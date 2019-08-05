@@ -31,7 +31,7 @@ Install
 
 In order to successfully use this library, you need:
 
-1. Get the ``pyModeS`` library:
+**1. Get the ``pyModeS`` library**
 
 Install the up-to-date pyModeS version from PyPI:
 
@@ -43,15 +43,16 @@ Install this library:
 
 .. code-block:: sh
 
-  $ pip install git+https://github.com/junzis/pyms4os
+  $ pip install git+https://github.com/junzis/pymodes-opensky
 
 
 
-2. Obtain access to OpenSky Impala database
+**2. Obtain access to OpenSky Impala database**
 
 Apply access at: https://opensky-network.org/data/impala. The user name and password will be used for the following configuration.
 
-3. Configure OpenSky Impala login
+
+**3. Configure OpenSky Impala login**
 
 The first time you use this library, the following configuration file will be created:
 
