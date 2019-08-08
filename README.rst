@@ -45,7 +45,7 @@ Install this library:
 
   $ pip install pyms4os
   or
-  $ pip install git+https://github.com/junzis/pymodes-opensky
+  $ pip install git+https://github.com/junzis/pyms4os
 
 
 
