@@ -1,4 +1,4 @@
-The pyModeS interface for OpenSky Impala database
+pyms4os: The pyModeS interface for OpenSky Impala database
 ==========================================================
 
 Introduction
@@ -43,6 +43,8 @@ Install this library:
 
 .. code-block:: sh
 
+  $ pip install pyms4os
+  or
   $ pip install git+https://github.com/junzis/pymodes-opensky
 
 
