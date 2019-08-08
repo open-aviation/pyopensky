@@ -6,7 +6,7 @@ https://github.com/pypa/sampleproject
 
 Steps for deploying a new verison:
 1. Increase the version number
-2. remove the old deployment under [dist] folder
+2. remove the old deployment under [dist] AND [build] folder
 3. run: python setup.py sdist
    run: python setup.py bdist_wheel
 4. twine upload dist/*
@@ -26,7 +26,7 @@ with open(path.join(here, "README.rst"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="pyms4os",
+    name="pymodes_opensky",
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html

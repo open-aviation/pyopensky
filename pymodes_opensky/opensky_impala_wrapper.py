@@ -7,7 +7,7 @@ import warnings
 from io import StringIO
 from typing import Iterable
 from pathlib import Path
-from pyms4os.ssh_client import SSHClient
+from pymodes_opensky.ssh_client import SSHClient
 
 # logging.basicConfig(level=logging.DEBUG)
 # logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ warnings.filterwarnings(action="ignore", module=".*paramiko.*")
 
 # check login config file
 homedir = str(Path.home())
-config_path = homedir + "/.config/pyms4os/secret.conf"
+config_path = homedir + "/.config/pymodes_opensky/secret.conf"
 
 if not os.path.exists(config_path):
     os.makedirs(os.path.dirname(config_path), exist_ok=True)
@@ -29,7 +29,7 @@ if not os.path.exists(config_path):
         f.write("password = \n")
 
 config = configparser.ConfigParser()
-config.read(homedir + "/.config/pyms4os/secret.conf")
+config.read(homedir + "/.config/pymodes_opensky/secret.conf")
 
 SERVER = config.get("default", "server")
 PORT = config.get("default", "port")

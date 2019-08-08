@@ -1,7 +1,7 @@
 import pandas as pd
 import pyModeS as pms
 from typing import Iterable
-from pyms4os.opensky_impala_wrapper import OpenskyImpalaWrapper
+from pymodes_opensky.opensky_impala_wrapper import OpenskyImpalaWrapper
 
 
 class MeteoHelper(object):

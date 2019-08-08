@@ -1,4 +1,4 @@
-from pyms4os import MeteoHelper
+from pymodes_opensky import MeteoHelper
 
 meteo = MeteoHelper()
 df = meteo.get(

@@ -1,4 +1,4 @@
-pyms4os: The pyModeS interface for OpenSky Impala database
+The pyModeS interface for OpenSky Impala database
 ==========================================================
 
 Introduction
@@ -43,9 +43,9 @@ Install this library:
 
 .. code-block:: sh
 
-  $ pip install pyms4os
+  $ pip install pymodes-opensky
   or
-  $ pip install git+https://github.com/junzis/pyms4os
+  $ pip install git+https://github.com/junzis/pymodes-opensky
 
 
 
@@ -60,7 +60,7 @@ The first time you use this library, the following configuration file will be cr
 
 .. code-block::
 
-  ~/.config/pyms4os/secret.conf
+  ~/.config/pymodes_opensky/secret.conf
 
 with the following content:
 
@@ -89,7 +89,7 @@ An example is shown as follows:
 
 .. code-block:: python
 
-  from pyms4os import EHSHelper
+  from pymodes_opensky import EHSHelper
 
   ehs = EHSHelper()
 
@@ -121,7 +121,7 @@ The interface is similar to ``EHSHelper``, for example:
 
 .. code-block:: python
 
-  from pyms4os import MeteoHelper
+  from pymodes_opensky import MeteoHelper
 
   meteo = MeteoHelper()
   df = meteo.get(
@@ -143,7 +143,7 @@ By defined the query type as ``type="raw"``, the raw Mode-S message can be obtai
 
 .. code-block:: python
 
-  from pyms4os import OpenskyImpalaWrapper
+  from pymodes_opensky import OpenskyImpalaWrapper
 
   opensky = OpenskyImpalaWrapper()
 
@@ -164,7 +164,7 @@ By switching the query type from ``type="raw"`` to ``type="adsb"``, you can obta
 
 .. code-block:: python
 
-  from pyms4os import OpenskyImpalaWrapper
+  from pymodes_opensky import OpenskyImpalaWrapper
 
   opensky = OpenskyImpalaWrapper()
 

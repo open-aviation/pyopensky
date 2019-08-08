@@ -1,4 +1,4 @@
-from pyms4os import OpenskyImpalaWrapper
+from pymodes_opensky import OpenskyImpalaWrapper
 
 import logging
 

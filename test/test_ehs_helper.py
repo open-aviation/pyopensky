@@ -1,4 +1,4 @@
-from pyms4os import EHSHelper
+from pymodes_opensky import EHSHelper
 
 ehs = EHSHelper()
 df = ehs.get(
