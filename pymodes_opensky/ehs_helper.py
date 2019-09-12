@@ -23,14 +23,12 @@ class EHSHelper(object):
         for x in self.bds_codes:
             if x not in SUPPORT_BDS:
                 raise RuntimeError(
-                    "BDS codes must be a subset of (%s)."
-                    % ",".join(SUPPORT_BDS)
+                    "BDS codes must be a subset of (%s)." % ",".join(SUPPORT_BDS)
                 )
 
     def get(self, icao24, start, end):
-        df = self.opensky.query(
-            type="raw", start=start, end=end, icao24=icao24
-        )
+        df = self.opensky.query(type="raw", start=start, end=end, icao24=icao24)
+        df = df.drop_duplicates(subset=["icao24", "rawmsg"])
 
         if df is None:
             return
@@ -40,26 +38,22 @@ class EHSHelper(object):
         df = df.sort_values("mintime")
         df["DF"] = df["rawmsg"].apply(pms.df)
 
-        commb = df[df["DF"].isin([20, 21])][
-            ["icao24", "mintime", "rawmsg", "DF"]
-        ]
+        commb = df[df["DF"].isin([20, 21])][["icao24", "mintime", "rawmsg", "DF"]]
 
         commb.loc[commb.DF == 20, "altitude"] = commb.loc[
             commb.DF == 20, "rawmsg"
         ].apply(pms.altcode)
 
-        commb.loc[commb.DF == 21, "squawk"] = commb.loc[
-            commb.DF == 21, "rawmsg"
-        ].apply(pms.idcode)
+        commb.loc[commb.DF == 21, "squawk"] = commb.loc[commb.DF == 21, "rawmsg"].apply(
+            pms.idcode
+        )
 
         if "BDS44" in self.bds_codes or "BDS45" in self.bds_codes:
             include_mrar = True
         else:
             include_mrar = False
 
-        commb["bds"] = commb["rawmsg"].apply(
-            pms.bds.infer, args=[include_mrar]
-        )
+        commb["bds"] = commb["rawmsg"].apply(pms.bds.infer, args=[include_mrar])
 
         ehs = commb[commb["bds"].isin(self.bds_codes)]
 

@@ -62,7 +62,7 @@ class OpenskyImpalaWrapper(SSHClient):
         end = pd.Timestamp(end, tz="utc").timestamp()
 
         hour_start = start // 3600 * 3600
-        hour_end = (start // 3600 + 1) * 3600
+        hour_end = (end // 3600 + 1) * 3600
 
         if type == "adsb":
             table = "state_vectors_data4"
@@ -119,6 +119,12 @@ class OpenskyImpalaWrapper(SSHClient):
 
         sio.seek(0)
         df = pd.read_csv(sio, dtype={"icao24": str})
+
+        if "time" in df.columns.tolist():
+            df = df.sort_values("time")
+        elif "mintime" in df.columns.tolist():
+            df = df.sort_values("mintime")
+
         print("**Records downloaded.")
 
         return df
