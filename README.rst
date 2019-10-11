@@ -96,10 +96,10 @@ An example is shown as follows:
   df = ehs.get(
       icao24="49d304",
       start="2018-07-19 15:00:00",
-      end="2018-07-19 15:10:00"
+      end="2018-07-19 15:10:00",
   )
 
-It is also possible to decode a subset of EHS message types, by specify the BDS codes using ``require_bds()`` function. For example:
+It is also possible to decode a subset of EHS message types, by specify the BDS codes using ``require_bds()`` function. You can also add a boundary (with format of ``[lat1, lon1, lat2, lon2]``) to the queries. For example:
 
 .. code-block:: python
 
@@ -108,7 +108,8 @@ It is also possible to decode a subset of EHS message types, by specify the BDS 
   df = ehs.get(
       icao24="49d304",
       start="2018-07-19 15:00:00",
-      end="2018-07-19 15:10:00"
+      end="2018-07-19 15:10:00",
+      bound=[30, -20, 65, 20],
   )
 
 
@@ -128,6 +129,7 @@ The interface is similar to ``EHSHelper``, for example:
       icao24=["49d304", "4007f9"],
       start="2018-07-19 15:00:00",
       end="2018-07-19 15:10:00",
+      bound=[30, -20, 65, 20],
       include45=True,
   )
 
@@ -158,6 +160,7 @@ By defined the query type as ``type="raw"``, the raw Mode-S message can be obtai
       start="2018-07-01 13:00:00",
       end="2018-07-01 13:00:10",
       icao24=["424588", "3c66a9"],
+      bound=[30, -20, 65, 20],
   )
 
 By switching the query type from ``type="raw"`` to ``type="adsb"``, you can obtained the history ADS-B information in a similar way. For example:
@@ -179,6 +182,7 @@ By switching the query type from ``type="raw"`` to ``type="adsb"``, you can obta
       start="2018-07-01 13:00:00",
       end="2018-07-01 13:00:10",
       icao24=["424588", "3c66a9"],
+      bound=[30, -20, 65, 20],
   )
 
 

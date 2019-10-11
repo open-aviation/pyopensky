@@ -38,7 +38,7 @@ PASSWORD = config.get("default", "password")
 
 if not USERNAME or not PASSWORD:
     raise RuntimeError(
-        "Opensky Impala username and password are empty in %s" % config_path
+        "Opensky Impala username and password are empty in {}".format(config_path)
     )
 
 
@@ -47,6 +47,9 @@ class OpenskyImpalaWrapper(SSHClient):
 
     def __init__(self):
         SSHClient.__init__(self)
+        self.connect_opensky()
+
+    def connect_opensky(self):
         self.connect(
             SERVER,
             port=PORT,
@@ -57,7 +60,18 @@ class OpenskyImpalaWrapper(SSHClient):
             compress=True,
         )
 
-    def query(self, type, start, end, icao24=None):
+    def disconnect_opensky(self):
+        self.disconnect()
+
+    def check_and_reconnect(self):
+        try:
+            transport = self.get_transport()
+            transport.send_ignore()
+        except EOFError:
+            print("Connection lost, reconnecting...")
+            self.connect_opensky()
+
+    def query(self, type, start, end, icao24=None, bound=None, countfirst=True):
         start = pd.Timestamp(start, tz="utc").timestamp()
         end = pd.Timestamp(end, tz="utc").timestamp()
 
@@ -73,36 +87,58 @@ class OpenskyImpalaWrapper(SSHClient):
 
         icao_filter = ""
         if isinstance(icao24, str):
-            icao_filter += "AND icao24='%s' " % icao24.lower()
+            icao_filter += "AND icao24='{}' ".format(icao24.lower())
         elif isinstance(icao24, Iterable):
             icao24s = ",".join(["'" + x.lower() + "'" for x in icao24])
-            icao_filter += "AND icao24 in (%s) " % icao24s
+            icao_filter += "AND icao24 in ({}) ".format(icao24s)
+
+        bound_filter = ""
+        if bound is None:
+            pass
+        elif len(bound) != 4:
+            raise RuntimeError("bound format must be [lat1, lon1, lat2, lon2]")
+        else:
+            lat1, lon1, lat2, lon2 = bound
+            lat_min = min((lat1, lat2))
+            lat_max = max((lat1, lat2))
+
+            bound_filter += "AND lat>={} AND lat<={} ".format(lat_min, lat_max)
+
+            if lon1 < lon2:
+                bound_filter += "AND lon>={} AND lon<={} ".format(lon1, lon2)
+            else:
+                bound_filter += "AND lon>={} OR lon<={} ".format(lon1, lon2)
 
         cmd = (
-            "SELECT * FROM %s WHERE " % table
-            + "hour>=%s " % hour_start
-            + "AND hour<%s " % hour_end
-            + "AND %s>=%s " % (time_col, start)
-            + "AND %s<%s " % (time_col, end)
+            "SELECT * FROM {} WHERE ".format(table)
+            + "hour>={} ".format(hour_start)
+            + "AND hour<{} ".format(hour_end)
+            + "AND {}>={} ".format(time_col, start)
+            + "AND {}<{} ".format(time_col, end)
             + icao_filter
+            + bound_filter
         )
 
-        # check how many records are related to the query
-        count_cmd = cmd.replace("*", "COUNT(*)")
-        print("**Obtaining details of the query...")
-        logging.info("Sending count request: [" + count_cmd + "]")
-        output = self.shell("-q " + count_cmd)
-        count = int(re.findall("\d+", output)[0])
-        print("**OpenSky Impala: %d of records found." % count)
+        if countfirst:
+            # check how many records are related to the query
+            count_cmd = cmd.replace("*", "COUNT(*)")
+            print("**Obtaining details of the query...")
+            logging.info("Sending count request: [" + count_cmd + "]")
 
-        if count == 0:
-            print("**No record found.")
-            return None
+            self.check_and_reconnect()
+            output = self.shell("-q " + count_cmd)
+            count = int(re.findall(r"\d+", output)[0])
+            print("**OpenSky Impala: {} of records found.".format(count))
+
+            if count == 0:
+                print("**No record found.")
+                return None
 
         # sending actual query
         print("**Fetching records...")
         logging.info("Sending query request: [" + cmd + "]")
 
+        self.check_and_reconnect()
         output = self.shell("-q " + cmd)
 
         logging.info("Processing query result.")
@@ -114,7 +150,7 @@ class OpenskyImpalaWrapper(SSHClient):
             if "hour" in line and i > 10:
                 # skip header row, after first occurance
                 continue
-            new_line = re.sub(" *\| *", ",", line)[1:-1]
+            new_line = re.sub(r" *\| *", ",", line)[1:-1]
             sio.write(new_line + "\n")
 
         sio.seek(0)

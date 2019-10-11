@@ -11,9 +11,9 @@ class MeteoHelper(object):
         super(MeteoHelper, self).__init__()
         self.opensky = OpenskyImpalaWrapper()
 
-    def get(self, icao24, start, end, include45=False):
+    def get(self, icao24, start, end, bound=None, include45=False):
         df = self.opensky.query(
-            type="raw", start=start, end=end, icao24=icao24
+            type="raw", start=start, end=end, icao24=icao24, bound=bound
         )
 
         if df is None:
@@ -24,17 +24,15 @@ class MeteoHelper(object):
         df = df.sort_values("mintime")
         df["DF"] = df["rawmsg"].apply(pms.df)
 
-        commb = df[df["DF"].isin([20, 21])][
-            ["icao24", "mintime", "rawmsg", "DF"]
-        ]
+        commb = df[df["DF"].isin([20, 21])][["icao24", "mintime", "rawmsg", "DF"]]
 
         commb.loc[commb.DF == 20, "altitude"] = commb.loc[
             commb.DF == 20, "rawmsg"
         ].apply(pms.altcode)
 
-        commb.loc[commb.DF == 21, "squawk"] = commb.loc[
-            commb.DF == 21, "rawmsg"
-        ].apply(pms.idcode)
+        commb.loc[commb.DF == 21, "squawk"] = commb.loc[commb.DF == 21, "rawmsg"].apply(
+            pms.idcode
+        )
 
         commb["bds"] = commb["rawmsg"].apply(pms.bds.infer, args=[True])
 
@@ -48,22 +46,11 @@ class MeteoHelper(object):
         # construct colums of the data frame based on BDS44, BDS45
         columns = ["icao24", "time", "rawmsg", "bds", "altitude", "squawk"]
 
-        columns.extend(
-            ["wind44spd", "wind44dir", "temp44", "p44", "hum44", "turb44"]
-        )
+        columns.extend(["wind44spd", "wind44dir", "temp44", "p44", "hum44", "turb44"])
 
         if include45:
             columns.extend(
-                [
-                    "turb45",
-                    "ws45",
-                    "mb45",
-                    "ic45",
-                    "wv45",
-                    "temp45",
-                    "p45",
-                    "rh45",
-                ]
+                ["turb45", "ws45", "mb45", "ic45", "wv45", "temp45", "p45", "rh45"]
             )
         dfout = pd.DataFrame(columns=columns)
 

@@ -9,19 +9,19 @@ logger.setLevel(logging.INFO)
 
 opensky = OpenskyImpalaWrapper()
 
-# test a simple and massive query
+# test a simple and massive query, bounded on EU
 df = opensky.query(
-    type="raw", start="2018-07-01 13:00:00", end="2018-07-01 13:00:01"
+    type="raw",
+    start="2018-07-01 13:00:00",
+    end="2018-07-01 13:00:01",
+    bound=[30, -30, 90, 35],
 )
 print("**Print first 10 rows:")
 print(df.head(10))
 
 # test query with single icao address
 df = opensky.query(
-    type="raw",
-    start="2018-07-01 13:00:00",
-    end="2018-07-01 13:00:10",
-    icao24="40097e",
+    type="raw", start="2018-07-01 13:00:00", end="2018-07-01 13:00:10", icao24="40097e"
 )
 print("**Print first 10 rows:")
 print(df.head(10))

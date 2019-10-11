@@ -26,8 +26,10 @@ class EHSHelper(object):
                     "BDS codes must be a subset of (%s)." % ",".join(SUPPORT_BDS)
                 )
 
-    def get(self, icao24, start, end):
-        df = self.opensky.query(type="raw", start=start, end=end, icao24=icao24)
+    def get(self, icao24, start, end, bound=None):
+        df = self.opensky.query(
+            type="raw", start=start, end=end, icao24=icao24, bound=bound
+        )
         df = df.drop_duplicates(subset=["icao24", "rawmsg"])
 
         if df is None:

@@ -11,17 +11,17 @@ opensky = OpenskyImpalaWrapper()
 
 # test a simple and massive query
 df = opensky.query(
-    type="adsb", start="2018-08-01 13:00:00", end="2018-08-01 13:00:05"
+    type="adsb",
+    start="2018-08-01 13:00:00",
+    end="2018-08-01 13:00:05",
+    bound=[30, -30, 90, 35],
 )
 print("**Print first 10 rows:")
 print(df.head(10))
 
 # test query with single icao address
 df = opensky.query(
-    type="adsb",
-    start="2018-07-01 13:00:00",
-    end="2018-07-01 13:00:10",
-    icao24="424588",
+    type="adsb", start="2018-07-01 13:00:00", end="2018-07-01 13:00:10", icao24="424588"
 )
 print("**Print first 10 rows:")
 print(df.head(10))
