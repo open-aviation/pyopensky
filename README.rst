@@ -94,21 +94,21 @@ An example is shown as follows:
   ehs = EHSHelper()
 
   df = ehs.get(
-      icao24="49d304",
-      start="2018-07-19 15:00:00",
-      end="2018-07-19 15:10:00",
+      icao24="4844C6",
+      start="2019-10-01 08:00:00",
+      end="2019-10-01 08:10:00",
   )
 
 It is also possible to decode a subset of EHS message types, by specify the BDS codes using ``require_bds()`` function. For example:
 
 .. code-block:: python
 
-  ehs.require_bds([BDS50, BDS60])
+  ehs.require_bds(["BDS50", "BDS60"])
 
   df = ehs.get(
-      icao24="49d304",
-      start="2018-07-19 15:00:00",
-      end="2018-07-19 15:10:00",
+      icao24="4844C6",
+      start="2019-10-01 08:00:00",
+      end="2019-10-01 08:10:00",
   )
 
 
