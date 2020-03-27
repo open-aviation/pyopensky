@@ -30,10 +30,11 @@ class EHSHelper(object):
         df = self.opensky.query(
             type="raw", start=start, end=end, icao24=icao24, bound=bound
         )
-        df = df.drop_duplicates(subset=["icao24", "rawmsg"])
 
         if df is None:
             return
+
+        df = df.drop_duplicates(subset=["icao24", "rawmsg"])
 
         print("**Processing data...")
 
