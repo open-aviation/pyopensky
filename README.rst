@@ -195,6 +195,15 @@ If you find this project useful for your research, please consider citing the fo
 
 .. code-block:: bibtex
 
+  @inproceedings{sun2019integrating,
+    title={Integrating pyModeS and OpenSky Historical Database},
+    author={Sun, Junzi and Hoekstra, Jacco M},
+    booktitle={Proceedings of the 7th OpenSky Workshop},
+    volume={67},
+    pages={63--72},
+    year={2019}
+  }
+
   @article{sun2019pymodes,
       title={pyModeS: Decoding Mode-S Surveillance Data for Open Air Transportation Research},
       author={J. {Sun} and H. {V\^u} and J. {Ellerbroek} and J. M. {Hoekstra}},
