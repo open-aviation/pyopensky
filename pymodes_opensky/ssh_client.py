@@ -55,20 +55,14 @@ class SSHClient(paramiko.SSHClient):
             if retry:
                 time.sleep(3)
             try:
-                super(SSHClient, self).connect(
-                    host_name, **self.connect_kwargs
-                )
-                print("**Server connection successful!")
+                super(SSHClient, self).connect(host_name, **self.connect_kwargs)
+                print("* Server connection successful!")
                 break
             except paramiko.ssh_exception.AuthenticationException:
-                logging.warn(
-                    "Error connecting to %s" % host_name, exc_info=True
-                )
+                logging.warn("Error connecting to %s" % host_name, exc_info=True)
                 raise
             except Exception as e:
-                logging.warn(
-                    "Error connecting to %s" % host_name, exc_info=True
-                )
+                logging.warn("Error connecting to %s" % host_name, exc_info=True)
 
         self.get_transport().set_keepalive(10)
 
@@ -81,9 +75,7 @@ class SSHClient(paramiko.SSHClient):
            non-zero or the command times out, an exception is raised.
         """
         cmd = textwrap.dedent(cmd.strip())
-        logging.debug(
-            "Running command via ssh on %s:\n%s" % (self.host_name, cmd)
-        )
+        logging.debug("Running command via ssh on %s:\n%s" % (self.host_name, cmd))
         transport = self.get_transport()
         for is_first_attempt in (True, False):
             try:
@@ -96,16 +88,13 @@ class SSHClient(paramiko.SSHClient):
                     self.connect(self.host_name, **self.connect_kwargs)
                 else:
                     raise Exception(
-                        "Unable to open ssh session to %s: %s"
-                        % (self.host_name, e)
+                        "Unable to open ssh session to %s: %s" % (self.host_name, e)
                     )
         channel.set_combine_stderr(True)
         channel.exec_command(cmd)
         process = RemoteProcess(channel)
 
-        deadline = (
-            time.time() + timeout_secs if timeout_secs is not None else None
-        )
+        deadline = time.time() + timeout_secs if timeout_secs is not None else None
 
         buffer = ""
 
@@ -139,9 +128,7 @@ class SSHClient(paramiko.SSHClient):
             err = process.stderr.read().decode()
 
             if output:
-                output = output.decode("utf-8").encode(
-                    "ascii", errors="ignore"
-                )
+                output = output.decode("utf-8").encode("ascii", errors="ignore")
             else:
                 output = "(No stdout)"
 

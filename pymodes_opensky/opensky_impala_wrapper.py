@@ -1,5 +1,6 @@
 import os
 import re
+import time
 import pandas as pd
 import configparser
 import logging
@@ -72,11 +73,11 @@ class OpenskyImpalaWrapper(SSHClient):
             self.connect_opensky()
 
     def query(self, type, start, end, icao24=None, bound=None, countfirst=True):
-        start = pd.Timestamp(start, tz="utc").timestamp()
-        end = pd.Timestamp(end, tz="utc").timestamp()
+        ts_start = pd.Timestamp(start, tz="utc").timestamp()
+        ts_end = pd.Timestamp(end, tz="utc").timestamp()
 
-        hour_start = start // 3600 * 3600
-        hour_end = (end // 3600 + 1) * 3600
+        hour_start = ts_start // 3600 * 3600
+        hour_end = (ts_end // 3600 + 1) * 3600
 
         if type == "adsb":
             table = "state_vectors_data4"
@@ -85,12 +86,36 @@ class OpenskyImpalaWrapper(SSHClient):
             table = "rollcall_replies_data4"
             time_col = "mintime"
 
-        icao_filter = ""
         if isinstance(icao24, str):
-            icao_filter += "AND icao24='{}' ".format(icao24.lower())
+            icaos = [icao24.lower()]
         elif isinstance(icao24, Iterable):
-            icao24s = ",".join(["'" + x.lower() + "'" for x in icao24])
-            icao_filter += "AND icao24 in ({}) ".format(icao24s)
+            icaos = [x.lower() for x in icao24]
+        else:
+            icaos = None
+
+        # for raw queries with bound filter
+        if (type == "raw") and (bound is not None):
+            print("** You are query raw messages with boundary.")
+            print("** An ADS-B query will be performed to get ICAO codes.")
+
+            # find out ICAO address first
+            adsb_icaos = self.get_icaos(start=start, end=end, bound=bound)
+
+            if icaos is not None:
+                icaos = set(icaos).intersection(adsb_icaos)
+            else:
+                icaos = adsb_icaos
+
+            print("** {} number of ICAOs.".format(len(adsb_icaos)))
+
+            if len(icaos) == 0:
+                print("** No data to be queried.")
+
+            bound = None
+
+        icao_filter = "AND icao24 in ({}) ".format(
+            ",".join(["'" + x + "'" for x in icaos])
+        )
 
         bound_filter = ""
         if bound is None:
@@ -112,9 +137,9 @@ class OpenskyImpalaWrapper(SSHClient):
         cmd = (
             "SELECT * FROM {} WHERE ".format(table)
             + "hour>={} ".format(hour_start)
-            + "AND hour<{} ".format(hour_end)
-            + "AND {}>={} ".format(time_col, start)
-            + "AND {}<{} ".format(time_col, end)
+            + "AND hour<={} ".format(hour_end)
+            + "AND {}>={} ".format(time_col, ts_start)
+            + "AND {}<={} ".format(time_col, ts_end)
             + icao_filter
             + bound_filter
         )
@@ -122,20 +147,26 @@ class OpenskyImpalaWrapper(SSHClient):
         if countfirst:
             # check how many records are related to the query
             count_cmd = cmd.replace("*", "COUNT(*)")
-            print("**Obtaining details of the query...")
+            print("* Obtaining details of the query...")
             logging.info("Sending count request: [" + count_cmd + "]")
 
             self.check_and_reconnect()
             output = self.shell("-q " + count_cmd)
             count = int(re.findall(r"\d+", output)[0])
-            print("**OpenSky Impala: {} of records found.".format(count))
+            print("* OpenSky Impala: {} of records found.".format(count))
 
             if count == 0:
-                print("**No record found.")
+                print("* No record found.")
                 return None
+            elif count > 200000:
+                print(
+                    "* Too many records to download. "
+                    + "You should consider exiting and re-partitioning the query."
+                )
+                time.sleep(5)
 
         # sending actual query
-        print("**Fetching records...")
+        print("* Fetching records...")
         logging.info("Sending query request: [" + cmd + "]")
 
         self.check_and_reconnect()
@@ -161,6 +192,63 @@ class OpenskyImpalaWrapper(SSHClient):
         elif "mintime" in df.columns.tolist():
             df = df.sort_values("mintime")
 
-        print("**Records downloaded.")
+        print("* Records downloaded.")
 
         return df
+
+    def get_icaos(self, start, end, bound):
+        ts_start = pd.Timestamp(start, tz="utc").timestamp()
+        ts_end = pd.Timestamp(end, tz="utc").timestamp()
+
+        hour_start = ts_start // 3600 * 3600
+        hour_end = (ts_end // 3600 + 1) * 3600
+
+        table = "state_vectors_data4"
+        time_col = "time"
+
+        bound_filter = ""
+
+        lat1, lon1, lat2, lon2 = bound
+        lat_min = min((lat1, lat2))
+        lat_max = max((lat1, lat2))
+
+        bound_filter += "AND lat>={} AND lat<={} ".format(lat_min, lat_max)
+
+        if lon1 < lon2:
+            bound_filter += "AND lon>={} AND lon<={} ".format(lon1, lon2)
+        else:
+            bound_filter += "AND lon>={} OR lon<={} ".format(lon1, lon2)
+
+        cmd = (
+            "SELECT DISTINCT icao24 FROM {} WHERE ".format(table)
+            + "hour>={} ".format(hour_start)
+            + "AND hour<={} ".format(hour_end)
+            + "AND {}>={} ".format(time_col, ts_start)
+            + "AND {}<={} ".format(time_col, ts_end)
+            + bound_filter
+        )
+
+        logging.info("Sending query request: [" + cmd + "]")
+
+        self.check_and_reconnect()
+        output = self.shell("-q " + cmd)
+
+        logging.info("Processing query result.")
+
+        sio = StringIO()
+        for i, line in enumerate(output.split("\n")):
+            if "|" not in line:
+                # keep only table rows
+                continue
+            if "hour" in line and i > 10:
+                # skip header row, after first occurance
+                continue
+            new_line = re.sub(r" *\| *", ",", line)[1:-1]
+            sio.write(new_line + "\n")
+
+        sio.seek(0)
+        df = pd.read_csv(sio, dtype={"icao24": str})
+
+        icaos = df.icao24.unique().tolist()
+
+        return icaos
