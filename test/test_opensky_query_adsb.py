@@ -13,7 +13,7 @@ opensky = OpenskyImpalaWrapper()
 df = opensky.query(
     type="adsb",
     start="2020-02-01 13:00:00",
-    end="2020-02-01 13:10:00",
+    end="2020-02-01 13:00:05",
     # icao24=[],
     bound=[40, -5, 50, 10],
 )

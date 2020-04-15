@@ -7,5 +7,5 @@ df = meteo.get(
     end="2018-07-19 15:10:00",
     include45=True,
 )
-print("**Print first 10 rows:")
+print("Print first 10 rows:")
 print(df.head(10))

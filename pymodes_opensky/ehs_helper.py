@@ -36,7 +36,7 @@ class EHSHelper(object):
 
         df = df.drop_duplicates(subset=["icao24", "rawmsg"])
 
-        print("**Processing data...")
+        print("* Processing data...")
 
         df = df.sort_values("mintime")
         df["DF"] = df["rawmsg"].apply(pms.df)

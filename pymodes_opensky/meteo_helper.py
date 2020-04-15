@@ -19,7 +19,7 @@ class MeteoHelper(object):
         if df is None:
             return
 
-        print("**Processing data...")
+        print("* Processing data...")
 
         df = df.sort_values("mintime")
         df["DF"] = df["rawmsg"].apply(pms.df)

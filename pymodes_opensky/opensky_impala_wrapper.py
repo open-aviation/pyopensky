@@ -113,9 +113,11 @@ class OpenskyImpalaWrapper(SSHClient):
 
             bound = None
 
-        icao_filter = "AND icao24 in ({}) ".format(
-            ",".join(["'" + x + "'" for x in icaos])
-        )
+        icao_filter = ""
+        if icaos is not None:
+            icao_filter = "AND icao24 in ({}) ".format(
+                ",".join(["'" + x + "'" for x in icaos])
+            )
 
         bound_filter = ""
         if bound is None:
