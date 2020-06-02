@@ -115,7 +115,7 @@ It is also possible to decode a subset of EHS message types, by specify the BDS 
 MeteoHelper
 ************
 
-The ``MeteoHelper`` class allows the users to download and decoded meteorological messages automatically. By default it provides information from BDS44 messages. Information from BDS45 messages can also be enable with ``include45=Ture`` switch.
+The ``MeteoHelper`` class allows the users to download and decoded meteorological messages automatically. By default it provides information from BDS44 messages. Information from BDS45 messages can also be enable with ``include45=True`` switch.
 
 The interface is similar to ``EHSHelper``, for example:
 
