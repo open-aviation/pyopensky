@@ -85,6 +85,8 @@ class OpenskyImpalaWrapper(SSHClient):
         elif type == "raw":
             table = "rollcall_replies_data4"
             time_col = "mintime"
+        else:
+            raise RuntimeError("Unknown query type: {}".format(type))
 
         if isinstance(icao24, str):
             icaos = [icao24.lower()]
