@@ -1,7 +1,7 @@
 import pandas as pd
 import pyModeS as pms
 from typing import Iterable
-from pymodes_opensky.opensky_impala_wrapper import OpenskyImpalaWrapper
+from pyopensky.impala_wrapper import OpenskyImpalaWrapper
 
 SUPPORT_BDS = ["BDS40", "BDS50", "BDS60"]
 

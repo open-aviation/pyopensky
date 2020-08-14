@@ -26,15 +26,15 @@ with open(path.join(here, "README.rst"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name="pymodes_opensky",
+    name="pyopensky",
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version="1.2",
-    description="The pyModeS interface for OpenSky-network Impala database",
+    version="1.3",
+    description="Python interface for OpenSky database with pyModeS decoder",
     long_description=long_description,
     # The project's main homepage.
-    url="https://github.com/junzis/pymodes-opensky",
+    url="https://github.com/junzis/pyopensky",
     # Author details
     author="Junzi Sun",
     author_email="j.sun-1@tudelft.nl",

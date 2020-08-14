@@ -1,4 +1,4 @@
-from pymodes_opensky import EHSHelper
+from pyopensky import EHSHelper
 
 ehs = EHSHelper()
 

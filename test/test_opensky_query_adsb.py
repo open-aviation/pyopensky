@@ -1,4 +1,4 @@
-from pymodes_opensky import OpenskyImpalaWrapper
+from pyopensky import OpenskyImpalaWrapper
 
 # import logging
 #

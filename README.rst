@@ -1,12 +1,18 @@
-The pyModeS interface for OpenSky Impala database
-==========================================================
+Python interface for OpenSky database with pyModeS decoder
+===========================================================
 
 Introduction
 ---------------------
 
-This Python library connects the `pyModeS <https://github.com/junzis/pyModeS>`_ decoder and OpenSky-network raw Mode-S data. It aims at making the Enhance Mode-S information form OpenSky network more accessible for researchers.
+This Python library provides interfaces to:
 
-The library can automatically retrieve and download data in ``rollcall_replies_data4`` table from the `OpenSky Imapala database <https://opensky-network.org/data/impala>`_, and then decodes several common Mode-S Comm-B message types. Currently, follows Mode-S downlink reports are supported:
+1. Query raw and ADS-B messages from OpenSky Impala database.
+2. Decode OpenSky Comm-B information automatically using pyModeS.
+
+
+The ``pyopensky`` connects the `pyModeS <https://github.com/junzis/pyModeS>`_ decoder and OpenSky-network raw Mode-S data. It aims at making the Enhance Mode-S information form OpenSky network more accessible for researchers. 
+
+It can automatically retrieve and download data in ``rollcall_replies_data4`` table from the `OpenSky Impala database <https://opensky-network.org/data/impala>`_, and then decodes several common Mode-S Comm-B message types. Currently, follows Mode-S downlink reports are supported:
 
 **Enhanced Mode-S:**
 
@@ -19,12 +25,6 @@ The library can automatically retrieve and download data in ``rollcall_replies_d
 - BDS44: Meteorological routine air report
 - BDS45: Meteorological hazard report
 
-In addition, the library can also be used to query decoded ADS-B information from ``state_vectors_data4`` table from the OpenSky Impala database.
-
-To further explore the Mode-S decoding and aircraft trajectory processing using open-source Python libraries, you may have a look at:
-
-- **junzis/pyModeS**: https://github.com/junzis/pyModeS
-- **xoolive/traffic**: https://github.com/xoolive/traffic
 
 Install
 -----------------------
@@ -43,9 +43,9 @@ Install this library:
 
 .. code-block:: sh
 
-  $ pip install pymodes-opensky
+  $ pip install pyopensky
   or
-  $ pip install git+https://github.com/junzis/pymodes-opensky
+  $ pip install git+https://github.com/junzis/pyopensky
 
 
 
@@ -60,7 +60,7 @@ The first time you use this library, the following configuration file will be cr
 
 .. code-block::
 
-  ~/.config/pymodes_opensky/secret.conf
+  ~/.config/pyopensky/secret.conf
 
 with the following content:
 
@@ -89,7 +89,7 @@ An example is shown as follows:
 
 .. code-block:: python
 
-  from pymodes_opensky import EHSHelper
+  from pyopensky import EHSHelper
 
   ehs = EHSHelper()
 
@@ -121,21 +121,20 @@ The interface is similar to ``EHSHelper``, for example:
 
 .. code-block:: python
 
-  from pymodes_opensky import MeteoHelper
+  from pyopensky import MeteoHelper
 
   meteo = MeteoHelper()
   df = meteo.get(
-      icao24=["49d304", "4007f9"],
-      start="2018-07-19 15:00:00",
-      end="2018-07-19 15:10:00",
-      include45=True,
+      icao24=["341395"],
+      start="2020-03-15 19:20:00",
+      end="2020-03-15 20:20:00",
+      include45=False,
   )
-
 
 OpenskyImpalaWrapper
 **********************
 
-All previous queries are based on the ``OpenskyImpalaWrapper`` class from the library. The wrapper class can also be used independently to query OpenSky Imapala database. It can be used for raw messages, as wells as decoded ADS-B data by OpenSky.
+All previous queries are based on the ``OpenskyImpalaWrapper`` class from the library. The wrapper class can also be used independently to query OpenSky Impala database. It can be used for raw messages, as wells as decoded ADS-B data by OpenSky.
 
 **Be aware!** The number of records can be massive without the ICAO filter. Thus the query can take a long time. To increase the query efficiency, please consider using a ICAO filter when possible.
 
@@ -143,7 +142,7 @@ By defined the query type as ``type="raw"``, the raw Mode-S message can be obtai
 
 .. code-block:: python
 
-  from pymodes_opensky import OpenskyImpalaWrapper
+  from pyopensky import OpenskyImpalaWrapper
 
   opensky = OpenskyImpalaWrapper()
 
@@ -164,7 +163,7 @@ By switching the query type from ``type="raw"`` to ``type="adsb"``, you can obta
 
 .. code-block:: python
 
-  from pymodes_opensky import OpenskyImpalaWrapper
+  from pyopensky import OpenskyImpalaWrapper
 
   opensky = OpenskyImpalaWrapper()
 
