@@ -72,7 +72,9 @@ class OpenskyImpalaWrapper(SSHClient):
             print("Connection lost, reconnecting...")
             self.connect_opensky()
 
-    def query(self, type, start, end, icao24=None, bound=None, countfirst=True):
+    def query(
+        self, type, start, end, icao24=None, bound=None, countfirst=True, limit=None
+    ):
         ts_start = pd.Timestamp(start, tz="utc").timestamp()
         ts_end = pd.Timestamp(end, tz="utc").timestamp()
 
@@ -138,6 +140,14 @@ class OpenskyImpalaWrapper(SSHClient):
             else:
                 bound_filter += "AND lon>={} OR lon<={} ".format(lon1, lon2)
 
+        extra_filter = ""
+        if table == "rollcall_replies_data4":
+            extra_filter += "AND message IS NOT NULL"
+
+        limit_number = ""
+        if limit:
+            limit_number += "LIMIT {} ".format(limit)
+
         cmd = (
             "SELECT * FROM {} WHERE ".format(table)
             + "hour>={} ".format(hour_start)
@@ -146,9 +156,11 @@ class OpenskyImpalaWrapper(SSHClient):
             + "AND {}<={} ".format(time_col, ts_end)
             + icao_filter
             + bound_filter
+            + extra_filter
+            + limit_number
         )
 
-        if countfirst:
+        if limit is None and countfirst:
             # check how many records are related to the query
             count_cmd = cmd.replace("*", "COUNT(*)")
             print("* Obtaining details of the query...")
@@ -188,17 +200,22 @@ class OpenskyImpalaWrapper(SSHClient):
             new_line = re.sub(r" *\| *", ",", line)[1:-1]
             sio.write(new_line + "\n")
 
-        sio.seek(0)
-        df = pd.read_csv(sio, dtype={"icao24": str})
+        if sio.tell() == 0:
+            print("* No record found.")
+            return None
 
-        if "time" in df.columns.tolist():
-            df = df.sort_values("time")
-        elif "mintime" in df.columns.tolist():
-            df = df.sort_values("mintime")
+        else:
+            sio.seek(0)
+            df = pd.read_csv(sio, dtype={"icao24": str})
 
-        print("* Records downloaded.")
+            if "time" in df.columns.tolist():
+                df = df.sort_values("time")
+            elif "mintime" in df.columns.tolist():
+                df = df.sort_values("mintime")
 
-        return df
+            print("* Records downloaded.")
+
+            return df
 
     def get_icaos(self, start, end, bound):
         ts_start = pd.Timestamp(start, tz="utc").timestamp()
@@ -250,9 +267,53 @@ class OpenskyImpalaWrapper(SSHClient):
             new_line = re.sub(r" *\| *", ",", line)[1:-1]
             sio.write(new_line + "\n")
 
-        sio.seek(0)
-        df = pd.read_csv(sio, dtype={"icao24": str})
+        if sio.tell() == 0:
+            print("* No record found.")
+            return []
+        else:
+            sio.seek(0)
+            df = pd.read_csv(sio, dtype={"icao24": str})
+            icaos = df.icao24.unique().tolist()
+            return icaos
 
-        icaos = df.icao24.unique().tolist()
+    def sql(self, cmd):
 
-        return icaos
+        # sending actual query
+        print("* Fetching records...")
+        # logging.info("Sending query request: [" + cmd + "]")
+        print("Sending query request: [" + cmd + "]")
+
+        self.check_and_reconnect()
+        output = self.shell("-q " + cmd)
+
+        # logging.info("Processing query result.")
+        print("Processing query result.")
+
+        sio = StringIO()
+
+        for i, line in enumerate(output.split("\n")):
+            if "|" not in line:
+                # keep only table rows
+                continue
+            if "hour" in line and i > 10:
+                # skip header row, after first occurance
+                continue
+            new_line = re.sub(r" *\| *", ",", line)[1:-1]
+            sio.write(new_line + "\n")
+
+        if sio.tell() == 0:
+            print("* No record found.")
+            return None
+
+        else:
+            sio.seek(0)
+            df = pd.read_csv(sio, dtype={"icao24": str})
+
+            if "time" in df.columns.tolist():
+                df = df.sort_values("time")
+            elif "mintime" in df.columns.tolist():
+                df = df.sort_values("mintime")
+
+            print("* Records downloaded.")
+
+            return df
