@@ -20,6 +20,7 @@ import logging
 import paramiko
 import textwrap
 import time
+import traceback
 
 
 class SSHClient(paramiko.SSHClient):
@@ -58,11 +59,18 @@ class SSHClient(paramiko.SSHClient):
                 super(SSHClient, self).connect(host_name, **self.connect_kwargs)
                 print("* Server connection successful!")
                 break
+
             except paramiko.ssh_exception.AuthenticationException:
-                logging.warn("Error connecting to %s" % host_name, exc_info=True)
+                traceback.print_stack()
+                logging.warning("Error connecting to %s" % host_name, exc_info=True)
                 raise
-            except Exception as e:
-                logging.warn("Error connecting to %s" % host_name, exc_info=True)
+
+            except Exception:
+                traceback.print_stack()
+                logging.warning("Error connecting to %s" % host_name, exc_info=True)
+
+                if retry == retries - 1:
+                    raise
 
         self.get_transport().set_keepalive(10)
 
@@ -83,7 +91,7 @@ class SSHClient(paramiko.SSHClient):
                 break
             except Exception as e:
                 if is_first_attempt:
-                    logging.warn("Error opening ssh session: %s" % e)
+                    logging.warning("Error opening ssh session: %s" % e)
                     self.close()
                     self.connect(self.host_name, **self.connect_kwargs)
                 else:

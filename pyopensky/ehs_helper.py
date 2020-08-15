@@ -15,6 +15,12 @@ class EHSHelper(object):
         self.bds_codes = SUPPORT_BDS
 
     def require_bds(self, bds):
+        """Set required BDS code.
+
+        Args:
+            bds (str or list): Desired BDS code, must be a subset of ["BDS40", "BDS50", "BDS60"]
+
+        """
         if isinstance(bds, str):
             self.bds_codes = [bds.upper()]
         elif isinstance(bds, Iterable):
@@ -27,6 +33,17 @@ class EHSHelper(object):
                 )
 
     def get(self, icao24, start, end, bound=None):
+        """Get decoded EHS data.
+
+        Args:
+            icao24 (str or list): Filter of one or a list of IACO addresses, default to None
+            start (str): Start of time period with format YYYY-MM-DD HH:MM:SS
+            end (str): End of time period with format YYYY-MM-DD HH:MM:SS
+            bound (list): Filter latitude and longitude bound with format of [lat1, lon1, lat2, lon2], default to None
+        Returns:
+            pandas.DataFrame: Impala query results
+
+        """
         df = self.opensky.query(
             type="raw", start=start, end=end, icao24=icao24, bound=bound
         )

@@ -72,9 +72,26 @@ class OpenskyImpalaWrapper(SSHClient):
             print("Connection lost, reconnecting...")
             self.connect_opensky()
 
-    def query(
-        self, type, start, end, icao24=None, bound=None, countfirst=True, limit=None
-    ):
+    def query(self, type, start, end, **kwargs):
+        """Query opensky impala database.
+
+        Args:
+            type (str): Type of messages "adsb" or "raw"
+            start (str): Start of time period with format YYYY-MM-DD HH:MM:SS
+            end (str): End of time period with format YYYY-MM-DD HH:MM:SS
+            icao24 (str or list): Filter of one or a list of IACO addresses, default to None
+            bound (list): Filter latitude and longitude bound with format of [lat1, lon1, lat2, lon2], default to None
+            countfirst (bool): Count and print number of records before actual query, default to True
+            limit (int): Return only a number of return records, defualt to None
+        Returns:
+            pandas.DataFrame: Impala query results
+
+        """
+        icao24 = kwargs.get("icao24", None)
+        bound = kwargs.get("bound", None)
+        countfirst = kwargs.get("countfirst", True)
+        limit = kwargs.get("limit", None)
+
         ts_start = pd.Timestamp(start, tz="utc").timestamp()
         ts_end = pd.Timestamp(end, tz="utc").timestamp()
 
@@ -218,6 +235,16 @@ class OpenskyImpalaWrapper(SSHClient):
             return df
 
     def get_icaos(self, start, end, bound):
+        """Get ICAO address in a certain time period and geographic bound.
+
+        Args:
+            start (str): Start of time period with format YYYY-MM-DD HH:MM:SS
+            end (str): End of time period with format YYYY-MM-DD HH:MM:SS
+            bound (list): Filter latitude and longitude bound with format of [lat1, lon1, lat2, lon2], default to None
+        Returns:
+            list: List of ICAO addresses
+
+        """
         ts_start = pd.Timestamp(start, tz="utc").timestamp()
         ts_end = pd.Timestamp(end, tz="utc").timestamp()
 
@@ -276,8 +303,15 @@ class OpenskyImpalaWrapper(SSHClient):
             icaos = df.icao24.unique().tolist()
             return icaos
 
-    def sql(self, cmd):
+    def rawquery(self, cmd):
+        """Perform a raw impala query.
 
+        Args:
+            cmd (str): Raw query command
+        Returns:
+            pandas.DataFrame: Impala query results
+
+        """
         # sending actual query
         print("* Fetching records...")
         # logging.info("Sending query request: [" + cmd + "]")
