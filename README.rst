@@ -8,8 +8,8 @@ The ``pyopensky`` library provides the Python interface to OpenSky-network Histo
 
 This Python library provides interfaces to:
 
-1. Query and download OpenSky ADS-B data (state vectors) using `OpenSky shell <https://opensky-network.org/data/impala>`_. 
-2. Query and raw Mode S message (rollcall replies) using `OpenSky shell <https://opensky-network.org/data/impala>`_. 
+1. Query and download OpenSky ADS-B data (state vectors) using `Impala shell <https://opensky-network.org/data/impala>`_. 
+2. Query and raw Mode S message (rollcall replies) using `Impala shell <https://opensky-network.org/data/impala>`_. 
 3. Decode Mode S messages automatically using `pyModeS <https://github.com/junzis/pyModeS>`_. 
 
 
