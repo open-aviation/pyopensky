@@ -1,8 +1,8 @@
 Python interface for OpenSky historical database
-=================================================
+================================================
 
 Introduction
--------------
+------------
 
 The ``pyopensky`` library provides the Python interface to OpenSky-network Historical data. It aims at making ADS-B and Mode S data from OpenSky easily accessible in the Python programming environment. 
 
@@ -14,7 +14,7 @@ This Python library provides interfaces to:
 
 
 Decoding capabilities
-----------------------
+---------------------
 
 In addition to the ability to download ADS-B data (state vectors), it can also retrieve raw Mode S messages in ``rollcall_replies_data4`` table, and then decodes common Mode S Comm-B message types. Currently, automatic decoding of the following Mode S messages are supported:
 
@@ -31,10 +31,10 @@ Mode S meteorological reports:
 
 
 Install
---------
+-------
 
 1. Install pyopensky
-*********************
+********************
 
 **[Option 1]**: stable release:
 
@@ -51,13 +51,13 @@ Install
 
 
 2. Obtain access to OpenSky Impala database
-********************************************
+*******************************************
 
 Apply access at: https://opensky-network.org/data/impala. The user name and password will be used for the following configuration.
 
 
 3. Configure OpenSky Impala login
-**********************************
+*********************************
 
 
 The first time you use this library, the following configuration file will be created:
@@ -82,14 +82,18 @@ Fill in the empty ``username`` and ``password`` field with your OpenSky login.
 Use the library
 ----------------
 
-OpenskyImpalaWrapper
-*********************
+1. OpenskyImpalaWrapper
+***********************
 
 The ``OpenskyImpalaWrapper`` class can be used to download raw messages, and ADS-B data (aka. OpenSky state vectors).
 
 **Be aware!** The number of records can be massive without the ICAO filter. Thus the query can take a long time. To increase the query efficiency, please consider using an ICAO filter when possible.
 
-By defined the query type as ``type="raw"``, the raw Mode S message can be obtained. For example:
+
+Perform Mode S roll-call queries
+++++++++++++++++++++++++++++++++
+
+By defined the query type as ``type="rollcall"``, the rollcall Mode S message can be obtained. For example:
 
 .. code-block:: python
 
@@ -99,18 +103,22 @@ By defined the query type as ``type="raw"``, the raw Mode S message can be obtai
 
   # Perform a simple and massive query (~20k records for 1 second here!)
   df = opensky.query(
-      type="raw", start="2018-07-01 13:00:00", end="2018-07-01 13:00:01"
+      type="rollcall", start="2018-07-01 13:00:00", end="2018-07-01 13:00:01"
   )
 
   # Perform a query with ICAO filter
   df = opensky.query(
-      type="raw",
+      type="rollcall",
       start="2018-07-01 13:00:00",
       end="2018-07-01 13:00:10",
       icao24=["424588", "3c66a9"],
   )
 
-By switching the query type from ``type="raw"`` to ``type="adsb"``, you can obtained the history ADS-B information (state vectors) in a similar way. You can also add a boundary (with the format of ``[lat1, lon1, lat2, lon2]``) to the queries. For example:
+
+Perform ADS-B (state vector) queries
+++++++++++++++++++++++++++++++++++++
+
+By switching the query type from ``type="rollcall"`` to ``type="adsb"``, you can obtained the history ADS-B information (state vectors) in a similar way. You can also add a boundary (with the format of ``[lat1, lon1, lat2, lon2]``) to the queries. For example:
 
 .. code-block:: python
 
@@ -133,9 +141,26 @@ By switching the query type from ``type="raw"`` to ``type="adsb"``, you can obta
   )
 
 
+Perform SQL-like queries
+++++++++++++++++++++++++
 
-EHSHelper
-**********
+You can use `rawquery` function to execuate SQL-like query directly. Following lines of code will perform a raw SQL query that counts aircraft which arrived or departed or crossed Frankfurt airport during a certain hour (an example from https://opensky-network.org/data/impala).
+
+.. code-block:: python
+
+  from pyopensky import OpenskyImpalaWrapper
+
+  opensky = OpenskyImpalaWrapper()
+
+  df = opensky.rawquery(
+      "SELECT COUNT(DISTINCT icao24) FROM state_vectors_data4 WHERE lat<=50.07 AND lat>=49.98 AND lon<=8.62 AND lon>=8.48 AND hour=1493892000;",
+      verbose=True
+  )
+
+
+
+2. EHSHelper
+************
 
 The ``EHSHelper`` class allows the users to download and decode Enhanced Mode S messages automatically.
 
@@ -169,8 +194,8 @@ It is also possible to decode a subset of EHS message types, by specify the BDS 
 
 
 
-MeteoHelper
-************
+3. MeteoHelper
+**************
 
 The ``MeteoHelper`` class allows the users to download and decoded meteorological messages automatically. By default it provides information from BDS44 messages. Information from BDS45 messages can also be enable with ``include45=True`` switch.
 
@@ -191,13 +216,14 @@ The interface is similar to ``EHSHelper``, for example:
 
 
 More examples
---------------
+-------------
 
 More complete examples can be found in the ``test`` directory of this library.
 
 
 Other information
--------------------
+-----------------
+
 If you find this project useful for your research, please consider citing the following works:
 
 .. code-block:: bibtex

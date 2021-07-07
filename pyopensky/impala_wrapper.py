@@ -76,7 +76,7 @@ class OpenskyImpalaWrapper(SSHClient):
         """Query opensky impala database.
 
         Args:
-            type (str): Type of messages "adsb" or "raw"
+            type (str): Type of messages "adsb" or "rollcall"
             start (str): Start of time period with format YYYY-MM-DD HH:MM:SS
             end (str): End of time period with format YYYY-MM-DD HH:MM:SS
             icao24 (str or list): Filter of one or a list of IACO addresses, default to None
@@ -101,7 +101,7 @@ class OpenskyImpalaWrapper(SSHClient):
         if type == "adsb":
             table = "state_vectors_data4"
             time_col = "time"
-        elif type == "raw":
+        elif type == "rollcall":
             table = "rollcall_replies_data4"
             time_col = "mintime"
         else:
@@ -114,9 +114,9 @@ class OpenskyImpalaWrapper(SSHClient):
         else:
             icaos = None
 
-        # for raw queries with bound filter
-        if (type == "raw") and (bound is not None):
-            print("** You are query raw messages with boundary.")
+        # for rollcall queries with bound filter
+        if (type == "rollcall") and (bound is not None):
+            print("** You are query rollcall messages with boundary.")
             print("** An ADS-B query will be performed to get ICAO codes.")
 
             # find out ICAO address first
@@ -303,25 +303,26 @@ class OpenskyImpalaWrapper(SSHClient):
             icaos = df.icao24.unique().tolist()
             return icaos
 
-    def rawquery(self, cmd):
-        """Perform a raw impala query.
+    def rawquery(self, cmd, verbose=False):
+        """Perform a raw SQL-like impala query.
 
         Args:
-            cmd (str): Raw query command
+            cmd (str): SQL-like query command
         Returns:
             pandas.DataFrame: Impala query results
 
         """
         # sending actual query
-        print("* Fetching records...")
-        # logging.info("Sending query request: [" + cmd + "]")
-        print("Sending query request: [" + cmd + "]")
+        if verbose:
+            print("* Fetching records...")
+            print("Sending query request: [" + cmd + "]")
 
         self.check_and_reconnect()
         output = self.shell("-q " + cmd)
 
         # logging.info("Processing query result.")
-        print("Processing query result.")
+        if verbose:
+            print("Processing query result.")
 
         sio = StringIO()
 
@@ -336,7 +337,8 @@ class OpenskyImpalaWrapper(SSHClient):
             sio.write(new_line + "\n")
 
         if sio.tell() == 0:
-            print("* No record found.")
+            if verbose:
+                print("* No record found.\n")
             return None
 
         else:
@@ -348,6 +350,7 @@ class OpenskyImpalaWrapper(SSHClient):
             elif "mintime" in df.columns.tolist():
                 df = df.sort_values("mintime")
 
-            print("* Records downloaded.")
+            if verbose:
+                print(f"* {df.shape[0]} records downloaded.\n")
 
             return df
