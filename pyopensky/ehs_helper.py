@@ -45,7 +45,7 @@ class EHSHelper(object):
 
         """
         df = self.opensky.query(
-            type="raw", start=start, end=end, icao24=icao24, bound=bound
+            type="rollcall", start=start, end=end, icao24=icao24, bound=bound
         )
 
         if df is None:
