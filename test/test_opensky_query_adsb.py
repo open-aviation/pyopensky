@@ -11,7 +11,7 @@ opensky = OpenskyImpalaWrapper()
 
 # test a simple and large query, over France
 df = opensky.query(
-    type="adsb",
+    source="adsb",
     start="2020-02-01 13:00:00",
     end="2020-02-01 13:00:05",
     # icao24=[],

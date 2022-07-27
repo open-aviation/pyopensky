@@ -72,11 +72,11 @@ class OpenskyImpalaWrapper(SSHClient):
             print("Connection lost, reconnecting...")
             self.connect_opensky()
 
-    def query(self, type, start, end, **kwargs):
+    def query(self, source, start, end, **kwargs):
         """Query opensky impala database.
 
         Args:
-            type (str): Type of messages "adsb" or "rollcall"
+            source (str): Source of messages "adsb" or "rollcall"
             start (str): Start of time period with format YYYY-MM-DD HH:MM:SS
             end (str): End of time period with format YYYY-MM-DD HH:MM:SS
             icao24 (str or list): Filter of one or a list of IACO addresses, default to None
@@ -98,14 +98,14 @@ class OpenskyImpalaWrapper(SSHClient):
         hour_start = ts_start // 3600 * 3600
         hour_end = (ts_end // 3600 + 1) * 3600
 
-        if type == "adsb":
+        if source == "adsb":
             table = "state_vectors_data4"
             time_col = "time"
-        elif type == "rollcall":
+        elif source == "rollcall":
             table = "rollcall_replies_data4"
             time_col = "mintime"
         else:
-            raise RuntimeError("Unknown query type: {}".format(type))
+            raise RuntimeError("Unknown query source: {}".format(source))
 
         if isinstance(icao24, str):
             icaos = [icao24.lower()]
@@ -115,7 +115,7 @@ class OpenskyImpalaWrapper(SSHClient):
             icaos = None
 
         # for rollcall queries with bound filter
-        if (type == "rollcall") and (bound is not None):
+        if (source == "rollcall") and (bound is not None):
             print("** You are query rollcall messages with boundary.")
             print("** An ADS-B query will be performed to get ICAO codes.")
 

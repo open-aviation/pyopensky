@@ -93,7 +93,7 @@ The ``OpenskyImpalaWrapper`` class can be used to download raw messages, and ADS
 Perform Mode S roll-call queries
 ++++++++++++++++++++++++++++++++
 
-By defined the query type as ``type="rollcall"``, the rollcall Mode S message can be obtained. For example:
+By defined the query type as ``source="rollcall"``, the rollcall Mode S message can be obtained. For example:
 
 .. code-block:: python
 
@@ -103,12 +103,12 @@ By defined the query type as ``type="rollcall"``, the rollcall Mode S message ca
 
   # Perform a simple and massive query (~20k records for 1 second here!)
   df = opensky.query(
-      type="rollcall", start="2018-07-01 13:00:00", end="2018-07-01 13:00:01"
+      source="rollcall", start="2018-07-01 13:00:00", end="2018-07-01 13:00:01"
   )
 
   # Perform a query with ICAO filter
   df = opensky.query(
-      type="rollcall",
+      source="rollcall",
       start="2018-07-01 13:00:00",
       end="2018-07-01 13:00:10",
       icao24=["424588", "3c66a9"],
@@ -118,7 +118,7 @@ By defined the query type as ``type="rollcall"``, the rollcall Mode S message ca
 Perform ADS-B (state vector) queries
 ++++++++++++++++++++++++++++++++++++
 
-By switching the query type from ``type="rollcall"`` to ``type="adsb"``, you can obtained the history ADS-B information (state vectors) in a similar way. You can also add a boundary (with the format of ``[lat1, lon1, lat2, lon2]``) to the queries. For example:
+By switching the query type from ``source="rollcall"`` to ``source="adsb"``, you can obtained the history ADS-B information (state vectors) in a similar way. You can also add a boundary (with the format of ``[lat1, lon1, lat2, lon2]``) to the queries. For example:
 
 .. code-block:: python
 
@@ -128,12 +128,12 @@ By switching the query type from ``type="rollcall"`` to ``type="adsb"``, you can
 
   # Perform a simple and massive query (~25k records for 5 second here!)
   df = opensky.query(
-      type="adsb", start="2018-08-01 13:00:00", end="2018-08-01 13:00:10"
+      source="adsb", start="2018-08-01 13:00:00", end="2018-08-01 13:00:10"
   )
 
   # Perform a query with ICAO address filter
   df = opensky.query(
-      type="adsb",
+      source="adsb",
       start="2018-07-01 13:00:00",
       end="2018-07-01 13:00:10",
       icao24=["424588", "3c66a9"],

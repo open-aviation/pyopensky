@@ -25,7 +25,7 @@ class MeteoHelper(object):
         """
 
         df = self.opensky.query(
-            type="raw", start=start, end=end, icao24=icao24, bound=bound
+            source="raw", start=start, end=end, icao24=icao24, bound=bound
         )
 
         if df is None:
