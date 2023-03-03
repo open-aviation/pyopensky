@@ -1,5 +1,4 @@
 # %%
-# %%
 from pyopensky.trino import Trino
 
 import pandas as pd
