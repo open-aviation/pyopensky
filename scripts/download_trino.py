@@ -1,4 +1,5 @@
 # %%
+
 from pyopensky.trino import Trino
 
 import pandas as pd
@@ -9,5 +10,4 @@ df = opensky.query(
     "where 43 < lat and lat < 44 and 1 < lon and lon < 2 "
     f"and hour = {pd.Timestamp('2023-02-12 12:00Z').timestamp():.0f}"
 )
-
-# %%
+df

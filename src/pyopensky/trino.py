@@ -1,9 +1,17 @@
 from __future__ import annotations
 
-from typing import Any, TypedDict, cast
+import time
+from multiprocessing.pool import ThreadPool
+from typing import Any, Iterable, TypedDict, cast
 
 import requests
-from sqlalchemy import Connection, create_engine
+from sqlalchemy import (
+    Connection,
+    CursorResult,
+    Engine,
+    TextClause,
+    create_engine,
+)
 from sqlalchemy.sql.expression import text
 from tqdm import tqdm
 from trino.auth import JWTAuthentication  # , OAuth2Authentication
@@ -34,7 +42,7 @@ class Trino:
         result.raise_for_status()
         return cast(Token, result.json())
 
-    def connection(self) -> Connection:
+    def engine(self) -> Engine:
         token = self.token()
         engine = create_engine(
             URL(
@@ -50,22 +58,52 @@ class Trino:
                 http_scheme="https",
             ),
         )
-        return engine.connect().execution_options(stream_results=True)
+        return engine
 
-    def query(self, query: str) -> pd.DataFrame:
-        results = []
-        for chunk in tqdm(
-            pd.read_sql_query(
-                text(query),
-                self.connection(),
-                chunksize=2**20,
-                parse_dates={
-                    "time": {"utc": True, "unit": "s"},
-                    "lastposupdate": {"utc": True, "unit": "s"},
-                    "lastcontact": {"utc": True, "unit": "s"},
-                    "hour": {"utc": True, "unit": "s"},
-                },
-            )
-        ):
-            results.append(chunk)
-        return pd.concat(results)
+    def connect(self) -> Connection:
+        return self.engine().connect()
+
+    def query(self, query: str | TextClause) -> pd.DataFrame:
+        exec_kw = dict(stream_results=True)  # not sure this option is necessary
+        if isinstance(query, str):
+            query = text(query)
+        with self.connect().execution_options(**exec_kw) as connect:
+            # There are steps here, that will not appear in the progress bar
+            # but that you can check on https://trino.opensky-network.org/ui/
+            return pd.concat(self.process_result(connect.execute(query)))
+
+    def process_result(
+        self,
+        res: CursorResult[Any],
+        batch_size: int = 50_000,
+    ) -> Iterable[pd.DataFrame]:
+        pool = ThreadPool(processes=1)
+        async_result = pool.apply_async(res.fetchmany, (batch_size,))
+        percentage = 0
+
+        with tqdm(unit="%", unit_scale=True) as processing_bar:
+            while not async_result.ready():
+                processing_bar.set_description(res.cursor.stats["state"])
+                increment = res.cursor.stats["progressPercentage"] - percentage
+                percentage = res.cursor.stats["progressPercentage"]
+                processing_bar.update(increment)
+
+                time.sleep(0.1)
+
+            increment = res.cursor.stats["progressPercentage"] - percentage
+            percentage = res.cursor.stats["progressPercentage"]
+            processing_bar.set_description(res.cursor.stats["state"])
+
+        with tqdm(
+            unit="lines", unit_scale=True, desc="DOWNLOAD"
+        ) as download_bar:
+            sequence_rows = async_result.get()
+            download_bar.update(len(sequence_rows))
+            yield pd.DataFrame.from_records(sequence_rows, columns=res.keys())
+
+            while len(sequence_rows) == batch_size:
+                sequence_rows = res.fetchmany(batch_size)
+                download_bar.update(len(sequence_rows))
+                yield pd.DataFrame.from_records(
+                    sequence_rows, columns=res.keys()
+                )
