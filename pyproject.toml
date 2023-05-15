@@ -18,6 +18,7 @@ minio = ">=7.1"
 appdirs = "^1.4.4"
 tqdm = "^4.65.0"
 pyarrow = "^11.0.0"
+typing-extensions = "^4.5.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.1.1"

@@ -1,19 +1,27 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 from typing import Any
 
+import urllib3
 from minio import Minio, datatypes
 from tqdm import tqdm
+
+_log = logging.getLogger(__name__)
 
 
 class S3Client:
     def __init__(self, **kwargs: Any) -> None:
-        from .config import access_key, secret_key
+        from .config import access_key, http_proxy, secret_key
 
-        super().__init__(**kwargs)
+        super().__init__()
+
+        if http_proxy is not None:
+            _log.info(f"Using http_proxy: {http_proxy}")
+            kwargs["http_client"] = urllib3.ProxyManager(http_proxy)
 
         self.s3client = Minio(
             "s3.opensky-network.org:443",
@@ -22,21 +30,56 @@ class S3Client:
             **kwargs,
         )
 
-    def table_v4(
+    def list_objects(
         self,
         hour: datetime,
-        table_v4: str = "state_vectors",
+        table: str = "state_vectors",
+        folder: str = "tables_v4",
         **kwargs: Any,
     ) -> datatypes.Object:
+        """
+        Iterates over all files in the specified folder in the s3 object store.
+
+        :param hour: will be converted to a timestamp, should be a UTC day for
+            the flights table
+        :param table: one of `flights`, `identification`, `operational_status`,
+            `position`, `rollcall_replies`, `state_vectors`, `velocity`
+        :param folder: one of `tables_v4`, `tables_v5`
+
+        With `tables_v4`, the tables follow the pattern below:
+            - `flights/day=`
+            - `identification/hour=`
+            - `operational_status/hour=`
+            - `position/hour=`
+            - `rollcall_replies/hour=`
+            - `state_vectors/hour=`
+            - `velocity/hour=`
+
+        With tables_v5, the tables follow the pattern below:
+            - `flights/day=`
+
+        """
+
+        granularity = "day" if table == "flights" else "hour"
+        # the other folder is opensky-network-atc-audio
         yield from self.s3client.list_objects(
             "opensky-hdfs-backup",
-            prefix=f"tables_v4/{table_v4}/hour={hour.timestamp():.0f}",
+            prefix=f"{folder}/{table}/{granularity}={hour.timestamp():.0f}",
             **kwargs,
         )
 
     def download_object(
-        self, obj: datatypes.Object, filename: None | Path
+        self,
+        obj: datatypes.Object,
+        filename: None | Path,
     ) -> Path:
+        """
+        Download files from the s3 object store.
+
+        :param obj: object returned by returned by :meth S3Client.list_objects:
+        :param filename: If `None`, writes the file in current folder.
+            Otherwise, if a folder, writes the file in the given folder.
+        """
         total_size = obj.size
         buffer = BytesIO()
 
