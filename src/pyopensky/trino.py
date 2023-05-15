@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import functools
 import time
 from datetime import timedelta
 from multiprocessing.pool import ThreadPool
+from operator import or_
 from typing import Any, Iterable, Tuple, TypedDict, cast
 
 import requests
@@ -15,6 +17,7 @@ from sqlalchemy import (
     create_engine,
     select,
 )
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.sql.expression import text
 from tqdm import tqdm
 from trino.auth import JWTAuthentication, OAuth2Authentication
@@ -119,6 +122,27 @@ class Trino:
 
     ## Specific queries
 
+    def stmt_where_str(
+        self,
+        stmt: Select[Any],
+        value: None | str | list[str],
+        *attr: InstrumentedAttribute[str],
+    ) -> Select[Any]:
+        if len(attr) == 0:
+            return stmt
+        if isinstance(value, str):
+            if value.find("%") >= 0 or value.find("_") >= 0:
+                like = functools.reduce(or_, (a.like(value) for a in attr))
+                stmt = stmt.where(like)
+            else:
+                equal = functools.reduce(or_, (a == value for a in attr))
+                stmt = stmt.where(equal)
+        elif isinstance(value, Iterable):
+            is_in = functools.reduce(or_, (a.in_(list(value)) for a in attr))
+            stmt = stmt.where(is_in)
+        # stmt = stmt.where(attr.in_(list(value)))
+        return stmt
+
     def flightlist(
         self,
         start: timelike,
@@ -197,53 +221,28 @@ class Trino:
             FlightsData4.day,
         )
 
-        if isinstance(icao24, str):
-            if icao24.find("%") or icao24.find("_"):
-                stmt = stmt.where(FlightsData4.icao24.like(icao24))
-            else:
-                stmt = stmt.where(FlightsData4.icao24 == icao24)
-        elif isinstance(icao24, Iterable):
-            stmt = stmt.where(FlightsData4.icao24.in_(list(icao24)))
-
-        if isinstance(callsign, str):
-            if callsign.find("%") >= 0 or callsign.find("_") >= 0:
-                stmt = stmt.where(FlightsData4.callsign.like(callsign))
-            else:
-                print(f"{callsign=}")
-                stmt = stmt.where(FlightsData4.callsign == callsign)
-        elif isinstance(callsign, Iterable):
-            stmt = stmt.where(FlightsData4.callsign.in_(list(callsign)))
-
-        if isinstance(departure_airport, str):
-            if (
-                departure_airport.find("%") >= 0
-                or departure_airport.find("_") >= 0
-            ):
-                stmt = stmt.where(
-                    FlightsData4.estdepartureairport.like(departure_airport)
-                )
-            else:
-                stmt = stmt.where(
-                    FlightsData4.estdepartureairport == departure_airport
-                )
-        elif isinstance(departure_airport, Iterable):
-            stmt = stmt.where(
-                FlightsData4.estdepartureairport.in_(list(departure_airport))
-            )
-
-        if isinstance(arrival_airport, str):
-            if arrival_airport.find("%") >= 0 or arrival_airport.find("_") >= 0:
-                stmt = stmt.where(
-                    FlightsData4.estarrivalairport.like(arrival_airport)
-                )
-            else:
-                stmt = stmt.where(
-                    FlightsData4.estarrivalairport == arrival_airport
-                )
-        elif isinstance(arrival_airport, Iterable):
-            stmt = stmt.where(
-                FlightsData4.estarrivalairport.in_(list(arrival_airport))
-            )
+        stmt = self.stmt_where_str(stmt, icao24, FlightsData4.icao24)
+        stmt = self.stmt_where_str(stmt, callsign, FlightsData4.callsign)
+        stmt = self.stmt_where_str(
+            stmt,
+            departure_airport,
+            FlightsData4.estdepartureairport,
+        )
+        stmt = self.stmt_where_str(
+            stmt,
+            arrival_airport,
+            FlightsData4.estarrivalairport,
+        )
+        if airport is not None and arrival_airport is not None:
+            raise RuntimeError("airport may not be set if arrival_airport is")
+        if airport is not None and departure_airport is not None:
+            raise RuntimeError("airport may not be set if departure_airport is")
+        stmt = self.stmt_where_str(
+            stmt,
+            arrival_airport,
+            FlightsData4.estdepartureairport,
+            FlightsData4.estarrivalairport,
+        )
 
         if departure_airport is not None:
             stmt = stmt.where(
@@ -268,11 +267,9 @@ class Trino:
         if res.shape[0] == 0:
             return None
 
-        return res.sort_values(
-            "firstseen" if departure_airport is not None else "lastseen"
-        ).rename(
+        return res.rename(
             columns=dict(
-                estarrivalairport="destination",
-                estdepartureairport="origin",
+                estarrivalairport="arrival",
+                estdepartureairport="departure",
             )
         )

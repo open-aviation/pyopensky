@@ -43,7 +43,7 @@ class UTCTimestampInteger(TypeDecorator[pd.Timestamp]):
         return super().process_result_value(value, dialect)
 
 
-class CallsignString8(TypeDecorator[str]):
+class CallsignString(TypeDecorator[str]):
     """Automatic coercing of callsigns into 8-char left padded strings.
 
     Callsigns are decoded as 8 character strings, filled with spaces if needed.
@@ -96,7 +96,7 @@ class TrackRow:
 
 
 @dataclass
-class AirportCandidate:
+class AirportCandidateRow:
     icao24: str
     horizdistance: int
     vertdistance: int
@@ -122,14 +122,18 @@ class AirportCandidateType(TypeDecorator[List[Dict[str, Any]]]):
         if value is None:
             return []
         if isinstance(value, list):
-            return list(asdict(AirportCandidate(*row)) for row in value)
+            return list(asdict(AirportCandidateRow(*row)) for row in value)
         return super().process_result_value(value, dialect)
 
 
-AirportCandidates = List[AirportCandidate]
+## Descriptions of tables are below
+## For each table, indicate its type in Python and on the SQL side
+## For some types, the conversion is automatic (see `type_annotation_map`)
+
+AirportCandidates = List[AirportCandidateRow]
 Track = List[TrackRow]
 
-Callsign = Annotated[str, mapped_column(CallsignString8)]
+Callsign = Annotated[str, mapped_column(CallsignString)]
 
 
 class Base(DeclarativeBase):
@@ -137,7 +141,7 @@ class Base(DeclarativeBase):
         pd.Timestamp: UTCTimestampInteger,
         AirportCandidates: AirportCandidateType,
         Track: TrackType,
-        Callsign: CallsignString8,
+        Callsign: CallsignString,
     }
 
 

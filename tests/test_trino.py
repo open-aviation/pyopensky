@@ -1,5 +1,3 @@
-# %%
-
 from pyopensky.schema import FlightsData4
 from pyopensky.trino import Trino
 from sqlalchemy import select
@@ -59,7 +57,7 @@ def test_flightlist() -> None:
         departure_airport="LFPG",
     )
     assert df is not None
-    assert df.destination.max() == "RJBB"
+    assert df.arrival.max() == "RJBB"
 
     df = opensky.flightlist(
         "2023-01-01",
