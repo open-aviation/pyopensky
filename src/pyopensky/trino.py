@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import functools
+import hashlib
+import logging
 import time
-from datetime import timedelta
 from multiprocessing.pool import ThreadPool
 from operator import or_
-from typing import Any, Iterable, Tuple, TypedDict, cast
+from typing import Any, Iterable, TypedDict
 
+import jwt
 import requests
 from sqlalchemy import (
     Connection,
@@ -25,19 +27,38 @@ from trino.sqlalchemy import URL
 
 import pandas as pd
 
-from .config import password, username
+from .config import cache_path, password, username
 from .schema import FlightsData4
 from .time import timelike, to_datetime
+
+_log = logging.getLogger(__name__)
 
 
 class Token(TypedDict):
     access_token: str
+    iat: int
+    exp: int
 
 
 class Trino:
-    def token(self, **kwargs: Any) -> None | Token:
+    _token: None | Token = None
+
+    def token(self, **kwargs: Any) -> None | str:
         if username is None or password is None:
+            _log.warn(
+                "No credentials provided, "
+                "falling back to browser authentication"
+            )
+            self._token = None
             return None
+
+        # take a little margin (one minute)
+        now = pd.Timestamp("now", tz="utc") - pd.Timedelta("1 min")
+        if self._token is not None and self._token["exp"] < now.timestamp():
+            _log.info(f"Token still valid until {self._token['exp']}")
+            return self._token["access_token"]
+
+        _log.info("Requesting authentication token")
         result = requests.post(
             "https://auth.opensky-network.org/auth/realms/"
             "opensky-network/protocol/openid-connect/token",
@@ -50,7 +71,15 @@ class Trino:
             **kwargs,
         )
         result.raise_for_status()
-        return cast(Token, result.json())
+        payload = result.json()
+        self._token = {  # type: ignore
+            **payload,  # type: ignore
+            **jwt.decode(
+                payload["access_token"],
+                options={"verify_signature": False},
+            ),
+        }
+        return payload["access_token"]  # type: ignore
 
     def engine(self) -> Engine:
         token = self.token()
@@ -63,7 +92,7 @@ class Trino:
                 schema="osky",
             ),
             connect_args=dict(
-                auth=JWTAuthentication(token["access_token"])
+                auth=JWTAuthentication(token)
                 if token is not None
                 else OAuth2Authentication(),
                 http_scheme="https",
@@ -74,14 +103,36 @@ class Trino:
     def connect(self) -> Connection:
         return self.engine().connect()
 
-    def query(self, query: str | TextClause | Select[Any]) -> pd.DataFrame:
-        exec_kw = dict(stream_results=True)  # not sure this option is necessary
+    def query(
+        self,
+        query: str | TextClause | Select[Any],
+        cached: bool = True,
+        compress: bool = False,
+    ) -> pd.DataFrame:
+        exec_kw = dict(stream_results=True)
         if isinstance(query, str):
             query = text(query)
+
+        query_str = f"{(s := query.compile())}\n{s.params}"
+        digest = hashlib.md5(query_str.encode("utf8")).hexdigest()
+        suffix = ".parquet.gz" if compress else ".parquet"
+        if (cache_file := (cache_path / digest).with_suffix(suffix)).exists():
+            if cached:
+                _log.info(f"Reading results from {cache_file}")
+                return pd.read_parquet(cache_file)
+            else:
+                cache_file.unlink(missing_ok=True)
+
         with self.connect().execution_options(**exec_kw) as connect:
             # There are steps here, that will not appear in the progress bar
             # but that you can check on https://trino.opensky-network.org/ui/
-            return pd.concat(self.process_result(connect.execute(query)))
+            res = pd.concat(self.process_result(connect.execute(query)))
+
+        if cached:
+            _log.info(f"Saving results to {cache_file}")
+            res.to_parquet(cache_file)
+
+        return res
 
     def process_result(
         self,
@@ -140,7 +191,6 @@ class Trino:
         elif isinstance(value, Iterable):
             is_in = functools.reduce(or_, (a.in_(list(value)) for a in attr))
             stmt = stmt.where(is_in)
-        # stmt = stmt.where(attr.in_(list(value)))
         return stmt
 
     def flightlist(
@@ -205,11 +255,12 @@ class Trino:
 
         """
 
-        start = to_datetime(start)
-        if stop is not None:
-            stop = to_datetime(stop)
-        else:
-            stop = start + timedelta(days=1)
+        start_ts = to_datetime(start)
+        stop_ts = (
+            to_datetime(stop)
+            if stop is not None
+            else start_ts + pd.Timedelta("1d")
+        )
 
         stmt = select(FlightsData4).with_only_columns(
             FlightsData4.icao24,
@@ -246,23 +297,23 @@ class Trino:
 
         if departure_airport is not None:
             stmt = stmt.where(
-                FlightsData4.firstseen >= start,
-                FlightsData4.firstseen <= stop,
-                FlightsData4.day >= pd.to_datetime(start).floor("1d"),
-                FlightsData4.day < pd.to_datetime(stop).ceil("1d"),
+                FlightsData4.firstseen >= start_ts,
+                FlightsData4.firstseen <= stop_ts,
+                FlightsData4.day >= start_ts.floor("1d"),
+                FlightsData4.day < stop_ts.ceil("1d"),
             )
         else:
             stmt = stmt.where(
-                FlightsData4.lastseen >= start,
-                FlightsData4.lastseen <= stop,
-                FlightsData4.day >= pd.to_datetime(start).floor("1d"),
-                FlightsData4.day < pd.to_datetime(stop).ceil("1d"),
+                FlightsData4.lastseen >= start_ts,
+                FlightsData4.lastseen <= stop_ts,
+                FlightsData4.day >= start_ts.floor("1d"),
+                FlightsData4.day < stop_ts.ceil("1d"),
             )
 
         if limit is not None:
             stmt = stmt.limit(limit)
 
-        res = self.query(stmt)
+        res = self.query(stmt, cached=cached, compress=compress)
 
         if res.shape[0] == 0:
             return None

@@ -31,7 +31,8 @@ def test_query() -> None:
         .where(FlightsData4.day < "2023-02-01")
         .where(FlightsData4.estarrivalairport != None)
         .order_by(FlightsData4.firstseen)
-        .limit(50)
+        .limit(50),
+        cached=False,
     )
     assert res.shape[0] == 10
     assert res.callsign.max() == "AFR291"
@@ -57,7 +58,7 @@ def test_flightlist() -> None:
         departure_airport="LFPG",
     )
     assert df is not None
-    assert df.arrival.max() == "RJBB"
+    assert df.destination.max() == "RJBB"
 
     df = opensky.flightlist(
         "2023-01-01",
