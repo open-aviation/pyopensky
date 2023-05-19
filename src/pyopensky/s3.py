@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator, Literal, overload
 
 import urllib3
 from minio import Minio, datatypes
@@ -36,7 +36,7 @@ class S3Client:
         table: str = "state_vectors",
         folder: str = "tables_v4",
         **kwargs: Any,
-    ) -> datatypes.Object:
+    ) -> Iterator[datatypes.Object]:
         """
         Iterates over all files in the specified folder in the s3 object store.
 
@@ -55,24 +55,53 @@ class S3Client:
             - `state_vectors/hour=`
             - `velocity/hour=`
 
-        With tables_v5, the tables follow the pattern below:
+        With `tables_v5`, the tables follow the pattern below:
             - `flights/day=`
+
+        With `raw`, the tables follow the pattern below:
+            - ads-b.mode-s-v2/year/month/day/hour
+            - flarm-v1.avro/year/month/day/hour
 
         """
 
+        if folder == "raw":
+            yield from self.s3client.list_objects(
+                "opensky-hdfs-backup",
+                prefix=f"{folder}/{table}/{hour:%Y/%m/%d/%H}",
+                **kwargs,
+            )
+
         granularity = "day" if table == "flights" else "hour"
-        # the other folder is opensky-network-atc-audio
         yield from self.s3client.list_objects(
             "opensky-hdfs-backup",
             prefix=f"{folder}/{table}/{granularity}={hour.timestamp():.0f}",
             **kwargs,
         )
 
+    @overload
     def download_object(
         self,
         obj: datatypes.Object,
         filename: None | Path,
+        return_buffer: Literal[False],
     ) -> Path:
+        ...
+
+    @overload
+    def download_object(
+        self,
+        obj: datatypes.Object,
+        filename: None | Path,
+        return_buffer: Literal[True],
+    ) -> BytesIO:
+        ...
+
+    def download_object(
+        self,
+        obj: datatypes.Object,
+        filename: None | Path = None,
+        return_buffer: bool = False,
+    ) -> BytesIO | Path:
         """
         Download files from the s3 object store.
 
@@ -93,6 +122,9 @@ class S3Client:
             buffer.write(t.data)
 
         buffer.seek(0)
+
+        if return_buffer:
+            return buffer
 
         dirname = None
         if filename is not None and filename.is_dir():
