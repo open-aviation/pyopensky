@@ -83,6 +83,14 @@ class S3Client:
         self,
         obj: datatypes.Object,
         filename: None | Path,
+    ) -> Path:
+        ...
+
+    @overload
+    def download_object(
+        self,
+        obj: datatypes.Object,
+        filename: None | Path,
         return_buffer: Literal[False],
     ) -> Path:
         ...
