@@ -3,9 +3,9 @@ from __future__ import annotations
 import operator
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Protocol
 
-from sqlalchemy import ARRAY, Integer, String, TypeDecorator
+from sqlalchemy import ARRAY, Float, Integer, String, TypeDecorator
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.sql import operators as sql_operators
@@ -41,6 +41,28 @@ class UTCTimestampInteger(TypeDecorator[pd.Timestamp]):
         if isinstance(value, (int, float)):
             return pd.to_datetime(value, unit="s", utc=True)
         return super().process_result_value(value, dialect)
+
+
+class UTCTimestampFloat(TypeDecorator[pd.Timestamp]):
+    """Automatic coercing of UTC timestamps into and from float.
+
+    In OpenSky databases, timestamps are all encoded as a number of seconds
+    since the epoch.
+
+    The data here is not converted back to pd.Timestamp as it conflicts with
+    saving to parquet files.
+    """
+
+    impl = Float
+
+    def process_bind_param(
+        self, value: str | datetime | pd.Timestamp | None, dialect: Dialect
+    ) -> Any:
+        if isinstance(value, (str, datetime)):
+            value = pd.to_datetime(value, utc=True)
+        if isinstance(value, pd.Timestamp):
+            return float(value.timestamp())
+        return super().process_bind_param(value, dialect)
 
 
 class CallsignString(TypeDecorator[str]):
@@ -126,12 +148,33 @@ class AirportCandidateType(TypeDecorator[List[Dict[str, Any]]]):
         return super().process_result_value(value, dialect)
 
 
+@dataclass
+class SensorRow:
+    serial: int
+    mintime: float
+    maxtime: float
+
+
+class SensorsType(TypeDecorator[List[Dict[str, Any]]]):
+    impl = ARRAY(String)
+
+    def process_result_value(
+        self, value: Any | None, dialect: Dialect
+    ) -> List[Dict[str, Any]] | None:
+        if value is None:
+            return []
+        if isinstance(value, list):
+            return list(asdict(SensorRow(*row)) for row in value)
+        return super().process_result_value(value, dialect)
+
+
 ## Descriptions of tables are below
 ## For each table, indicate its type in Python and on the SQL side
 ## For some types, the conversion is automatic (see `type_annotation_map`)
 
 AirportCandidates = List[AirportCandidateRow]
 Track = List[TrackRow]
+Sensors = List[SensorRow]
 
 Callsign = Annotated[str, mapped_column(CallsignString)]
 
@@ -142,6 +185,7 @@ class Base(DeclarativeBase):
         AirportCandidates: AirportCandidateType,
         Track: TrackType,
         Callsign: CallsignString,
+        Sensors: SensorsType,
     }
 
 
@@ -225,3 +269,209 @@ class FlightsData5(Base):
     #   - this is not true
     #   - we still need one column with a primary key
     day: Mapped[pd.Timestamp] = mapped_column(primary_key=True)
+
+
+class RawTable(Protocol):
+    sensors: Mapped[Sensors]
+    rawmsg: Mapped[str]
+    mintime: Mapped[pd.Timestamp]
+    maxtime: Mapped[pd.Timestamp]
+    msgcount: Mapped[int]
+    icao24: Mapped[str]
+    message: Mapped[str]
+    isid: Mapped[bool]
+    flightstatus: Mapped[int]
+    downlinkrequest: Mapped[int]
+    utilitymsg: Mapped[int]
+    interrogatorid: Mapped[int]
+    identifierdesignator: Mapped[int]
+    valuecode: Mapped[int]
+    altitude: Mapped[float]
+    identity: Mapped[str]
+
+    # Whatever, we pick this one as primary key BUT
+    #   - this is not true
+    #   - we still need one column with a primary key
+    hour: Mapped[pd.Timestamp] = mapped_column(primary_key=True)
+
+
+class AcasData4(Base):
+    __tablename__ = "acas_data4"
+
+    sensors: Mapped[Sensors]
+    rawmsg: Mapped[str]
+    mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
+    maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
+    msgcount: Mapped[int]
+    icao24: Mapped[str]
+    message: Mapped[str]
+    isid: Mapped[bool]
+    flightstatus: Mapped[int]
+    downlinkrequest: Mapped[int]
+    utilitymsg: Mapped[int]
+    interrogatorid: Mapped[int]
+    identifierdesignator: Mapped[int]
+    valuecode: Mapped[int]
+    altitude: Mapped[float]
+    identity: Mapped[str]
+
+    # Whatever, we pick this one as primary key BUT
+    #   - this is not true
+    #   - we still need one column with a primary key
+    hour: Mapped[pd.Timestamp] = mapped_column(primary_key=True)
+
+
+class AllcallRepliesData4(Base):
+    __tablename__ = "allcall_replies_data4"
+
+    sensors: Mapped[Sensors]
+    rawmsg: Mapped[str]
+    mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
+    maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
+    msgcount: Mapped[int]
+    icao24: Mapped[str]
+    message: Mapped[str]
+    isid: Mapped[bool]
+    flightstatus: Mapped[int]
+    downlinkrequest: Mapped[int]
+    utilitymsg: Mapped[int]
+    interrogatorid: Mapped[int]
+    identifierdesignator: Mapped[int]
+    valuecode: Mapped[int]
+    altitude: Mapped[float]
+    identity: Mapped[str]
+
+    # Whatever, we pick this one as primary key BUT
+    #   - this is not true
+    #   - we still need one column with a primary key
+    hour: Mapped[pd.Timestamp] = mapped_column(primary_key=True)
+
+
+class IdentificationData4(Base):
+    __tablename__ = "identification_data4"
+
+    sensors: Mapped[Sensors]
+    rawmsg: Mapped[str]
+    mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
+    maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
+    msgcount: Mapped[int]
+    icao24: Mapped[str]
+    message: Mapped[str]
+    isid: Mapped[bool]
+    flightstatus: Mapped[int]
+    downlinkrequest: Mapped[int]
+    utilitymsg: Mapped[int]
+    interrogatorid: Mapped[int]
+    identifierdesignator: Mapped[int]
+    valuecode: Mapped[int]
+    altitude: Mapped[float]
+    identity: Mapped[str]
+
+    # Whatever, we pick this one as primary key BUT
+    #   - this is not true
+    #   - we still need one column with a primary key
+    hour: Mapped[pd.Timestamp] = mapped_column(primary_key=True)
+
+
+class OperationalStatusData4(Base):
+    __tablename__ = "operational_status_data4"
+
+    sensors: Mapped[Sensors]
+    rawmsg: Mapped[str]
+    mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
+    maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
+    msgcount: Mapped[int]
+    icao24: Mapped[str]
+    message: Mapped[str]
+    isid: Mapped[bool]
+    flightstatus: Mapped[int]
+    downlinkrequest: Mapped[int]
+    utilitymsg: Mapped[int]
+    interrogatorid: Mapped[int]
+    identifierdesignator: Mapped[int]
+    valuecode: Mapped[int]
+    altitude: Mapped[float]
+    identity: Mapped[str]
+
+    # Whatever, we pick this one as primary key BUT
+    #   - this is not true
+    #   - we still need one column with a primary key
+    hour: Mapped[pd.Timestamp] = mapped_column(primary_key=True)
+
+
+class PositionData4(Base):
+    __tablename__ = "position_data4"
+
+    sensors: Mapped[Sensors]
+    rawmsg: Mapped[str]
+    mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
+    maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
+    msgcount: Mapped[int]
+    icao24: Mapped[str]
+    message: Mapped[str]
+    isid: Mapped[bool]
+    flightstatus: Mapped[int]
+    downlinkrequest: Mapped[int]
+    utilitymsg: Mapped[int]
+    interrogatorid: Mapped[int]
+    identifierdesignator: Mapped[int]
+    valuecode: Mapped[int]
+    altitude: Mapped[float]
+    identity: Mapped[str]
+
+    # Whatever, we pick this one as primary key BUT
+    #   - this is not true
+    #   - we still need one column with a primary key
+    hour: Mapped[pd.Timestamp] = mapped_column(primary_key=True)
+
+
+class RollcallRepliesData4(Base):
+    __tablename__ = "rollcall_replies_data4"
+
+    sensors: Mapped[Sensors]
+    rawmsg: Mapped[str]
+    mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
+    maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
+    msgcount: Mapped[int]
+    icao24: Mapped[str]
+    message: Mapped[str]
+    isid: Mapped[bool]
+    flightstatus: Mapped[int]
+    downlinkrequest: Mapped[int]
+    utilitymsg: Mapped[int]
+    interrogatorid: Mapped[int]
+    identifierdesignator: Mapped[int]
+    valuecode: Mapped[int]
+    altitude: Mapped[float]
+    identity: Mapped[str]
+
+    # Whatever, we pick this one as primary key BUT
+    #   - this is not true
+    #   - we still need one column with a primary key
+    hour: Mapped[pd.Timestamp] = mapped_column(primary_key=True)
+
+
+class VelocityData4(Base):
+    __tablename__ = "velocity_data4"
+
+    sensors: Mapped[Sensors]
+    rawmsg: Mapped[str]
+    mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
+    maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
+    msgcount: Mapped[int]
+    icao24: Mapped[str]
+    message: Mapped[str]
+    isid: Mapped[bool]
+    flightstatus: Mapped[int]
+    downlinkrequest: Mapped[int]
+    utilitymsg: Mapped[int]
+    interrogatorid: Mapped[int]
+    identifierdesignator: Mapped[int]
+    valuecode: Mapped[int]
+    altitude: Mapped[float]
+    identity: Mapped[str]
+
+    # Whatever, we pick this one as primary key BUT
+    #   - this is not true
+    #   - we still need one column with a primary key
+    hour: Mapped[pd.Timestamp] = mapped_column(primary_key=True)

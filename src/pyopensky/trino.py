@@ -6,7 +6,7 @@ import logging
 import time
 from multiprocessing.pool import ThreadPool
 from operator import or_
-from typing import Any, Iterable, Protocol, TypedDict, cast
+from typing import Any, Iterable, Protocol, Type, TypedDict, cast
 
 import jwt
 import requests
@@ -30,7 +30,12 @@ from trino.sqlalchemy import URL
 import pandas as pd
 
 from .config import cache_path, password, username
-from .schema import FlightsData4, StateVectorsData4
+from .schema import (
+    FlightsData4,
+    RawTable,
+    RollcallRepliesData4,
+    StateVectorsData4,
+)
 from .time import timelike, to_datetime
 
 _log = logging.getLogger(__name__)
@@ -335,7 +340,7 @@ class Trino:
         self,
         start: timelike,
         stop: None | timelike = None,
-        *args: Any,  # more reasonable to be explicit about arguments
+        *args: Any,
         # date_delta: timedelta = timedelta(hours=1),
         callsign: None | str | list[str] = None,
         icao24: None | str | list[str] = None,
@@ -527,11 +532,260 @@ class Trino:
                     )
                 )
 
+        for condition in args:
+            stmt = stmt.where(condition)
+
         stmt = stmt.where(
             StateVectorsData4.time >= start_ts,
             StateVectorsData4.time <= stop_ts,
             StateVectorsData4.hour >= start_ts.floor("1H"),
             StateVectorsData4.hour < stop_ts.ceil("1H"),
+        )
+
+        if limit is not None:
+            stmt = stmt.limit(limit)
+
+        res = self.query(stmt, cached=cached, compress=compress)
+
+        if res.shape[0] == 0:
+            return None
+
+        return res
+
+    def rawdata(
+        self,
+        start: timelike,
+        stop: None | timelike = None,
+        Table: Type[RawTable] = RollcallRepliesData4,
+        *args: Any,  # more reasonable to be explicit about arguments
+        icao24: None | str | list[str] = None,
+        serials: None | int | Iterable[int] = None,
+        bounds: None | HasBounds | tuple[float, float, float, float] = None,
+        callsign: None | str | list[str] = None,
+        departure_airport: None | str = None,
+        arrival_airport: None | str = None,
+        airport: None | str = None,
+        cached: bool = True,
+        compress: bool = False,
+        limit: None | int = None,
+    ) -> None | pd.DataFrame:
+        """Get raw message from the OpenSky Impala shell.
+
+        You may pass requests based on time ranges, callsigns, aircraft, areas,
+        serial numbers for receivers, or airports of departure or arrival.
+
+        The method builds appropriate SQL requests, caches results and formats
+        data into a proper pandas DataFrame. Requests are split by hour (by
+        default) in case the connection fails.
+
+
+        :param start: a string (default to UTC), epoch or datetime (native
+            Python or pandas)
+        :param stop: a string (default to UTC), epoch or datetime (native Python
+            or pandas), *by default, one day after start*
+        :param table_name: one or several of Impala tables (listed in
+            `opensky._raw_tables`)
+        :param date_delta: a timedelta representing how to split the requests,
+            *by default: per hour*
+
+        More arguments to filter resulting data:
+
+        :param callsign: a string or a list of strings (wildcards
+            accepted, _ for any character, % for any sequence of characters);
+        :param icao24: a string or a list of strings identifying the transponder
+            code of the aircraft;
+        :param serials: an integer or a list of integers identifying the sensors
+            receiving the data;
+        :param bounds: sets a geographical footprint. Either an **airspace or
+            shapely shape** (requires the bounds attribute); or a **tuple of
+            float** (west, south, east, north);
+
+        **Airports**
+
+        The following options build more complicated requests by merging
+        information from two tables in the Impala database, resp.
+        ``rollcall_replies_data4`` and ``flights_data4``.
+
+        :param departure_airport: a string for the ICAO identifier of the
+            airport. Selects flights departing from the airport between the two
+            timestamps;
+        :param arrival_airport: a string for the ICAO identifier of the airport.
+            Selects flights arriving at the airport between the two timestamps;
+        :param airport: a string for the ICAO identifier of the airport. Selects
+            flights departing from or arriving at the airport between the two
+            timestamps;
+
+        .. warning::
+
+            - If both departure_airport and arrival_airport are set, requested
+              timestamps match the arrival time;
+            - If airport is set, departure_airport and arrival_airport cannot be
+              specified (a RuntimeException is raised).
+            - It is not possible at the moment to filter both on airports and on
+              geographical bounds (help welcome!).
+
+        **Useful options for debug**
+
+        :param cached: (default: True) switch to False to force a new request to
+            the database regardless of the cached files. This option also
+            deletes previous cache files;
+        :param compress: (default: False) compress cache files. Reduces disk
+            space occupied at the expense of slightly increased time
+            to load.
+        :param limit: maximum number of records requested, LIMIT keyword in SQL.
+
+        """
+
+        start_ts = to_datetime(start)
+        stop_ts = (
+            to_datetime(stop)
+            if stop is not None
+            else start_ts + pd.Timedelta("1d")
+        )
+
+        airports_params = [airport, departure_airport, arrival_airport]
+        count_airports_params = sum(x is not None for x in airports_params)
+        only_one_valid = [
+            count_airports_params > 0,
+            bounds is not None,
+            callsign is not None,
+            # serials is not None,
+        ]
+
+        if sum(only_one_valid) > 1:
+            raise RuntimeError(
+                "Filter on only one among: airports, bounds, callsign"
+            )
+
+        stmt = None
+        if sum(only_one_valid) == 0:
+            stmt = (
+                select(Table)
+                .with_only_columns(
+                    Table.mintime,
+                    Table.maxtime,
+                    Table.rawmsg,
+                    Table.msgcount,
+                    Table.icao24,
+                    Table.sensors,
+                )
+                .where(Table.rawmsg.is_not(None))
+            )
+        elif count_airports_params > 0:
+            flight_table = (
+                select(FlightsData4)
+                .with_only_columns(
+                    FlightsData4.icao24,
+                    FlightsData4.callsign,
+                    FlightsData4.firstseen,
+                    FlightsData4.lastseen,
+                    FlightsData4.estdepartureairport,
+                    FlightsData4.estarrivalairport,
+                )
+                .where(
+                    FlightsData4.day >= start_ts.floor("1d"),
+                    FlightsData4.day <= start_ts.ceil("1d"),
+                )
+            )
+
+            flight_table = self.stmt_where_str(
+                flight_table, icao24, FlightsData4.icao24
+            )
+            flight_table = self.stmt_where_str(
+                flight_table, callsign, FlightsData4.callsign
+            )
+            flight_table = self.stmt_where_str(
+                flight_table,
+                departure_airport,
+                FlightsData4.estdepartureairport,
+            )
+            flight_table = self.stmt_where_str(
+                flight_table,
+                arrival_airport,
+                FlightsData4.estarrivalairport,
+            )
+            if airport is not None and arrival_airport is not None:
+                raise RuntimeError(
+                    "airport may not be set if arrival_airport is"
+                )
+            if airport is not None and departure_airport is not None:
+                raise RuntimeError(
+                    "airport may not be set if departure_airport is"
+                )
+            flight_table = self.stmt_where_str(
+                flight_table,
+                airport,
+                FlightsData4.estdepartureairport,
+                FlightsData4.estarrivalairport,
+            )
+            flight_query = flight_table.subquery()
+            fd4 = aliased(FlightsData4, alias=flight_query, adapt_on_names=True)
+            stmt = select(
+                join(Table, flight_query, (Table.icao24 == fd4.icao24))
+            ).where(
+                Table.mintime >= fd4.firstseen,
+                Table.mintime <= fd4.lastseen,
+                Table.rawmsg.is_not(None),
+            )
+        else:
+            flight_table = (
+                select(
+                    func.min(StateVectorsData4.time).label("firstseen"),
+                    func.max(StateVectorsData4.time).label("lastseen"),
+                    StateVectorsData4.icao24,
+                )
+                .group_by(StateVectorsData4.icao24)
+                .where(
+                    StateVectorsData4.hour >= start_ts.floor("1H"),
+                    StateVectorsData4.hour <= stop_ts.ceil("1H"),
+                    StateVectorsData4.time >= start_ts,
+                    StateVectorsData4.time <= stop_ts,
+                )
+            )
+            if bounds is not None:
+                if isinstance(bounds, str):
+                    from cartes.osm import Nominatim
+
+                    bounds = cast(HasBounds, Nominatim.search(bounds))
+                    if bounds is None:
+                        raise RuntimeError(f"'{bounds}' not found on Nominatim")
+
+                if hasattr(bounds, "bounds"):
+                    # thinking of shapely bounds attribute (in this order)
+                    # I just don't want to add the shapely dependency here
+                    west, south, east, north = getattr(bounds, "bounds")
+                else:
+                    west, south, east, north = bounds
+
+                flight_table = flight_table.where(
+                    StateVectorsData4.lon >= west,
+                    StateVectorsData4.lon <= east,
+                    StateVectorsData4.lat >= south,
+                    StateVectorsData4.lat <= north,
+                )
+
+            if callsign is not None:
+                flight_table = self.stmt_where_str(
+                    flight_table, callsign, StateVectorsData4.callsign
+                )
+
+            flight_query = flight_table.subquery()
+            fd4 = aliased(FlightsData4, alias=flight_query, adapt_on_names=True)
+            stmt = select(
+                join(Table, flight_query, (Table.icao24 == fd4.icao24))
+            ).where(
+                Table.mintime >= fd4.firstseen,
+                Table.mintime <= fd4.lastseen,
+                Table.rawmsg.is_not(None),
+            )
+
+        stmt = self.stmt_where_str(stmt, icao24, Table.icao24)
+
+        stmt = stmt.where(
+            Table.mintime >= start_ts,
+            Table.mintime <= stop_ts,
+            Table.hour >= start_ts.floor("1H"),
+            Table.hour < stop_ts.ceil("1H"),
         )
 
         if limit is not None:
