@@ -156,16 +156,19 @@ class Trino:
 
         with tqdm(unit="%", unit_scale=True) as processing_bar:
             while not async_result.ready():
-                processing_bar.set_description(res.cursor.stats["state"])
-                increment = res.cursor.stats["progressPercentage"] - percentage
-                percentage = res.cursor.stats["progressPercentage"]
-                processing_bar.update(increment)
+                if res.cursor is not None:
+                    processing_bar.set_description(res.cursor.stats["state"])
+                    new_percentage = res.cursor.stats["progressPercentage"]
+                    increment = new_percentage - percentage
+                    percentage = new_percentage
+                    processing_bar.update(increment)
 
-                time.sleep(0.1)
+                    time.sleep(0.1)
 
             if res.cursor is not None:
-                increment = res.cursor.stats["progressPercentage"] - percentage
-                percentage = res.cursor.stats["progressPercentage"]
+                new_percentage = res.cursor.stats["progressPercentage"]
+                increment = new_percentage - percentage
+                percentage = new_percentage
                 processing_bar.set_description(res.cursor.stats["state"])
 
         with tqdm(
