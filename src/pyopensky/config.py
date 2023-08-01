@@ -18,6 +18,7 @@ __all__ = [  # noqa: F822
     "password",
     "http_proxy",
     "cache_path",
+    "ssh_proxycommand",
 ]
 
 traffic_config_dir = Path(user_config_dir("traffic"))
@@ -50,7 +51,10 @@ def __getattr__(name: str) -> None | str:
 
     if name == "http_proxy":
         section = "network"
-        name = "http_proxy"
+
+    if name == "ssh_proxycommand":
+        name = "ssh.proxycommand"
+        section = "network"
 
     if option := traffic_config.get(section, name, fallback=None):
         return option
@@ -63,5 +67,8 @@ def __getattr__(name: str) -> None | str:
 
     if name in ["http_proxy"]:
         return os.environ.get(name)
+
+    if name in ["http_proxy", "ssh_proxycommand"]:
+        return None
 
     raise AttributeError

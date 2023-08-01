@@ -6,7 +6,7 @@ import logging
 import time
 from multiprocessing.pool import ThreadPool
 from operator import or_
-from typing import Any, Iterable, Protocol, Type, TypedDict, cast
+from typing import Any, Iterable, Type, TypedDict, cast
 
 import jwt
 import requests
@@ -29,9 +29,11 @@ from trino.sqlalchemy import URL
 
 import pandas as pd
 
+from .api import HasBounds, OpenSkyDBAPI
 from .config import cache_path, password, username
 from .schema import (
     FlightsData4,
+    FlightsData5,
     RawTable,
     RollcallRepliesData4,
     StateVectorsData4,
@@ -41,17 +43,13 @@ from .time import timelike, to_datetime
 _log = logging.getLogger(__name__)
 
 
-class HasBounds(Protocol):
-    bounds: tuple[float, float, float, float]
-
-
 class Token(TypedDict):
     access_token: str
     iat: int
     exp: int
 
 
-class Trino:
+class Trino(OpenSkyDBAPI):
     _token: None | Token = None
 
     def token(self, **kwargs: Any) -> None | str:
@@ -220,6 +218,9 @@ class Trino:
         cached: bool = True,
         compress: bool = False,
         limit: None | int = None,
+        extra_columns: None | list[Any] = None,
+        Table: Type[FlightsData4] | Type[FlightsData5] = FlightsData4,
+        **kwargs: Any,
     ) -> None | pd.DataFrame:
         """Lists flights departing or arriving at a given airport.
 
@@ -276,27 +277,32 @@ class Trino:
             else start_ts + pd.Timedelta("1d")
         )
 
-        stmt = select(FlightsData4).with_only_columns(
-            FlightsData4.icao24,
-            FlightsData4.firstseen,
-            FlightsData4.estdepartureairport,
-            FlightsData4.lastseen,
-            FlightsData4.estarrivalairport,
-            FlightsData4.callsign,
-            FlightsData4.day,
+        stmt = select(Table).with_only_columns(  # type: ignore
+            Table.icao24,
+            Table.firstseen,
+            Table.estdepartureairport,
+            Table.lastseen,
+            Table.estarrivalairport,
+            Table.callsign,
+            Table.day,
+            *(extra_columns if extra_columns is not None else []),
         )
 
-        stmt = self.stmt_where_str(stmt, icao24, FlightsData4.icao24)
-        stmt = self.stmt_where_str(stmt, callsign, FlightsData4.callsign)
+        stmt = self.stmt_where_str(stmt, icao24, Table.icao24)  # type: ignore
+        stmt = self.stmt_where_str(
+            stmt,
+            callsign,
+            Table.callsign,  # type: ignore
+        )
         stmt = self.stmt_where_str(
             stmt,
             departure_airport,
-            FlightsData4.estdepartureairport,
+            Table.estdepartureairport,  # type: ignore
         )
         stmt = self.stmt_where_str(
             stmt,
             arrival_airport,
-            FlightsData4.estarrivalairport,
+            Table.estarrivalairport,  # type: ignore
         )
         if airport is not None and arrival_airport is not None:
             raise RuntimeError("airport may not be set if arrival_airport is")
@@ -305,23 +311,23 @@ class Trino:
         stmt = self.stmt_where_str(
             stmt,
             airport,
-            FlightsData4.estdepartureairport,
-            FlightsData4.estarrivalairport,
+            Table.estdepartureairport,  # type: ignore
+            Table.estarrivalairport,  # type: ignore
         )
 
         if departure_airport is not None:
             stmt = stmt.where(
-                FlightsData4.firstseen >= start_ts,
-                FlightsData4.firstseen <= stop_ts,
-                FlightsData4.day >= start_ts.floor("1d"),
-                FlightsData4.day < stop_ts.ceil("1d"),
+                Table.firstseen >= start_ts,
+                Table.firstseen <= stop_ts,
+                Table.day >= start_ts.floor("1d"),
+                Table.day < stop_ts.ceil("1d"),
             )
         else:
             stmt = stmt.where(
-                FlightsData4.lastseen >= start_ts,
-                FlightsData4.lastseen <= stop_ts,
-                FlightsData4.day >= start_ts.floor("1d"),
-                FlightsData4.day < stop_ts.ceil("1d"),
+                Table.lastseen >= start_ts,
+                Table.lastseen <= stop_ts,
+                Table.day >= start_ts.floor("1d"),
+                Table.day < stop_ts.ceil("1d"),
             )
 
         if limit is not None:
@@ -358,8 +364,9 @@ class Trino:
         cached: bool = True,
         compress: bool = False,
         limit: None | int = None,
+        **kwargs: Any,
     ) -> None | pd.DataFrame:
-        """Get Traffic from the OpenSky Impala shell.
+        """Get Traffic from the OpenSky Trino database.
 
         You may pass requests based on time ranges, callsigns, aircraft, areas,
         serial numbers for receivers, or airports of departure or arrival.
@@ -390,7 +397,7 @@ class Trino:
         **Airports**
 
         The following options build more complicated requests by merging
-        information from two tables in the Impala database, resp.
+        information from two tables in the Trino database, resp.
         ``state_vectors_data4`` and ``flights_data4``.
 
         :param departure_airport: a string for the ICAO identifier of the
@@ -404,9 +411,8 @@ class Trino:
 
         .. warning::
 
-            - See `opensky.flightlist
-              <#traffic.data.adsb.opensky_impala.Impala.flightlist>`__ if you do
-              not need any trajectory information.
+            - See :meth:`pyopensky.trino.flightlist` if you do not need any
+              trajectory information.
             - If both departure_airport and arrival_airport are set, requested
               timestamps match the arrival time;
             - If airport is set, departure_airport and arrival_airport cannot be
@@ -559,7 +565,6 @@ class Trino:
         self,
         start: timelike,
         stop: None | timelike = None,
-        Table: Type[RawTable] = RollcallRepliesData4,
         *args: Any,  # more reasonable to be explicit about arguments
         icao24: None | str | list[str] = None,
         serials: None | int | Iterable[int] = None,
@@ -571,8 +576,10 @@ class Trino:
         cached: bool = True,
         compress: bool = False,
         limit: None | int = None,
+        Table: Type[RawTable] = RollcallRepliesData4,
+        **kwargs: Any,
     ) -> None | pd.DataFrame:
-        """Get raw message from the OpenSky Impala shell.
+        """Get raw message from the OpenSky Trino database.
 
         You may pass requests based on time ranges, callsigns, aircraft, areas,
         serial numbers for receivers, or airports of departure or arrival.
@@ -586,8 +593,6 @@ class Trino:
             Python or pandas)
         :param stop: a string (default to UTC), epoch or datetime (native Python
             or pandas), *by default, one day after start*
-        :param table_name: one or several of Impala tables (listed in
-            `opensky._raw_tables`)
         :param date_delta: a timedelta representing how to split the requests,
             *by default: per hour*
 
@@ -606,7 +611,7 @@ class Trino:
         **Airports**
 
         The following options build more complicated requests by merging
-        information from two tables in the Impala database, resp.
+        information from two tables in the Trino database, resp.
         ``rollcall_replies_data4`` and ``flights_data4``.
 
         :param departure_airport: a string for the ICAO identifier of the

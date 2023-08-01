@@ -1,6 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from numbers import Real
-from typing import Any, Tuple, Union
+from typing import Any, Iterator, Tuple, Union
 
 import pandas as pd
 
@@ -29,3 +29,18 @@ def to_datetime(time: timelike) -> pd.Timestamp:
     elif isinstance(time, Real):
         time = pd.Timestamp(float(time), unit="s", tz="utc")
     return time
+
+
+def split_times(
+    before: datetime,
+    after: datetime,
+    by: timedelta = timedelta(hours=1),
+) -> Iterator[timetuple]:
+    seq = pd.date_range(
+        to_datetime(before).floor(by),
+        to_datetime(after).ceil(by),
+        freq=by,
+    )
+
+    for bh, ah in zip(seq[:-1], seq[1:]):
+        yield (before, after, bh, ah)
