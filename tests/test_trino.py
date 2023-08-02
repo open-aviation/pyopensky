@@ -95,7 +95,7 @@ def test_history() -> None:
         "2019-11-01 12:00",
         departure_airport="LFBO",
         arrival_airport="LFBO",
-        callsign="AIB%",
+        callsign="AIB04%",
         compress=True,
     )
     assert df is not None
@@ -114,7 +114,6 @@ def test_history() -> None:
     assert len(df.groupby(["icao24", "callsign"])) == 34
 
 
-@pytest.mark.timeout(300)
 def test_complex_queries() -> None:
     error_msg = "airport may not be set if arrival_airport is"
     with pytest.raises(RuntimeError, match=error_msg):

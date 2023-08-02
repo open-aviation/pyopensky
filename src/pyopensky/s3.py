@@ -14,6 +14,13 @@ _log = logging.getLogger(__name__)
 
 
 class S3Client:
+    """Wrapper to OpenSky S3 repository
+
+    Credentials are fetched from the configuration file.
+
+    All methods return standard structures. When calls are made from the traffic
+    library, they return advanced structures."""
+
     def __init__(self, **kwargs: Any) -> None:
         from .config import access_key, http_proxy, secret_key
 

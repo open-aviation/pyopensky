@@ -50,6 +50,13 @@ class Token(TypedDict):
 
 
 class Trino(OpenSkyDBAPI):
+    """Wrapper to OpenSky Trino database
+
+    Credentials are fetched from the configuration file.
+
+    All methods return standard structures. When calls are made from the traffic
+    library, they return advanced structures."""
+
     _token: None | Token = None
 
     def token(self, **kwargs: Any) -> None | str:

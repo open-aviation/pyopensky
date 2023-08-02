@@ -18,21 +18,13 @@ _log = logging.getLogger(__name__)
 
 
 class REST:
-    """Wrapper to OpenSky REST API and Impala Shell.
+    """Wrapper to OpenSky REST API.
 
-    An instance is automatically constructed when importing traffic.data with
-    the name opensky. Credentials are fetched from the configuration file.
-
-    [global]
-    opensky_username =
-    opensky_password =
-
-    The configuration file is located at `traffic.config_file`.
-
-    All functions from the REST API are prefixed with `api_`. The other
-    functions wrap the access to the Impala shell.
-
+    Credentials are fetched from the configuration file.
     REST API is documented here: https://opensky-network.org/apidoc/rest.html
+
+    All methods return standard structures. When calls are made from the traffic
+    library, they return advanced structures.
 
     """
 
@@ -65,7 +57,7 @@ class REST:
 
         self.session = requests.Session()
 
-    def api_states(
+    def states(
         self,
         own: bool = False,
         bounds: None
@@ -142,7 +134,7 @@ class REST:
         except Exception:
             _log.warning("Error in received data, retrying in 10 seconds")
             time.sleep(10)
-            return self.api_states(own, bounds)
+            return self.states(own, bounds)
 
         return r.assign(
             timestamp=lambda df: pd.to_datetime(
@@ -154,9 +146,7 @@ class REST:
             callsign=lambda df: df.callsign.str.strip(),
         )
 
-    def api_tracks(
-        self, icao24: str, time: None | timelike = None
-    ) -> pd.DataFrame:
+    def tracks(self, icao24: str, time: None | timelike = None) -> pd.DataFrame:
         """Returns a Flight corresponding to a given aircraft.
 
         Official documentation
@@ -212,7 +202,7 @@ class REST:
 
         return df
 
-    def api_routes(self, callsign: str) -> tuple[str, str]:
+    def routes(self, callsign: str) -> tuple[str, str]:
         """Returns the route associated to a callsign."""
         c = self.session.get(
             f"https://opensky-network.org/api/routes?callsign={callsign}"
@@ -222,7 +212,7 @@ class REST:
 
         return tuple(json["route"])  # type: ignore
 
-    def api_aircraft(
+    def aircraft(
         self,
         icao24: str,
         begin: None | timelike = None,
@@ -277,7 +267,7 @@ class REST:
             .sort_values("lastSeen")
         )
 
-    def api_sensors(self, day: None | timelike = None) -> set[str]:
+    def sensors(self, day: None | timelike = None) -> set[str]:
         """The set of sensors serials you own (require authentication)."""
         today = pd.Timestamp("now", tz="utc").floor("1d")
         if day is not None:
@@ -293,7 +283,7 @@ class REST:
         except JSONDecodeError:
             return set()
 
-    def api_range(self, serial: str, day: None | timelike = None) -> Any:
+    def range(self, serial: str, day: None | timelike = None) -> Any:
         """Wraps a polygon representing a sensor's range.
 
         By default, returns the current range. Otherwise, you may enter a
@@ -314,7 +304,7 @@ class REST:
         except JSONDecodeError:
             print(c.content)
 
-    def api_global_coverage(self, day: None | timelike = None) -> Any:
+    def global_coverage(self, day: None | timelike = None) -> Any:
         if day is None:
             day = pd.Timestamp("now", tz="utc").floor("1d")
         day_ts = to_datetime(day)
@@ -326,7 +316,7 @@ class REST:
         c.raise_for_status()
         return c.json()
 
-    def api_arrival(
+    def arrival(
         self,
         airport: str,
         begin: None | timelike = None,
@@ -385,7 +375,7 @@ class REST:
             .sort_values("lastSeen")
         )
 
-    def api_departure(
+    def departure(
         self,
         airport: str,
         begin: None | timelike = None,

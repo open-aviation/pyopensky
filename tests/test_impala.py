@@ -55,7 +55,7 @@ def test_history() -> None:
         "2019-11-01 12:00",
         departure_airport="LFBO",
         arrival_airport="LFBO",
-        callsign="AIB%",
+        callsign="AIB04%",
         compress=True,
     )
     assert df is not None

@@ -48,6 +48,13 @@ def open_cache_file(cachename: Path) -> Iterator[TextIO]:
 
 
 class Impala(OpenSkyDBAPI):
+    """Wrapper to OpenSky Impala database
+
+    Credentials are fetched from the configuration file.
+
+    All methods return standard structures. When calls are made from the traffic
+    library, they return advanced structures."""
+
     _impala_columns = (
         "time",
         "icao24",
