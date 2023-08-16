@@ -20,7 +20,7 @@ from sqlalchemy import (
     func,
     select,
 )
-from sqlalchemy.orm import aliased, join
+from sqlalchemy.orm import aliased
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.sql.expression import text
 from tqdm import tqdm
@@ -126,10 +126,13 @@ class Trino(OpenSkyDBAPI):
         compress: bool = False,
     ) -> pd.DataFrame:
         exec_kw = dict(stream_results=True)
+
         if isinstance(query, str):
             query = text(query)
 
         query_str = f"{(s := query.compile())}\n{s.params}"
+        _log.info(f"Processing query {query_str}")
+
         digest = hashlib.md5(query_str.encode("utf8")).hexdigest()
         suffix = ".parquet.gz" if compress else ".parquet"
         if (cache_file := (cache_path / digest).with_suffix(suffix)).exists():
@@ -499,16 +502,17 @@ class Trino(OpenSkyDBAPI):
 
             flight_query = flight_table.subquery()
             fd4 = aliased(FlightsData4, alias=flight_query, adapt_on_names=True)
-            stmt = select(
-                join(
-                    StateVectorsData4,
+            stmt = (
+                select(StateVectorsData4)
+                .join(
                     flight_query,
                     (fd4.icao24 == StateVectorsData4.icao24)
                     & (fd4.callsign == StateVectorsData4.callsign),
                 )
-            ).where(
-                StateVectorsData4.time >= fd4.firstseen,
-                StateVectorsData4.time <= fd4.lastseen,
+                .where(
+                    StateVectorsData4.time >= fd4.firstseen,
+                    StateVectorsData4.time <= fd4.lastseen,
+                )
             )
 
         stmt = self.stmt_where_str(stmt, icao24, StateVectorsData4.icao24)
@@ -735,12 +739,14 @@ class Trino(OpenSkyDBAPI):
             )
             flight_query = flight_table.subquery()
             fd4 = aliased(FlightsData4, alias=flight_query, adapt_on_names=True)
-            stmt = select(
-                join(Table, flight_query, (Table.icao24 == fd4.icao24))
-            ).where(
-                Table.mintime >= fd4.firstseen,
-                Table.mintime <= fd4.lastseen,
-                Table.rawmsg.is_not(None),
+            stmt = (
+                select(Table)
+                .join(flight_query, (Table.icao24 == fd4.icao24))
+                .where(
+                    Table.mintime >= fd4.firstseen,
+                    Table.mintime <= fd4.lastseen,
+                    Table.rawmsg.is_not(None),
+                )
             )
         else:
             flight_table = (
@@ -786,12 +792,14 @@ class Trino(OpenSkyDBAPI):
 
             flight_query = flight_table.subquery()
             fd4 = aliased(FlightsData4, alias=flight_query, adapt_on_names=True)
-            stmt = select(
-                join(Table, flight_query, (Table.icao24 == fd4.icao24))
-            ).where(
-                Table.mintime >= fd4.firstseen,
-                Table.mintime <= fd4.lastseen,
-                Table.rawmsg.is_not(None),
+            stmt = (
+                select(Table)
+                .join(flight_query, (Table.icao24 == fd4.icao24))
+                .where(
+                    Table.mintime >= fd4.firstseen,
+                    Table.mintime <= fd4.lastseen,
+                    Table.rawmsg.is_not(None),
+                )
             )
 
         stmt = self.stmt_where_str(stmt, icao24, Table.icao24)

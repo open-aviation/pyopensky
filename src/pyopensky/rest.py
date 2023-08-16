@@ -302,7 +302,8 @@ class REST:
         try:
             return c.json()
         except JSONDecodeError:
-            print(c.content)
+            _log.warning(c.content)
+            raise
 
     def global_coverage(self, day: None | timelike = None) -> Any:
         if day is None:
@@ -314,7 +315,11 @@ class REST:
             f"day={day_ts.timestamp():.0f}"
         )
         c.raise_for_status()
-        return c.json()
+        try:
+            return c.json()
+        except JSONDecodeError:
+            _log.warning(c.content)
+            raise
 
     def arrival(
         self,
