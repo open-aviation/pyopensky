@@ -38,6 +38,9 @@ if (traffic_config_file := (traffic_config_dir / "traffic.conf")).exists():
 opensky_config = configparser.ConfigParser()
 if (opensky_config_file := opensky_config_dir / "secret.conf").exists():
     opensky_config.read(opensky_config_file.as_posix())
+else:
+    opensky_config_dir.mkdir(parents=True)
+    opensky_config_file.write_text(DEFAULT_CONFIG)
 
 cache_dir = user_cache_dir("opensky")
 cache_path = Path(cache_dir)
@@ -49,7 +52,7 @@ cache_purge = traffic_config.get("cache", "purge", fallback="90 days")
 cache_no_expire = bool(os.environ.get("TRAFFIC_CACHE_NO_EXPIRE"))
 
 if cache_purge != "" and not cache_no_expire:  # coverage: ignore
-    expiration = pd.Timestamp("now").timestamp() - pd.Timedelta(cache_purge)
+    expiration = pd.Timestamp("now") - pd.Timedelta(cache_purge)
 
     for cache_file in cache_path.glob("*"):
         ctime = cache_file.stat().st_ctime
@@ -59,7 +62,11 @@ if cache_purge != "" and not cache_no_expire:  # coverage: ignore
 
 
 def __getattr__(name: str) -> None | str:
-    # in order: traffic.conf, opensky.conf, environment variables
+    # Pick in order:
+    # 1. traffic.conf (traffic)
+    # 2. secret.conf (pyopensky)
+    # 3. environment variables
+
     traffic_section = "opensky"
 
     if name == "http_proxy":
@@ -80,9 +87,6 @@ def __getattr__(name: str) -> None | str:
 
     if name in ["http_proxy"]:
         return os.environ.get(name)
-
-    if not opensky_config_file.exists():
-        opensky_config_file.write_text(DEFAULT_CONFIG)
 
     if name in __all__:
         return None

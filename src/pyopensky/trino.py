@@ -86,6 +86,11 @@ class Trino(OpenSkyDBAPI):
             },
             **kwargs,
         )
+
+        if result.status_code == 401:
+            # authentication failing
+            return None
+
         result.raise_for_status()
         payload = result.json()
         self._token = {  # type: ignore
