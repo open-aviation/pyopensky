@@ -3,7 +3,7 @@ from __future__ import annotations
 import operator
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Protocol
+from typing import Any, ClassVar, Dict, List, Protocol
 
 from sqlalchemy import ARRAY, Float, Integer, String, TypeDecorator
 from sqlalchemy.engine.interfaces import Dialect
@@ -180,7 +180,7 @@ Callsign = Annotated[str, mapped_column(CallsignString)]
 
 
 class Base(DeclarativeBase):
-    type_annotation_map = {
+    type_annotation_map: ClassVar[dict[Any, Any]] = {
         pd.Timestamp: UTCTimestampInteger,
         AirportCandidates: AirportCandidateType,
         Track: TrackType,
