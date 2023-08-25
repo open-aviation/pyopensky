@@ -5,11 +5,11 @@ from sqlalchemy import select
 
 import pandas as pd
 
-opensky = Trino()
+trino = Trino()
 
 
 def test_alive() -> None:
-    df = opensky.query(
+    df = trino.query(
         "select * from state_vectors_data4 limit 5",
         cached=False,
     )
@@ -17,7 +17,7 @@ def test_alive() -> None:
 
 
 def test_query() -> None:
-    res = opensky.query(
+    res = trino.query(
         select(FlightsData4)
         .with_only_columns(
             FlightsData4.icao24,
@@ -45,7 +45,7 @@ def test_query() -> None:
 
 
 def test_flightlist() -> None:
-    df = opensky.flightlist(
+    df = trino.flightlist(
         "2023-01-01",
         "2023-01-10",
         callsign="AFR%",
@@ -54,7 +54,7 @@ def test_flightlist() -> None:
     assert df is not None
     assert df.callsign.max() == "AFR292"
 
-    df = opensky.flightlist(
+    df = trino.flightlist(
         "2023-01-01",
         "2023-01-10",
         callsign="AFR292",
@@ -63,7 +63,7 @@ def test_flightlist() -> None:
     assert df is not None
     assert df.arrival.max() == "RJBB"
 
-    df = opensky.flightlist(
+    df = trino.flightlist(
         "2023-01-01",
         "2023-01-10",
         departure_airport="LF%",
@@ -74,7 +74,7 @@ def test_flightlist() -> None:
     expected = {"AFR", "ANA", "FDX", "JAL"}
     assert expected.intersection(df.callsign.str[:3].unique()) == expected
 
-    df = opensky.flightlist(
+    df = trino.flightlist(
         "2019-11-01",
         departure_airport="LFBO",
         arrival_airport="LFBO",
@@ -84,13 +84,13 @@ def test_flightlist() -> None:
     assert df.shape[0] == 2
     assert all(df.callsign.str.startswith("AIB"))
 
-    df = opensky.flightlist("2019-11-01", icao24="44017c")
+    df = trino.flightlist("2019-11-01", icao24="44017c")
     assert df is not None
     assert all(df.callsign.str.startswith("EJU"))
 
 
 def test_history() -> None:
-    df = opensky.history(
+    df = trino.history(
         "2019-11-01 09:00",
         "2019-11-01 12:00",
         departure_airport="LFBO",
@@ -102,7 +102,7 @@ def test_history() -> None:
     assert df.icao24.max() == "388dfb"
     assert df.callsign.max() == "AIB04FI"
 
-    df = opensky.history(
+    df = trino.history(
         "2019-11-11 10:00",
         "2019-11-11 10:10",
         bounds=(0.11, 42.3, 2.82, 44.6),
@@ -117,14 +117,14 @@ def test_history() -> None:
 def test_complex_queries() -> None:
     error_msg = "airport may not be set if arrival_airport is"
     with pytest.raises(RuntimeError, match=error_msg):
-        _ = opensky.history(
+        _ = trino.history(
             start="2021-08-24 00:00",
             stop="2021-08-24 01:00",
             airport="ESSA",
             arrival_airport="EGLL",
         )
     # test that `limit` generate correct query
-    df = opensky.history(
+    df = trino.history(
         start="2021-08-24 00:00",
         stop="2021-08-24 01:00",
         airport="ESSA",
@@ -133,7 +133,7 @@ def test_complex_queries() -> None:
     assert df is not None
     assert df.shape[0] == 3
 
-    df = opensky.history(
+    df = trino.history(
         start="2021-08-24 09:00",
         stop="2021-08-24 09:10",
         airport="ESSA",
@@ -141,7 +141,7 @@ def test_complex_queries() -> None:
     assert df is not None
     assert len(df.groupby(["icao24", "callsign"])) == 23
 
-    df = opensky.history(
+    df = trino.history(
         start="2021-08-24 09:00",
         stop="2021-08-24 09:10",
         arrival_airport="ESSA",
@@ -149,7 +149,7 @@ def test_complex_queries() -> None:
     assert df is not None
     assert len(df.groupby(["icao24", "callsign"])) == 13
 
-    df = opensky.history(
+    df = trino.history(
         start="2021-08-24 11:32",
         stop="2021-08-24 11:42",
         departure_airport="ESSA",
@@ -162,7 +162,7 @@ def test_complex_queries() -> None:
     assert s.icao24.iloc[0] == "400936"
 
     with pytest.raises(RuntimeError, match=error_msg):
-        _ = opensky.history(
+        _ = trino.history(
             start="2021-08-24 00:00",
             stop="2021-08-24 01:00",
             airport="ESSA",
@@ -170,7 +170,7 @@ def test_complex_queries() -> None:
             limit=3,
         )
 
-    df = opensky.history(
+    df = trino.history(
         start="2021-08-24 00:00",
         stop="2021-08-24 00:10",
         arrival_airport="ESSA",
@@ -182,7 +182,7 @@ def test_complex_queries() -> None:
     assert s.callsign.iloc[0] == "SAS6906"
     assert s.icao24.iloc[0] == "4ca863"
 
-    df = opensky.history(
+    df = trino.history(
         start="2021-08-24 00:00",
         stop="2021-08-24 00:10",
         serials=(-1408232560, -1408232534),
@@ -190,7 +190,7 @@ def test_complex_queries() -> None:
     assert df is not None
     assert len(df.groupby(["icao24", "callsign"])) == 12
 
-    df = opensky.history(
+    df = trino.history(
         start="2021-08-24 09:00",
         stop="2021-08-24 09:10",
         departure_airport="ESSA",
@@ -203,7 +203,7 @@ def test_complex_queries() -> None:
     assert s.callsign.iloc[0] == "LOT454"
     assert s.icao24.iloc[0] == "489789"
 
-    df = opensky.history(
+    df = trino.history(
         start="2021-08-24 09:00",
         stop="2021-08-24 09:10",
         bounds=(17.8936, 59.6118, 17.9894, 59.6716),
@@ -214,7 +214,7 @@ def test_complex_queries() -> None:
     s = df.groupby(["icao24", "callsign"]).agg(dict(time="min")).reset_index()
     assert s.query('callsign == "SAS1136"').icao24.iloc[0] == "51110b"
 
-    df = opensky.history(
+    df = trino.history(
         start="2021-08-24 09:30",
         stop="2021-08-24 09:40",
         departure_airport="ESSA",

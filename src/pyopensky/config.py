@@ -14,8 +14,10 @@ _log = logging.getLogger(__name__)
 __all__ = [  # noqa: F822
     "access_key",
     "secret_key",
-    "username",
-    "password",
+    "impala_username",
+    "impala_password",
+    "trino_username",
+    "trino_password",
     "http_proxy",
     "cache_path",
     "ssh_proxycommand",
@@ -26,17 +28,26 @@ DEFAULT_CONFIG = """
 [default]
 username =
 password =
+
+[trino]
+username =
+password =
+
+[cache]
+## You can use a different cache folder if data is large
+## default to: $HOME/.cache/pyopensky on Linux
+# path = 
+
+## The purge cache folder after certain days
+## purge happens when the library is imported.
+purge = 90 days
+
 """
 
-traffic_config_dir = Path(user_config_dir("traffic"))
 opensky_config_dir = Path(user_config_dir("pyopensky"))
-
-traffic_config = configparser.ConfigParser()
-if (traffic_config_file := (traffic_config_dir / "traffic.conf")).exists():
-    traffic_config.read(traffic_config_file.as_posix())
-
 opensky_config = configparser.ConfigParser()
-if (opensky_config_file := opensky_config_dir / "secret.conf").exists():
+
+if (opensky_config_file := opensky_config_dir / "settings.conf").exists():
     opensky_config.read(opensky_config_file.as_posix())
 else:
     opensky_config_dir.mkdir(parents=True)
@@ -48,8 +59,8 @@ if not cache_path.exists():
     cache_path.mkdir(parents=True)
 
 
-cache_purge = traffic_config.get("cache", "purge", fallback="90 days")
-cache_no_expire = bool(os.environ.get("TRAFFIC_CACHE_NO_EXPIRE"))
+cache_purge = opensky_config.get("cache", "purge", fallback="90 days")
+cache_no_expire = bool(os.environ.get("OPENSKY_CACHE_NO_EXPIRE"))
 
 if cache_purge != "" and not cache_no_expire:  # coverage: ignore
     expiration = pd.Timestamp("now") - pd.Timedelta(cache_purge)
@@ -63,9 +74,8 @@ if cache_purge != "" and not cache_no_expire:  # coverage: ignore
 
 def __getattr__(name: str) -> None | str:
     # Pick in order:
-    # 1. traffic.conf (traffic)
-    # 2. secret.conf (pyopensky)
-    # 3. environment variables
+    # 1. pyopensky -> settings.conf
+    # 2. environment variables
 
     traffic_section = "opensky"
 
@@ -76,14 +86,17 @@ def __getattr__(name: str) -> None | str:
         name = "ssh.proxycommand"
         traffic_section = "network"
 
-    if option := traffic_config.get(traffic_section, name, fallback=None):
-        return option
+    if name == "username":
+        return opensky_config.get("default", "username", fallback=None)
 
-    if option := opensky_config.get("default", name, fallback=None):
-        return option
+    if name == "password":
+        return opensky_config.get("default", "password", fallback=None)
 
-    if name in ["username", "password"]:
-        return os.environ.get(f"OPENSKY_{name.upper()}", None)
+    if name == "trino_username":
+        return opensky_config.get("trino", "username", fallback=None)
+
+    if name == "trino_password":
+        return opensky_config.get("trino", "password", fallback=None)
 
     if name in ["http_proxy"]:
         return os.environ.get(name)

@@ -30,7 +30,9 @@ from trino.sqlalchemy import URL
 import pandas as pd
 
 from .api import HasBounds, OpenSkyDBAPI
-from .config import cache_path, password, username
+from .config import cache_path
+from .config import trino_username as username
+from .config import trino_password as password
 from .schema import (
     FlightsData4,
     FlightsData5,
