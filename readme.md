@@ -29,7 +29,7 @@ poetry install
 | Impala | https://opensky-network.org/data/impala                        |
 | Trino  | contact@opensky-network.org (or specify it in the Impala form) |
 
-The first time you use the library, a configuration file named `settings.conf` with the following content:
+The first time you use the library, a configuration file named `settings.conf` with the following content is created:
 
 ```text
 [default]
