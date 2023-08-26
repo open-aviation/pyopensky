@@ -1,6 +1,6 @@
 # pyopensky
 
-The `pyopensky` Python library provides tools to download data from the OpenSky Network live API and historical databases. It aims at making ADS-B and Mode S data from OpenSky easily accessible in the Python programming environment.
+The `pyopensky` Python library provides functions to download data from the OpenSky Network live API and historical databases. It aims at making ADS-B and Mode S data from OpenSky easily accessible in the Python programming environment.
 
 ## Installation
 
@@ -29,25 +29,12 @@ poetry install
 | Impala | https://opensky-network.org/data/impala                        |
 | Trino  | contact@opensky-network.org (or specify it in the Impala form) |
 
-The first time you use the library, a configuration file named `settings.conf` with the following content is created:
+The first time you use the library, a configuration file named `settings.conf` is created, including the following content:
 
 ```text
 [default]
 username =
 password =
-
-[trino]
-username =
-password =
-
-[cache]
-## You can use a different cache folder if data is large
-## default to: $HOME/.cache/pyopensky on Linux
-# path =
-
-## The purge cache folder after certain days
-## purge happens when the library is imported.
-purge = 90 days
 ```
 
 You will identify the folder where the `settings.conf` is located:
