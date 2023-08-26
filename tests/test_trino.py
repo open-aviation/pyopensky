@@ -33,7 +33,7 @@ def test_query() -> None:
         .where(FlightsData4.icao24.like("39%"))
         .where(FlightsData4.day >= "2023-01-01")
         .where(FlightsData4.day < "2023-02-01")
-        .where(FlightsData4.estarrivalairport != None)
+        .where(FlightsData4.estarrivalairport != None)  # noqa: E711
         .order_by(FlightsData4.firstseen)
         .limit(50)
     )
