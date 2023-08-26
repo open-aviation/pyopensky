@@ -94,7 +94,7 @@ class Trino(OpenSkyDBAPI):
         result.raise_for_status()
         payload = result.json()
         self._token = {  # type: ignore
-            **payload,  # type: ignore
+            **payload,
             **jwt.decode(
                 payload["access_token"],
                 options={"verify_signature": False},

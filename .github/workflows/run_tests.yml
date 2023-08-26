@@ -49,7 +49,7 @@ jobs:
           key: poetry-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install and configure Poetry
-        uses: snok/install-poetry@v1.3.3
+        uses: snok/install-poetry@v1.3.4
         with:
           version: ${{ env.POETRY_VERSION }}
           virtualenvs-create: true
@@ -84,11 +84,4 @@ jobs:
           OPENSKY_USERNAME: ${{ secrets.OPENSKY_USERNAME }}
           OPENSKY_PASSWORD: ${{ secrets.OPENSKY_PASSWORD }}
         run: |
-          poetry run pytest --cov --cov-report xml
-
-      - name: Upload coverage to Codecov
-        if: ${{ github.event_name != 'pull_request_target' }}
-        uses: codecov/codecov-action@v3
-        with:
-          env_vars: PYTHON_VERSION
-
+          poetry run pytest
