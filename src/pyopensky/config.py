@@ -54,11 +54,6 @@ else:
         opensky_config_dir.mkdir(parents=True)
     opensky_config_file.write_text(DEFAULT_CONFIG)
 
-cache_dir = user_cache_dir("opensky")
-cache_path = Path(cache_dir)
-if not cache_path.exists():
-    cache_path.mkdir(parents=True)
-
 traffic_config_dir = Path(user_config_dir("traffic"))
 traffic_config = configparser.ConfigParser()
 
@@ -66,7 +61,7 @@ if (traffic_config_file := traffic_config_dir / "traffic.conf").exists():
     traffic_config.read(traffic_config_file.as_posix())
 
 
-def purge_cache() -> None:
+def purge_cache(cache_path: Path) -> None:
     cache_no_expire = False
     cache_no_expire |= bool(os.environ.get("TRAFFIC_CACHE_NO_EXPIRE"))
     cache_no_expire |= bool(os.environ.get("OPENSKY_CACHE_NO_EXPIRE"))
@@ -87,9 +82,6 @@ def purge_cache() -> None:
             if ctime < expiration.timestamp():
                 _log.warn(f"Removing {cache_file} created on {ctime}")
                 cache_file.unlink()
-
-
-purge_cache()
 
 
 class Resolution(TypedDict, total=False):
@@ -180,6 +172,16 @@ def get_config(
         return os.environ.get(environment_variable)
 
     return None
+
+
+cache_dir = get_config(**NAME_RESOLUTION["cache_dir"])
+if cache_dir is None:
+    cache_dir = user_cache_dir("opensky")
+cache_path = Path(cache_dir)
+if not cache_path.exists():
+    cache_path.mkdir(parents=True)
+
+purge_cache(cache_path)
 
 
 def __getattr__(name: str) -> None | str:
