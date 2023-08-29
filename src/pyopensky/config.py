@@ -49,6 +49,9 @@ opensky_config = configparser.ConfigParser()
 
 if (opensky_config_file := opensky_config_dir / "settings.conf").exists():
     opensky_config.read(opensky_config_file.as_posix())
+elif (previous_config_file := opensky_config_dir / "secret.conf").exists():
+    previous_config_file.rename(opensky_config_file)
+    opensky_config.read(opensky_config_file.as_posix())
 else:
     if not opensky_config_dir.exists():
         opensky_config_dir.mkdir(parents=True)
