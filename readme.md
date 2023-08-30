@@ -2,6 +2,8 @@
 
 The `pyopensky` Python library provides functions to download data from the OpenSky Network live API and historical databases. It aims at making ADS-B and Mode S data from OpenSky easily accessible in the Python programming environment.
 
+Full documentation on https://open-aviation.github.io/pyopensky
+
 ## Installation
 
 ```sh
@@ -47,7 +49,7 @@ print(opensky_config_dir)
 
 ## Usage
 
-- from the REST API:
+- from the [REST API](https://open-aviation.github.io/pyopensky/rest.html):
 
   ```python
   from pyopensky.rest import REST
@@ -62,7 +64,7 @@ print(opensky_config_dir)
   rest.departure(airport, begin, end)
   ```
 
-- from the Impala shell (requires authentication):
+- from the [Impala](https://open-aviation.github.io/pyopensky/impala.html) shell (requires authentication):
 
   ```python
   from pyopensky.impala import Impala
@@ -74,7 +76,7 @@ print(opensky_config_dir)
   impala.rawdata(start, stop, *, callsign, icao24, bounds)
   ```
 
-- from the Trino shell (requires authentication):
+- from the [Trino](https://open-aviation.github.io/pyopensky/trino.html) database (requires authentication):
 
   ```python
   from pyopensky.trino import Trino
