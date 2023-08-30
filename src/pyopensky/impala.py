@@ -20,7 +20,12 @@ import pandas as pd
 from pandas.errors import ParserError
 
 from .api import HasBounds, OpenSkyDBAPI, ProgressbarType
-from .config import cache_path, password, ssh_proxycommand, username
+from .config import (
+    cache_path,
+    impala_password,
+    impala_username,
+    ssh_proxycommand,
+)
 from .time import split_times, timelike, to_datetime
 
 _log = logging.getLogger(__name__)
@@ -137,21 +142,21 @@ class Impala(OpenSkyDBAPI):
     # actually ChannelStderrFile
 
     def __init__(self, **kwargs: Any) -> None:
-        if username is None or password is None:
+        if impala_username is None or impala_password is None:
             _log.warn("No credentials provided")
 
-        self.username = username
-        self.password = password
+        self.username = impala_username
+        self.password = impala_password
         self.proxy_command = ssh_proxycommand
         self.connected = False
         self.cache_dir = cache_path
         if not self.cache_dir.exists():
             self.cache_dir.mkdir(parents=True)
 
-        if username == "" or password == "":
+        if impala_username == "" or impala_password == "":
             self.auth = None
         else:
-            self.auth = (username, password)
+            self.auth = (impala_username, impala_password)
 
     def clear_cache(self) -> None:  # coverage: ignore
         """Clear cache files for OpenSky.

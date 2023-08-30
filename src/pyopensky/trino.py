@@ -30,7 +30,7 @@ from trino.sqlalchemy import URL
 import pandas as pd
 
 from .api import HasBounds, OpenSkyDBAPI
-from .config import cache_path, password, username
+from .config import cache_path, trino_password, trino_username
 from .schema import (
     FlightsData4,
     FlightsData5,
@@ -60,7 +60,7 @@ class Trino(OpenSkyDBAPI):
     _token: None | Token = None
 
     def token(self, **kwargs: Any) -> None | str:
-        if username is None or password is None:
+        if trino_username is None or trino_password is None:
             _log.warn(
                 "No credentials provided, "
                 "falling back to browser authentication"
@@ -81,8 +81,8 @@ class Trino(OpenSkyDBAPI):
             data={
                 "client_id": "trino-client",
                 "grant_type": "password",
-                "username": username,
-                "password": password,
+                "username": trino_username,
+                "password": trino_password,
             },
             **kwargs,
         )
@@ -108,7 +108,7 @@ class Trino(OpenSkyDBAPI):
             URL(
                 "trino.opensky-network.org",
                 port=443,
-                user=username,
+                user=trino_username,
                 catalog="minio",
                 schema="osky",
             ),
