@@ -1,5 +1,5 @@
-Welcome to pyopensky's documentation!
-=====================================
+pyopensky
+=========
 
 .. toctree::
    :maxdepth: 2
