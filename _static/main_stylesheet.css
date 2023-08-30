@@ -1,0 +1,17 @@
+a.reference code.literal span {
+  font-family: Lato, proxima-nova, Helvetica Neue, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #2980b9;
+}
+.rst-content .document a {
+  text-decoration: underline;
+  text-underline-offset: 2pt;
+}
+.rst-content .document a code {
+    padding: 0
+}
+.rst-content code {
+    border: none;
+    background: none;
+}
