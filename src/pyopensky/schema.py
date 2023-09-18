@@ -31,6 +31,8 @@ class UTCTimestampInteger(TypeDecorator[pd.Timestamp]):
             value = pd.to_datetime(value, utc=True)
         if isinstance(value, pd.Timestamp):
             return int(value.timestamp())
+        if isinstance(value, pd.Timedelta):
+            return int(value.total_seconds())
         return super().process_bind_param(value, dialect)
 
     def process_result_value(

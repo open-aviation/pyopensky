@@ -50,6 +50,7 @@ class OpenSkyDBAPI(Protocol):
         departure_airport: None | str = None,
         arrival_airport: None | str = None,
         airport: None | str = None,
+        time_buffer: None | str | pd.Timedelta = None,
         cached: bool = True,
         compress: bool = False,
         limit: None | int = None,

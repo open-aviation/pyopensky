@@ -656,12 +656,12 @@ class Impala(OpenSkyDBAPI):
         departure_airport: None | str = None,
         arrival_airport: None | str = None,
         airport: None | str = None,
+        time_buffer: None | str | pd.Timedelta = None,
         cached: bool = True,
         compress: bool = False,
         limit: None | int = None,
         other_tables: str = "",
         other_params: str = "",
-        time_buffer: None | str | pd.Timedelta = None,
         progressbar: bool | ProgressbarType[Any] = True,
         date_delta: timedelta = timedelta(hours=1),
         count: bool = False,
@@ -711,6 +711,10 @@ class Impala(OpenSkyDBAPI):
         :param airport: a string for the ICAO identifier of the airport. Selects
             flights departing from or arriving at the airport between the two
             timestamps;
+        :param time_buffer: (default: None) time buffer used to extend time
+            bounds for flights in the OpenSky flight tables: requests will get
+            flights between ``start - time_buffer`` and ``stop + time_buffer``.
+            If no airport is specified, the parameter is ignored.
 
         .. warning::
 
@@ -728,10 +732,6 @@ class Impala(OpenSkyDBAPI):
             received each record;
         :param nautical_units: (default: True) convert data stored in Impala to
             standard nautical units (ft, ft/min, knots).
-        :param time_buffer: (default: None) time buffer used to extend time
-            bounds for flights in the OpenSky flight tables: requests will get
-            flights between ``start - time_buffer`` and ``stop + time_buffer``.
-            If no airport is specified, the parameter is ignored.
         :param cached: (default: True) switch to False to force a new request to
             the database regardless of the cached files. This option also
             deletes previous cache files;
