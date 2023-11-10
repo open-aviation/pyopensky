@@ -38,7 +38,7 @@ from .schema import (
     RollcallRepliesData4,
     StateVectorsData4,
 )
-from .time import timelike, to_datetime
+from .time import deltalike, timelike, to_datetime
 
 _log = logging.getLogger(__name__)
 
@@ -514,7 +514,7 @@ class Trino(OpenSkyDBAPI):
             if isinstance(time_buffer, str):
                 time_buffer = pd.Timedelta(time_buffer)
             stmt = (
-                select(StateVectorsData4)
+                select(StateVectorsData4, fd4)
                 .join(
                     flight_query,
                     (fd4.icao24 == StateVectorsData4.icao24)
@@ -597,7 +597,9 @@ class Trino(OpenSkyDBAPI):
         bounds: None | HasBounds | tuple[float, float, float, float] = None,
         callsign: None | str | list[str] = None,
         departure_airport: None | str = None,
+        time_after_departure: deltalike = None,
         arrival_airport: None | str = None,
+        time_before_arrival: deltalike = None,
         airport: None | str = None,
         cached: bool = True,
         compress: bool = False,
@@ -763,6 +765,16 @@ class Trino(OpenSkyDBAPI):
                     Table.rawmsg.is_not(None),
                 )
             )
+            if time_after_departure is not None:
+                stmt = stmt.where(
+                    Table.mintime
+                    <= fd4.firstseen + pd.Timedelta(time_after_departure)
+                )
+            if time_before_arrival is not None:
+                stmt = stmt.where(
+                    Table.mintime
+                    >= fd4.lastseen - pd.Timedelta(time_after_departure)
+                )
         else:
             flight_table = (
                 select(
