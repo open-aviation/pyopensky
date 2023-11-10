@@ -514,7 +514,7 @@ class Trino(OpenSkyDBAPI):
             if isinstance(time_buffer, str):
                 time_buffer = pd.Timedelta(time_buffer)
             stmt = (
-                select(StateVectorsData4, fd4)
+                select(StateVectorsData4, fd4)  # type: ignore
                 .join(
                     flight_query,
                     (fd4.icao24 == StateVectorsData4.icao24)
