@@ -2196,13 +2196,13 @@ tests = ["black", "httpretty (<1.1)", "isort", "pre-commit", "pytest", "pytest-r
 
 [[package]]
 name = "types-paramiko"
-version = "3.3.0.0"
+version = "3.3.0.2"
 description = "Typing stubs for paramiko"
 optional = false
-python-versions = "*"
+python-versions = ">=3.7"
 files = [
-    {file = "types-paramiko-3.3.0.0.tar.gz", hash = "sha256:d02236a77a0bccedc52dc3c821ddf71a515c307863243e3c4eb5a40f6655d7c4"},
-    {file = "types_paramiko-3.3.0.0-py3-none-any.whl", hash = "sha256:a42bd71c5fa36dc1c63171f111b426014f5f68e2004e277afd028f3c2963a410"},
+    {file = "types-paramiko-3.3.0.2.tar.gz", hash = "sha256:4615fa0bc5b78c0f1b68b106071dc29737cb2cf53903712df72785dad5b359c3"},
+    {file = "types_paramiko-3.3.0.2-py3-none-any.whl", hash = "sha256:18fe96e6ef78ca04b2ac2a111f9404409b31a1d28bb2f5dca1a1afd62b8351a9"},
 ]
 
 [package.dependencies]
