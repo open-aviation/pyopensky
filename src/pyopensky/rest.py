@@ -210,7 +210,7 @@ class REST:
         c.raise_for_status()
         json = c.json()
 
-        return tuple(json["route"])  # type: ignore
+        return tuple(json["route"])
 
     def aircraft(
         self,
