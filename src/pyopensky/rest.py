@@ -64,6 +64,7 @@ class REST:
         | str
         | HasBounds
         | tuple[float, float, float, float] = None,
+        retry: int = 5,
     ) -> pd.DataFrame:
         """Returns the current state vectors from OpenSky REST API.
 
@@ -132,9 +133,12 @@ class REST:
                     columns.append("_")
             r = pd.DataFrame.from_records(json["states"], columns=columns)
         except Exception:
-            _log.warning("Error in received data, retrying in 10 seconds")
-            time.sleep(10)
-            return self.states(own, bounds)
+            if retry > 0:
+                retry = retry - 1
+                _log.warning("Retrying in 10 seconds... {retry} more time")
+                time.sleep(10)
+                return self.states(own, bounds, retry=retry)
+            raise
 
         return r.assign(
             timestamp=lambda df: pd.to_datetime(
