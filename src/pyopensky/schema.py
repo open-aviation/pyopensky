@@ -85,6 +85,7 @@ class CallsignString(TypeDecorator[str]):
             operator.ne,  # !=
             sql_operators.eq,
             sql_operators.ne,
+            sql_operators.in_op,
             sql_operators.contains,  # .in()
         ):
             return self
