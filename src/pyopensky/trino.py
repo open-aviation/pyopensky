@@ -22,6 +22,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.attributes import InstrumentedAttribute
+from sqlalchemy.sql import ColumnExpressionArgument
 from sqlalchemy.sql.expression import text
 from tqdm import tqdm
 from trino.auth import JWTAuthentication, OAuth2Authentication
@@ -38,7 +39,7 @@ from .schema import (
     RollcallRepliesData4,
     StateVectorsData4,
 )
-from .time import deltalike, timelike, to_datetime
+from .time import timelike, to_datetime
 
 _log = logging.getLogger(__name__)
 
@@ -224,7 +225,7 @@ class Trino(OpenSkyDBAPI):
         self,
         start: timelike,
         stop: None | timelike = None,
-        *args: Any,  # more reasonable to be explicit about arguments
+        *args: ColumnExpressionArgument[bool],
         departure_airport: None | str | list[str] = None,
         arrival_airport: None | str | list[str] = None,
         airport: None | str | list[str] = None,
@@ -345,6 +346,9 @@ class Trino(OpenSkyDBAPI):
                 Table.day < stop_ts.ceil("1d"),
             )
 
+        for condition in args:
+            stmt = stmt.where(condition)
+
         if limit is not None:
             stmt = stmt.limit(limit)
 
@@ -364,7 +368,7 @@ class Trino(OpenSkyDBAPI):
         self,
         start: timelike,
         stop: None | timelike = None,
-        *args: Any,
+        *args: ColumnExpressionArgument[bool],
         # date_delta: timedelta = timedelta(hours=1),
         callsign: None | str | list[str] = None,
         icao24: None | str | list[str] = None,
@@ -376,7 +380,6 @@ class Trino(OpenSkyDBAPI):
         departure_airport: None | str = None,
         arrival_airport: None | str = None,
         airport: None | str = None,
-        time_buffer: None | str | pd.Timedelta = None,
         cached: bool = True,
         compress: bool = False,
         limit: None | int = None,
@@ -424,9 +427,6 @@ class Trino(OpenSkyDBAPI):
         :param airport: a string for the ICAO identifier of the airport. Selects
             flights departing from or arriving at the airport between the two
             timestamps;
-        :param time_buffer: allows to add extra time before and after the first
-            and last timestamps of the flight table, as those may miss part of
-            the taxiing.
 
         .. warning::
 
@@ -511,22 +511,16 @@ class Trino(OpenSkyDBAPI):
 
             flight_query = flight_table.subquery()
             fd4 = aliased(FlightsData4, alias=flight_query, adapt_on_names=True)
-            if isinstance(time_buffer, str):
-                time_buffer = pd.Timedelta(time_buffer)
             stmt = (
-                select(StateVectorsData4, fd4)  # type: ignore
+                select(StateVectorsData4)
                 .join(
                     flight_query,
                     (fd4.icao24 == StateVectorsData4.icao24)
                     & (fd4.callsign == StateVectorsData4.callsign),
                 )
                 .where(
-                    (StateVectorsData4.time >= fd4.firstseen - time_buffer)
-                    if time_buffer
-                    else (StateVectorsData4.time >= fd4.firstseen),
-                    (StateVectorsData4.time <= fd4.lastseen + time_buffer)
-                    if time_buffer
-                    else (StateVectorsData4.time <= fd4.lastseen),
+                    StateVectorsData4.time >= fd4.firstseen,
+                    StateVectorsData4.time <= fd4.lastseen,
                 )
             )
 
@@ -591,20 +585,19 @@ class Trino(OpenSkyDBAPI):
         self,
         start: timelike,
         stop: None | timelike = None,
-        *args: Any,  # more reasonable to be explicit about arguments
+        *args: ColumnExpressionArgument[bool],
         icao24: None | str | list[str] = None,
         serials: None | int | Iterable[int] = None,
         bounds: None | HasBounds | tuple[float, float, float, float] = None,
         callsign: None | str | list[str] = None,
         departure_airport: None | str = None,
-        time_after_departure: deltalike = None,
         arrival_airport: None | str = None,
-        time_before_arrival: deltalike = None,
         airport: None | str = None,
         cached: bool = True,
         compress: bool = False,
         limit: None | int = None,
         Table: Type[RawTable] = RollcallRepliesData4,
+        extra_columns: tuple[InstrumentedAttribute[Any], ...] = (),
         **kwargs: Any,
     ) -> None | pd.DataFrame:
         """Get raw message from the OpenSky Trino database.
@@ -699,11 +692,9 @@ class Trino(OpenSkyDBAPI):
                 select(Table)
                 .with_only_columns(
                     Table.mintime,
-                    Table.maxtime,
                     Table.rawmsg,
-                    Table.msgcount,
                     Table.icao24,
-                    Table.sensors,
+                    *extra_columns,
                 )
                 .where(Table.rawmsg.is_not(None))
             )
@@ -765,16 +756,6 @@ class Trino(OpenSkyDBAPI):
                     Table.rawmsg.is_not(None),
                 )
             )
-            if time_after_departure is not None:
-                stmt = stmt.where(
-                    Table.mintime
-                    <= fd4.firstseen + pd.Timedelta(time_after_departure)
-                )
-            if time_before_arrival is not None:
-                stmt = stmt.where(
-                    Table.mintime
-                    >= fd4.lastseen - pd.Timedelta(time_after_departure)
-                )
         else:
             flight_table = (
                 select(
@@ -828,6 +809,9 @@ class Trino(OpenSkyDBAPI):
                     Table.rawmsg.is_not(None),
                 )
             )
+
+        for condition in args:
+            stmt = stmt.where(condition)
 
         stmt = self.stmt_where_str(stmt, icao24, Table.icao24)
 
