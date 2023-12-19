@@ -804,7 +804,7 @@ class Impala(OpenSkyDBAPI):
                 else:
                     other_params += f"and RTRIM(callsign) REGEXP('{callsign}') "
 
-            elif callsign.find("%") > 0 or callsign.find("_") > 0:
+            elif callsign.find("%") >= 0 or callsign.find("_") >= 0:
                 other_params += "and callsign ilike '{}' ".format(callsign)
             else:
                 other_params += "and callsign='{:<8s}' ".format(callsign)
@@ -1010,7 +1010,7 @@ class Impala(OpenSkyDBAPI):
         other_params += "and not typeogn "
 
         if isinstance(sensor_name, str):
-            if sensor_name.find("%") > 0 or sensor_name.find("_") > 0:
+            if sensor_name.find("%") > -1 or sensor_name.find("_") > -1:
                 other_params += "and sensorname ilike '{}' ".format(sensor_name)
             else:
                 other_params += "and sensorname='{:<8s}' ".format(sensor_name)
@@ -1241,7 +1241,7 @@ class Impala(OpenSkyDBAPI):
                     "supported at the moment."
                 )
             if isinstance(callsign, str):
-                if callsign.find("%") > 0 or callsign.find("_") > 0:
+                if callsign.find("%") > -1 or callsign.find("_") > -1:
                     callsigns = "and callsign ilike '{}' ".format(callsign)
                 else:
                     callsigns = "and callsign='{:<8s}' ".format(callsign)
