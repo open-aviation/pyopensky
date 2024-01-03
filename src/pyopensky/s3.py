@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Iterator, Literal, overload
+from typing import Any, Iterator, Literal, cast, overload
 
 import urllib3
 from minio import Minio, datatypes
@@ -124,8 +124,11 @@ class S3Client:
         :param filename: If `None`, writes the file in current folder.
             Otherwise, if a folder, writes the file in the given folder.
         """
-        total_size = obj.size
+        total_size: int = cast(int, obj.size)
         buffer = BytesIO()
+
+        if obj.object_name is None:
+            raise ValueError("Object {obj} has no object_name attribute")
 
         for idx in tqdm(range(0, total_size, 2**20), unit="Mb"):
             t = self.s3client.get_object(

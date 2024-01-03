@@ -17,6 +17,7 @@ stem = "part-r-00169-1cb1ad83-4e0f-4ae8-8a3a-9ca53b4e0f3e.snappy"
 def test_list_objects() -> None:
     for obj in opensky.list_objects(hour=timestamp, recursive=True):
         print(f"{obj.bucket_name=}, {obj.object_name=}")
+    assert obj.object_name is not None
     assert Path(obj.object_name).stem == stem
 
 
