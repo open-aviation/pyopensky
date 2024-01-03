@@ -88,8 +88,9 @@ class Trino(OpenSkyDBAPI):
             **kwargs,
         )
 
-        if result.status_code == 401:
-            # authentication failing
+        if result.status_code in [400, 401]:
+            msg = "Authentication failing on trino"
+            _log.warning(msg)
             return None
 
         result.raise_for_status()

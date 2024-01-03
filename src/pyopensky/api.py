@@ -13,7 +13,9 @@ ProgressbarType = Callable[[Iterable[T]], Iterable[T]]
 
 
 class HasBounds(Protocol):
-    bounds: tuple[float, float, float, float]
+    @property
+    def bounds(self) -> tuple[float, float, float, float]:
+        ...
 
 
 class OpenSkyDBAPI(Protocol):

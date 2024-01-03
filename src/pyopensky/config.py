@@ -144,10 +144,26 @@ NAME_RESOLUTION: dict[str, Resolution] = {
         traffic_category="opensky",
         traffic_name="password",
     ),
-    "trino_username": dict(opensky_category="trino", opensky_name="username"),
-    "trino_password": dict(opensky_category="trino", opensky_name="password"),
-    "impala_username": dict(opensky_category="impala", opensky_name="username"),
-    "impala_password": dict(opensky_category="impala", opensky_name="password"),
+    "trino_username": dict(
+        environment_variable="OPENSKY_TRINO_USERNAME",
+        opensky_category="trino",
+        opensky_name="username",
+    ),
+    "trino_password": dict(
+        environment_variable="OPENSKY_TRINO_PASSWORD",
+        opensky_category="trino",
+        opensky_name="password",
+    ),
+    "impala_username": dict(
+        environment_variable="OPENSKY_IMPALA_USERNAME",
+        opensky_category="impala",
+        opensky_name="username",
+    ),
+    "impala_password": dict(
+        environment_variable="OPENSKY_IMPALA_PASSWORD",
+        opensky_category="impala",
+        opensky_name="password",
+    ),
 }
 
 __all__ = list(NAME_RESOLUTION.keys())
