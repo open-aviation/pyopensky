@@ -18,7 +18,7 @@ DEFAULT_CONFIG = """
 username =
 password =
 
-# If you use different credentials for Impala and Trino, uncomment the following
+# If you use both Impala and Trino, uncomment the following
 # [impala]
 # username =
 # password =
