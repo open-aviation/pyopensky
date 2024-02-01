@@ -26,26 +26,7 @@ poetry install
 
 ## Credentials
 
-|        | Apply for access                                               |
-| ------ | -------------------------------------------------------------- |
-| Impala | https://opensky-network.org/data/impala                        |
-| Trino  | contact@opensky-network.org (or specify it in the Impala form) |
-
-The first time you use the library, a configuration file named `settings.conf` is created, including the following content:
-
-```text
-[default]
-username =
-password =
-```
-
-You will identify the folder where the `settings.conf` is located:
-
-```python
-from pyopensky.config import opensky_config_dir
-
-print(opensky_config_dir)
-```
+See details in the [documentation](https://open-aviation.github.io/pyopensky/credentials.html)
 
 ## Usage
 
