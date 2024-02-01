@@ -55,9 +55,8 @@ different credentials in the configuration file.
 If these sections are commented, the library will use the credentials from the
 [default] section. For Trino users, not specify Trino credentials will likely fail.
 
-
-for `traffic` library users only
---------------------------------
+Fallback configuration
+----------------------
 
 If no username and password are specified in the `pyopensky` configuration file, the
 following steps are performed in order:
