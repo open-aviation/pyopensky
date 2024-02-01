@@ -8,10 +8,10 @@ Access to the Impala database can be granted provide you meet the conditions
 defined by The OpenSky Network. Please apply here:
 https://opensky-network.org/data/impala 
 
-For access to the Trino database, please create an account on
-https://trino.opensky-network.org and specify you want access in the Impala
-form. If you already have access to Impala, send an email to
-contact@opensky-network.org.
+Access to the Trino database requires separate a login, please create an account on
+https://trino.opensky-network.org, and then send an email to
+contact@opensky-network.org with your Trino username to request for activation.
+
 
 Configuration
 -------------
@@ -25,6 +25,8 @@ is created, including the following content:
     username =
     password =
 
+This is your login to OpenSky website, REST API, and Impala service, which shares the same login.
+
 You will identify the folder where the ``settings.conf`` file is located:
 
 .. code:: python
@@ -33,10 +35,11 @@ You will identify the folder where the ``settings.conf`` file is located:
 
     print(opensky_config_dir)
 
-Different credentials for all services
---------------------------------------
 
-If you use different credentials for one of the services, you may specify
+Credentials for Impala and Trino
+--------------------------------
+
+If you use Trino services in addition to Impala, you should specify
 different credentials in the configuration file.
 
 .. code::
@@ -45,18 +48,18 @@ different credentials in the configuration file.
     username =
     password =
 
-or 
-
-.. code::
-
     [trino]
     username =
     password =
 
-If those sections are commented, the library will get the credentials from the
-[default] section.
+If these sections are commented, the library will use the credentials from the
+[default] section. For Trino users, not specify Trino credentials will likely fail.
 
-If no username and password are specified in the configuration file, the
+
+for `traffic` library users only
+--------------------------------
+
+If no username and password are specified in the `pyopensky` configuration file, the
 following steps are performed in order:
 
 - try to get the credentials from the `traffic <https://traffic-viz.github.io>`_
