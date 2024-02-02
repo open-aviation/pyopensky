@@ -136,9 +136,9 @@ class Impala(OpenSkyDBAPI):
     For more information, find below the error and the buggy line:
     """
 
-    stdin: paramiko.ChannelFile  # type: ignore
-    stdout: paramiko.ChannelFile  # type: ignore
-    stderr: paramiko.ChannelFile  # type: ignore
+    stdin: paramiko.ChannelFile
+    stdout: paramiko.ChannelFile
+    stderr: paramiko.ChannelFile
     # actually ChannelStderrFile
 
     def __init__(self, **kwargs: Any) -> None:
@@ -338,7 +338,7 @@ class Impala(OpenSkyDBAPI):
             request = request.replace("\n", " ")
             _log.info(request)
 
-            self.stdin.channel.send(request + ";\n")
+            self.stdin.channel.send((request + ";\n").encode())
             # avoid messing lines in the cache file
             time.sleep(0.1)
             total = ""
