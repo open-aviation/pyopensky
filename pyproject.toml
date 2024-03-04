@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyopensky"
-version = "2.3"
+version = "2.4"
 description = "A Python interface for OpenSky database"
 authors = ["Xavier Olive <git@xoolive.org>", "Junzi Sun <j.sun-1@tudelft.nl>"]
 license = "MIT"
@@ -11,7 +11,7 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 pandas = ">=1.5"
 trino = { version = ">=0.322", extras = ['sqlalchemy'] }
 minio = ">=7.1"
