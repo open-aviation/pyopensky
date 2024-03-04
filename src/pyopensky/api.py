@@ -14,8 +14,7 @@ ProgressbarType = Callable[[Iterable[T]], Iterable[T]]
 
 class HasBounds(Protocol):
     @property
-    def bounds(self) -> tuple[float, float, float, float]:
-        ...
+    def bounds(self) -> tuple[float, float, float, float]: ...
 
 
 class OpenSkyDBAPI(Protocol):
@@ -33,8 +32,7 @@ class OpenSkyDBAPI(Protocol):
         compress: bool = False,
         limit: None | int = None,
         **kwargs: Any,
-    ) -> None | pd.DataFrame:
-        ...
+    ) -> None | pd.DataFrame: ...
 
     def history(
         self,
@@ -57,8 +55,7 @@ class OpenSkyDBAPI(Protocol):
         compress: bool = False,
         limit: None | int = None,
         **kwargs: Any,
-    ) -> None | pd.DataFrame:
-        ...
+    ) -> None | pd.DataFrame: ...
 
     def rawdata(
         self,
@@ -76,5 +73,4 @@ class OpenSkyDBAPI(Protocol):
         compress: bool = False,
         limit: None | int = None,
         **kwargs: Any,
-    ) -> None | pd.DataFrame:
-        ...
+    ) -> None | pd.DataFrame: ...

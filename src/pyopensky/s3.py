@@ -90,8 +90,7 @@ class S3Client:
         self,
         obj: datatypes.Object,
         filename: None | Path,
-    ) -> Path:
-        ...
+    ) -> Path: ...
 
     @overload
     def download_object(
@@ -99,8 +98,7 @@ class S3Client:
         obj: datatypes.Object,
         filename: None | Path,
         return_buffer: Literal[False],
-    ) -> Path:
-        ...
+    ) -> Path: ...
 
     @overload
     def download_object(
@@ -108,8 +106,7 @@ class S3Client:
         obj: datatypes.Object,
         filename: None | Path,
         return_buffer: Literal[True],
-    ) -> BytesIO:
-        ...
+    ) -> BytesIO: ...
 
     def download_object(
         self,
