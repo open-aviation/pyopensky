@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The REST API &mdash; pyopensky 2.3 documentation</title>
+  <title>The REST API &mdash; pyopensky 2.4 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="_static/main_stylesheet.css?v=0065971f" />
@@ -16,9 +16,9 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=901b7368"></script>
+        <script src="_static/documentation_options.js?v=9caaf7ed"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -96,10 +96,10 @@
            <div itemprop="articleBody">
              
   <section id="the-rest-api">
-<h1>The REST API<a class="headerlink" href="#the-rest-api" title="Permalink to this heading"></a></h1>
+<h1>The REST API<a class="headerlink" href="#the-rest-api" title="Link to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyopensky.rest.REST">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyopensky.rest.</span></span><span class="sig-name descname"><span class="pre">REST</span></span><a class="headerlink" href="#pyopensky.rest.REST" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyopensky.rest.</span></span><span class="sig-name descname"><span class="pre">REST</span></span><a class="headerlink" href="#pyopensky.rest.REST" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Wrapper to OpenSky REST API.</p>
 <p>Credentials are fetched from the configuration file.
@@ -108,7 +108,7 @@ REST API is documented here: <a class="reference external" href="https://opensky
 library, they return advanced structures.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pyopensky.rest.REST.aircraft">
-<span class="sig-name descname"><span class="pre">aircraft</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">icao24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">begin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.aircraft" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">aircraft</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">icao24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">begin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.aircraft" title="Link to this definition"></a></dt>
 <dd><p>Returns a flight table associated to an aircraft.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -116,7 +116,7 @@ library, they return advanced structures.</p>
 </dd>
 </dl>
 <section id="official-documentation">
-<h2>Official documentation<a class="headerlink" href="#official-documentation" title="Permalink to this heading"></a></h2>
+<h2>Official documentation<a class="headerlink" href="#official-documentation" title="Link to this heading"></a></h2>
 <p>This API call retrieves flights for a particular aircraft within a
 certain time interval. Resulting flights departed and arrived within
 [begin, end]. If no flights are found for the given period, HTTP stats
@@ -126,7 +126,7 @@ certain time interval. Resulting flights departed and arrived within
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyopensky.rest.REST.arrival">
-<span class="sig-name descname"><span class="pre">arrival</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">airport</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">begin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.arrival" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">arrival</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">airport</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">begin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.arrival" title="Link to this definition"></a></dt>
 <dd><p>Returns a flight table associated to an airport.</p>
 <p>By default, returns the current table. Otherwise, you may enter a
 specific date (as a string, as an epoch or as a datetime)</p>
@@ -136,7 +136,7 @@ specific date (as a string, as an epoch or as a datetime)</p>
 </dd>
 </dl>
 <section id="id1">
-<h2>Official documentation<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h2>
+<h2>Official documentation<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
 <p>Retrieve flights for a certain airport which arrived within a given time
 interval [begin, end]. If no flights are found for the given period,
 HTTP stats 404 - Not found is returned with an empty response body.</p>
@@ -145,7 +145,7 @@ HTTP stats 404 - Not found is returned with an empty response body.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyopensky.rest.REST.departure">
-<span class="sig-name descname"><span class="pre">departure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">airport</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">begin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.departure" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">departure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">airport</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">begin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.departure" title="Link to this definition"></a></dt>
 <dd><p>Returns a flight table associated to an airport.</p>
 <p>By default, returns the current table. Otherwise, you may enter a
 specific date (as a string, as an epoch or as a datetime)</p>
@@ -155,7 +155,7 @@ specific date (as a string, as an epoch or as a datetime)</p>
 </dd>
 </dl>
 <section id="id2">
-<h2>Official documentation<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h2>
+<h2>Official documentation<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
 <p>Retrieve flights for a certain airport which departed within a given
 time interval [begin, end]. If no flights are found for the given
 period, HTTP stats 404 - Not found is returned with an empty response
@@ -165,7 +165,7 @@ body.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyopensky.rest.REST.range">
-<span class="sig-name descname"><span class="pre">range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">serial</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">day</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.range" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">serial</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">day</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.range" title="Link to this definition"></a></dt>
 <dd><p>Wraps a polygon representing a sensor’s range.</p>
 <p>By default, returns the current range. Otherwise, you may enter a
 specific day (as a string, as an epoch or as a datetime)</p>
@@ -178,7 +178,7 @@ specific day (as a string, as an epoch or as a datetime)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyopensky.rest.REST.routes">
-<span class="sig-name descname"><span class="pre">routes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">callsign</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.routes" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">routes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">callsign</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.routes" title="Link to this definition"></a></dt>
 <dd><p>Returns the route associated to a callsign.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -189,7 +189,7 @@ specific day (as a string, as an epoch or as a datetime)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyopensky.rest.REST.sensors">
-<span class="sig-name descname"><span class="pre">sensors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">day</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.sensors" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">sensors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">day</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.sensors" title="Link to this definition"></a></dt>
 <dd><p>The set of sensors serials you own (require authentication).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -200,7 +200,7 @@ specific day (as a string, as an epoch or as a datetime)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyopensky.rest.REST.states">
-<span class="sig-name descname"><span class="pre">states</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">own</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.states" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">states</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">own</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.states" title="Link to this definition"></a></dt>
 <dd><p>Returns the current state vectors from OpenSky REST API.</p>
 <p>If own parameter is set to True, returns only the state vectors
 associated to own sensors (requires authentication)</p>
@@ -211,7 +211,7 @@ associated to own sensors (requires authentication)</p>
 </dd>
 </dl>
 <section id="id3">
-<h2>Official documentation<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h2>
+<h2>Official documentation<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
 <p>Limitations for anonymous (unauthenticated) users</p>
 <p>Anonymous are those users who access the API without using credentials.
 The limitations for anonymous users are:</p>
@@ -237,7 +237,7 @@ state vectors for time t-(t mod 5).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyopensky.rest.REST.tracks">
-<span class="sig-name descname"><span class="pre">tracks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">icao24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.tracks" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">tracks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">icao24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.tracks" title="Link to this definition"></a></dt>
 <dd><p>Returns a Flight corresponding to a given aircraft.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -245,7 +245,7 @@ state vectors for time t-(t mod 5).</p>
 </dd>
 </dl>
 <section id="id4">
-<h2>Official documentation<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h2>
+<h2>Official documentation<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
 <p>Retrieve the trajectory for a certain aircraft at a given time. The
 trajectory is a list of waypoints containing position, barometric
 altitude, true track and an on-ground flag.</p>
