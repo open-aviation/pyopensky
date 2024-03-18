@@ -384,6 +384,7 @@ class Trino(OpenSkyDBAPI):
         cached: bool = True,
         compress: bool = False,
         limit: None | int = None,
+        selected_columns: tuple[InstrumentedAttribute[Any] | str, ...] = (),
         **kwargs: Any,
     ) -> None | pd.DataFrame:
         """Get Traffic from the OpenSky Trino database.
@@ -475,7 +476,7 @@ class Trino(OpenSkyDBAPI):
                 )
                 .where(
                     FlightsData4.day >= start_ts.floor("1d"),
-                    FlightsData4.day <= start_ts.ceil("1d"),
+                    FlightsData4.day <= stop_ts.ceil("1d"),
                 )
             )
 
@@ -571,6 +572,14 @@ class Trino(OpenSkyDBAPI):
             StateVectorsData4.hour >= start_ts.floor("1H"),
             StateVectorsData4.hour < stop_ts.ceil("1H"),
         )
+
+        if len(selected_columns) > 0:
+            columns = (
+                # TODO OK-ish for now...
+                getattr(fd4, col) if isinstance(col, str) else col
+                for col in selected_columns
+            )
+            stmt = stmt.with_only_columns(*columns)
 
         if limit is not None:
             stmt = stmt.limit(limit)
@@ -712,7 +721,7 @@ class Trino(OpenSkyDBAPI):
                 )
                 .where(
                     FlightsData4.day >= start_ts.floor("1d"),
-                    FlightsData4.day <= start_ts.ceil("1d"),
+                    FlightsData4.day <= stop_ts.ceil("1d"),
                 )
             )
 
