@@ -119,6 +119,8 @@ class Trino(OpenSkyDBAPI):
                 if token is not None
                 else OAuth2Authentication(),
                 http_scheme="https",
+                # https://github.com/trinodb/trino-python-client/discussions/456
+                legacy_prepared_statements=True,
             ),
         )
         return engine
