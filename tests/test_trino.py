@@ -1,11 +1,16 @@
 import pytest
-from pyopensky.schema import FlightsData4
+from pyopensky.schema import FlightsData4, StateVectorsData4
 from pyopensky.trino import Trino
-from sqlalchemy import select
+from sqlalchemy import func, not_, select
 
 import pandas as pd
 
 trino = Trino()
+
+
+commercial_callsign = (
+    "^([A-Z]{3})[0-9](([0-9]{0,3})|([0-9]{0,2})([A-Z])|([0-9]?)([A-Z]{2}))\\s*$"
+)
 
 
 def test_alive() -> None:
@@ -225,3 +230,58 @@ def test_complex_queries() -> None:
     assert len(df.groupby(["icao24", "callsign"])) == 1
     assert df.callsign.iloc[0] == "THY5HT"
     assert df.icao24.iloc[0] == "4bb1c5"
+
+
+def test_specific_columns() -> None:
+    df = trino.history(
+        "2023-03-01 12:00",
+        "2023-03-01 13:00",
+        arrival_airport="EHAM",
+        selected_columns=(
+            StateVectorsData4.time,
+            "lat",
+            "lon",
+            "StateVectorsData4.icao24",
+            # FlightsData4.estdepartureairport does not work without quotes
+            "FlightsData4.estdepartureairport",
+            "lastseen",  # in FlightData4
+        ),
+        limit=10,
+    )
+    assert df is not None
+    for col in [
+        "time",
+        "lat",
+        "lon",
+        "icao24",
+        "estdepartureairport",
+        "lastseen",
+    ]:
+        assert col in df.columns
+
+
+def test_func() -> None:
+    airport = "EHAM"
+    lat, lon = (52.308601, 4.76389)
+    df = trino.history(
+        "2023-03-01 12:00",
+        "2023-03-01 13:00",
+        func.ST_Distance(
+            func.to_spherical_geography(func.ST_Point(lon, lat)),
+            func.to_spherical_geography(
+                func.ST_Point(StateVectorsData4.lon, StateVectorsData4.lat)
+            ),
+        )
+        <= 10 * 1858,  # within 10 nautical miles
+        arrival_airport=airport,
+        limit=10,
+    )
+    assert df is not None
+
+    df = trino.history(
+        "2023-07-13",
+        "2023-07-14",
+        not_(func.regexp_like(StateVectorsData4.callsign, commercial_callsign)),
+        limit=10,
+    )
+    assert df is not None

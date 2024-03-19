@@ -573,10 +573,23 @@ class Trino(OpenSkyDBAPI):
             StateVectorsData4.hour < stop_ts.ceil("1h"),
         )
 
+        def transform_column(col: str) -> InstrumentedAttribute[Any]:
+            if "." in col:
+                table, column = col.split(".")
+                MATCH = {
+                    "StateVectorsData4": StateVectorsData4,
+                    "FlightsData4": fd4,
+                }
+                return getattr(MATCH[table], column)  # type: ignore
+            if candidate := getattr(StateVectorsData4, col, None):
+                return candidate  # type: ignore
+            if candidate := getattr(fd4, col, None):
+                return candidate  # type: ignore
+            raise ValueError(f"Unknown column: {col}")
+
         if len(selected_columns) > 0:
             columns = (
-                # TODO OK-ish for now...
-                getattr(fd4, col) if isinstance(col, str) else col
+                transform_column(col) if isinstance(col, str) else col
                 for col in selected_columns
             )
             stmt = stmt.with_only_columns(*columns)
