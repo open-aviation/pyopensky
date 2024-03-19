@@ -569,8 +569,8 @@ class Trino(OpenSkyDBAPI):
         stmt = stmt.where(
             StateVectorsData4.time >= start_ts,
             StateVectorsData4.time <= stop_ts,
-            StateVectorsData4.hour >= start_ts.floor("1H"),
-            StateVectorsData4.hour < stop_ts.ceil("1H"),
+            StateVectorsData4.hour >= start_ts.floor("1h"),
+            StateVectorsData4.hour < stop_ts.ceil("1h"),
         )
 
         if len(selected_columns) > 0:
@@ -775,8 +775,8 @@ class Trino(OpenSkyDBAPI):
                 )
                 .group_by(StateVectorsData4.icao24)
                 .where(
-                    StateVectorsData4.hour >= start_ts.floor("1H"),
-                    StateVectorsData4.hour <= stop_ts.ceil("1H"),
+                    StateVectorsData4.hour >= start_ts.floor("1h"),
+                    StateVectorsData4.hour <= stop_ts.ceil("1h"),
                     StateVectorsData4.time >= start_ts,
                     StateVectorsData4.time <= stop_ts,
                 )
@@ -828,8 +828,8 @@ class Trino(OpenSkyDBAPI):
         stmt = stmt.where(
             Table.mintime >= start_ts,
             Table.mintime <= stop_ts,
-            Table.hour >= start_ts.floor("1H"),
-            Table.hour < stop_ts.ceil("1H"),
+            Table.hour >= start_ts.floor("1h"),
+            Table.hour < stop_ts.ceil("1h"),
         )
 
         if limit is not None:
