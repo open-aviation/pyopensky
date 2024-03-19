@@ -414,6 +414,10 @@ class Trino(OpenSkyDBAPI):
         :param bounds: sets a geographical footprint. Either an **airspace or
             shapely shape** (requires the bounds attribute); or a **tuple of
             float** (west, south, east, north);
+        :param selected_columns: specify the columns you want to retrieve. When
+            empty, use all columns of the StateVectorsData4 table. You may
+            escape column names as str. **Always** escape names from the
+            FlightsData4 table.
 
         **Airports**
 

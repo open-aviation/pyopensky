@@ -5,5 +5,4 @@ API reference
    :maxdepth: 1
 
    rest
-   impala
    trino

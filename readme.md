@@ -30,13 +30,16 @@ See details in the [documentation](https://open-aviation.github.io/pyopensky/cre
 
 ## Usage
 
+> [!IMPORTANT]
+> The Impala shell is now deprecated. Please upgrade to Trino.
+
 - from the [REST API](https://open-aviation.github.io/pyopensky/rest.html):
 
   ```python
   from pyopensky.rest import REST
-  
+
   rest = REST()
-  
+
   rest.states()
   rest.tracks(icao24)
   rest.routes(callsign)
@@ -44,22 +47,12 @@ See details in the [documentation](https://open-aviation.github.io/pyopensky/cre
   rest.arrival(airport, begin, end)
   rest.departure(airport, begin, end)
   ```
-- from the [Impala](https://open-aviation.github.io/pyopensky/impala.html) shell (requires authentication):
 
-  ```python
-  from pyopensky.impala import Impala
-  
-  impala = Impala()
-  # full description of the whole set of parameters in the documentation
-  impala.flightlist(start, stop, *, airport, callsign, icao24)
-  impala.history(start, stop, *, callsign, icao24, bounds)
-  impala.rawdata(start, stop, *, callsign, icao24, bounds)
-  ```
 - from the [Trino](https://open-aviation.github.io/pyopensky/trino.html) database (requires authentication):
 
   ```python
   from pyopensky.trino import Trino
-  
+
   trino = Trino()
   # full description of the whole set of parameters in the documentation
   trino.flightlist(start, stop, *, airport, callsign, icao24)
