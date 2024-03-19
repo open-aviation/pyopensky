@@ -25,7 +25,8 @@ is created, including the following content:
     username =
     password =
 
-This is your login to OpenSky website, REST API, and Impala service, which shares the same login.
+If you use the same login for the OpenSky website (therefore the REST API) and 
+for Trino (it will be unified one day), just fill it here.
 
 You will identify the folder where the ``settings.conf`` file is located:
 
@@ -36,24 +37,24 @@ You will identify the folder where the ``settings.conf`` file is located:
     print(opensky_config_dir)
 
 
-Credentials for Impala and Trino
---------------------------------
+Different credentials per service
+---------------------------------
 
-If you use Trino services in addition to Impala, you should specify
-different credentials in the configuration file.
+If you want to specify different credentials for the REST API and for the Trino 
+database, use the following sections in the configuration file.
 
 .. code::
 
-    [impala]
+    [opensky]  # REST API
     username =
     password =
 
-    [trino]
+    [trino]  # Trino database
     username =
     password =
 
 If these sections are commented, the library will use the credentials from the
-[default] section. For Trino users, not specify Trino credentials will likely fail.
+[default] section.
 
 Fallback configuration
 ----------------------
