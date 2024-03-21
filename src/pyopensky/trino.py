@@ -440,7 +440,7 @@ class Trino(OpenSkyDBAPI):
             bounds for flights in the OpenSky flight tables: requests will get
             flights between ``start - time_buffer`` and ``stop + time_buffer``.
             If no airport is specified, the parameter is ignored.
-        
+
         .. warning::
 
             - See :meth:`pyopensky.trino.flightlist` if you do not need any
@@ -524,23 +524,26 @@ class Trino(OpenSkyDBAPI):
 
             flight_query = flight_table.subquery()
             fd4 = aliased(FlightsData4, alias=flight_query, adapt_on_names=True)
-            
+
             if isinstance(time_buffer, str):
                 time_buffer = pd.Timedelta(time_buffer)
-            if time_buffer is None:
-                time_buffer = pd.Timedelta('0m')
-            stmt = (
-                select(StateVectorsData4)
-                .join(
-                    flight_query,
-                    (fd4.icao24 == StateVectorsData4.icao24)
-                    & (fd4.callsign == StateVectorsData4.callsign),
-                )
-                .where(
-                    StateVectorsData4.time >= (fd4.firstseen - time_buffer),
-                    StateVectorsData4.time <= (fd4.lastseen  + time_buffer),
-                )
+
+            stmt = select(StateVectorsData4).join(
+                flight_query,
+                (fd4.icao24 == StateVectorsData4.icao24)
+                & (fd4.callsign == StateVectorsData4.callsign),
             )
+
+            if time_buffer is None:
+                stmt = stmt.where(
+                    StateVectorsData4.time >= fd4.firstseen,
+                    StateVectorsData4.time <= fd4.lastseen,
+                )
+            else:
+                stmt = stmt.where(
+                    StateVectorsData4.time >= (fd4.firstseen - time_buffer),
+                    StateVectorsData4.time <= (fd4.lastseen + time_buffer),
+                )
 
         stmt = self.stmt_where_str(stmt, icao24, StateVectorsData4.icao24)
         stmt = self.stmt_where_str(stmt, callsign, StateVectorsData4.callsign)

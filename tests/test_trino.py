@@ -231,12 +231,14 @@ def test_complex_queries() -> None:
     assert df.callsign.iloc[0] == "THY5HT"
     assert df.icao24.iloc[0] == "4bb1c5"
 
+
+def test_time_buffer() -> None:
     df = trino.history(
         start="2024-03-16 09:00",
         stop="2024-03-16 11:00",
-        time_buffer='25m',
+        time_buffer="25m",
         airport="UGTB",
-        bounds=(44.958636,41.665760,44.965417,41.670505)
+        bounds=(44.958636, 41.665760, 44.965417, 41.670505),
     )
     assert df is not None
     assert len(df.groupby(["icao24", "callsign"])) == 4
