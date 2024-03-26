@@ -297,3 +297,12 @@ def test_func() -> None:
         limit=10,
     )
     assert df is not None
+
+
+def test_icao24_lowcase() -> None:
+    df = trino.flightlist(
+        start="2023-01-03",
+        stop="2023-01-04",
+        icao24="400A0E",
+    )
+    assert df is not None

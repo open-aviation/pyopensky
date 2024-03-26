@@ -67,6 +67,17 @@ class UTCTimestampFloat(TypeDecorator[pd.Timestamp]):
         return super().process_bind_param(value, dialect)
 
 
+class AddressString(TypeDecorator[str]):
+    """Automatic coercing of icao24 addresses into low characters."""
+
+    impl = String
+
+    def process_bind_param(self, value: str | None, dialect: Dialect) -> Any:
+        if isinstance(value, str):
+            return value.lower()
+        return super().process_bind_param(value, dialect)
+
+
 class CallsignString(TypeDecorator[str]):
     """Automatic coercing of callsigns into 8-char left padded strings.
 
@@ -122,7 +133,7 @@ class TrackRow:
 
 @dataclass
 class AirportCandidateRow:
-    icao24: str
+    icao24: Address
     horizdistance: int
     vertdistance: int
 
@@ -180,6 +191,7 @@ Track = List[TrackRow]
 Sensors = List[SensorRow]
 
 Callsign = Annotated[str, mapped_column(CallsignString)]
+Address = Annotated[str, mapped_column(AddressString)]
 
 
 class Base(DeclarativeBase):
@@ -188,6 +200,7 @@ class Base(DeclarativeBase):
         AirportCandidates: AirportCandidateType,
         Track: TrackType,
         Callsign: CallsignString,
+        Address: AddressString,
         Sensors: SensorsType,
     }
 
@@ -196,7 +209,7 @@ class StateVectorsData4(Base):
     __tablename__ = "state_vectors_data4"
 
     time: Mapped[pd.Timestamp]
-    icao24: Mapped[str]
+    icao24: Mapped[Address]
     lat: Mapped[float]
     lon: Mapped[float]
     velocity: Mapped[float]
@@ -218,7 +231,7 @@ class StateVectorsData4(Base):
 class FlightsData4(Base):
     __tablename__ = "flights_data4"
 
-    icao24: Mapped[str]
+    icao24: Mapped[Address]
     firstseen: Mapped[pd.Timestamp]
     estdepartureairport: Mapped[str]
     lastseen: Mapped[pd.Timestamp]
@@ -243,7 +256,7 @@ class FlightsData4(Base):
 class FlightsData5(Base):
     __tablename__ = "flights_data5"
 
-    icao24: Mapped[str]
+    icao24: Mapped[Address]
     firstseen: Mapped[pd.Timestamp]
     estdepartureairport: Mapped[str]
     lastseen: Mapped[pd.Timestamp]
@@ -280,7 +293,7 @@ class RawTable(Protocol):
     mintime: Mapped[pd.Timestamp]
     maxtime: Mapped[pd.Timestamp]
     msgcount: Mapped[int]
-    icao24: Mapped[str]
+    icao24: Mapped[Address]
     message: Mapped[str]
     isid: Mapped[bool]
     flightstatus: Mapped[int]
@@ -306,7 +319,7 @@ class AcasData4(Base):
     mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     msgcount: Mapped[int]
-    icao24: Mapped[str]
+    icao24: Mapped[Address]
     message: Mapped[str]
     isid: Mapped[bool]
     flightstatus: Mapped[int]
@@ -332,7 +345,7 @@ class AllcallRepliesData4(Base):
     mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     msgcount: Mapped[int]
-    icao24: Mapped[str]
+    icao24: Mapped[Address]
     message: Mapped[str]
     isid: Mapped[bool]
     flightstatus: Mapped[int]
@@ -358,7 +371,7 @@ class IdentificationData4(Base):
     mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     msgcount: Mapped[int]
-    icao24: Mapped[str]
+    icao24: Mapped[Address]
     message: Mapped[str]
     isid: Mapped[bool]
     flightstatus: Mapped[int]
@@ -384,7 +397,7 @@ class OperationalStatusData4(Base):
     mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     msgcount: Mapped[int]
-    icao24: Mapped[str]
+    icao24: Mapped[Address]
     message: Mapped[str]
     isid: Mapped[bool]
     flightstatus: Mapped[int]
@@ -410,7 +423,7 @@ class PositionData4(Base):
     mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     msgcount: Mapped[int]
-    icao24: Mapped[str]
+    icao24: Mapped[Address]
     nicsuppla: Mapped[bool]
     hcr: Mapped[float]
     nic: Mapped[int]
@@ -442,7 +455,7 @@ class RollcallRepliesData4(Base):
     mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     msgcount: Mapped[int]
-    icao24: Mapped[str]
+    icao24: Mapped[Address]
     message: Mapped[str]
     isid: Mapped[bool]
     flightstatus: Mapped[int]
@@ -468,7 +481,7 @@ class VelocityData4(Base):
     mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     msgcount: Mapped[int]
-    icao24: Mapped[str]
+    icao24: Mapped[Address]
     message: Mapped[str]
     isid: Mapped[bool]
     flightstatus: Mapped[int]
