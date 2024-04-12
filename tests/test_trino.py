@@ -1,5 +1,5 @@
 import pytest
-from pyopensky.schema import FlightsData4, StateVectorsData4
+from pyopensky.schema import FlarmRaw, FlightsData4, StateVectorsData4
 from pyopensky.trino import Trino
 from sqlalchemy import func, not_, select
 
@@ -304,5 +304,15 @@ def test_icao24_lowcase() -> None:
         start="2023-01-03",
         stop="2023-01-04",
         icao24="400A0E",
+    )
+    assert df is not None
+
+
+def test_flarm() -> None:
+    df = trino.flarm(
+        "2018-09-11 07:00",
+        "2018-09-11 08:00",
+        limit=10,
+        sensor_name="LS%",
     )
     assert df is not None
