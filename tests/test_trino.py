@@ -1,5 +1,5 @@
 import pytest
-from pyopensky.schema import FlarmRaw, FlightsData4, StateVectorsData4
+from pyopensky.schema import FlightsData4, StateVectorsData4
 from pyopensky.trino import Trino
 from sqlalchemy import func, not_, select
 

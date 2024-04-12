@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyopensky"
-version = "2.5"
+version = "2.6"
 description = "A Python interface for OpenSky database"
 repository = "https://github.com/open-aviation/pyopensky/"
 authors = ["Xavier Olive <git@xoolive.org>", "Junzi Sun <j.sun-1@tudelft.nl>"]
