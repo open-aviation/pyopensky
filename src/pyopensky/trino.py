@@ -33,6 +33,7 @@ import pandas as pd
 from .api import HasBounds, OpenSkyDBAPI
 from .config import cache_path, trino_password, trino_username
 from .schema import (
+    FlarmRaw,
     FlightsData4,
     FlightsData5,
     RawTable,
@@ -612,6 +613,63 @@ class Trino(OpenSkyDBAPI):
                 for col in selected_columns
             )
             stmt = stmt.with_only_columns(*columns)
+
+        if limit is not None:
+            stmt = stmt.limit(limit)
+
+        res = self.query(stmt, cached=cached, compress=compress)
+
+        if res.shape[0] == 0:
+            return None
+
+        return res
+
+    def flarm(
+        self,
+        start: timelike,
+        stop: None | timelike = None,
+        *args: ColumnExpressionArgument[bool],
+        sensor_name: None | str | list[str] = None,
+        cached: bool = True,
+        compress: bool = False,
+        limit: None | int = None,
+        correct_only: bool = True,
+        extra_columns: tuple[InstrumentedAttribute[Any], ...] = (),
+        **kwargs: Any,
+    ) -> None | pd.DataFrame:
+        start_ts = to_datetime(start)
+        stop_ts = (
+            to_datetime(stop)
+            if stop is not None
+            else start_ts + pd.Timedelta("1d")
+        )
+        stmt = select(FlarmRaw).with_only_columns(
+            FlarmRaw.sensoraltitude,
+            FlarmRaw.sensorlatitude,
+            FlarmRaw.sensorlongitude,
+            FlarmRaw.sensorname,
+            FlarmRaw.timestamp,
+            FlarmRaw.timeatserver,
+            FlarmRaw.timeatsensor,
+            FlarmRaw.rawmessage,
+            *extra_columns,
+        )
+        if correct_only:
+            stmt = stmt.where(FlarmRaw.crccorrect)
+            stmt = stmt.where(FlarmRaw.rawmessage.is_not(None))
+
+        if sensor_name is not None:
+            stmt = self.stmt_where_str(stmt, sensor_name, FlarmRaw.sensorname)
+
+        for condition in args:
+            stmt = stmt.where(condition)
+
+        stmt = stmt.where(
+            FlarmRaw.timestamp >= start_ts,
+            FlarmRaw.timestamp <= stop_ts,
+            FlarmRaw.hour >= start_ts.floor("1h"),
+            FlarmRaw.hour < stop_ts.ceil("1h"),
+        )
 
         if limit is not None:
             stmt = stmt.limit(limit)

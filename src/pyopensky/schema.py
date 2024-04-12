@@ -294,16 +294,6 @@ class RawTable(Protocol):
     maxtime: Mapped[pd.Timestamp]
     msgcount: Mapped[int]
     icao24: Mapped[Address]
-    message: Mapped[str]
-    isid: Mapped[bool]
-    flightstatus: Mapped[int]
-    downlinkrequest: Mapped[int]
-    utilitymsg: Mapped[int]
-    interrogatorid: Mapped[int]
-    identifierdesignator: Mapped[int]
-    valuecode: Mapped[int]
-    altitude: Mapped[float]
-    identity: Mapped[str]
 
     # Whatever, we pick this one as primary key BUT
     #   - this is not true
@@ -372,15 +362,8 @@ class IdentificationData4(Base):
     maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     msgcount: Mapped[int]
     icao24: Mapped[Address]
-    message: Mapped[str]
-    isid: Mapped[bool]
-    flightstatus: Mapped[int]
-    downlinkrequest: Mapped[int]
-    utilitymsg: Mapped[int]
-    interrogatorid: Mapped[int]
-    identifierdesignator: Mapped[int]
-    valuecode: Mapped[int]
-    altitude: Mapped[float]
+    emittercategory: Mapped[int]
+    ftc: Mapped[int]
     identity: Mapped[str]
 
     # Whatever, we pick this one as primary key BUT
@@ -499,16 +482,47 @@ class VelocityData4(Base):
     maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     msgcount: Mapped[int]
     icao24: Mapped[Address]
-    message: Mapped[str]
-    isid: Mapped[bool]
-    flightstatus: Mapped[int]
-    downlinkrequest: Mapped[int]
-    utilitymsg: Mapped[int]
-    interrogatorid: Mapped[int]
-    identifierdesignator: Mapped[int]
-    valuecode: Mapped[int]
-    altitude: Mapped[float]
-    identity: Mapped[str]
+    supersonic: Mapped[bool]
+    intentchange: Mapped[bool]
+    ifrcapability: Mapped[bool]
+    nac: Mapped[int]
+    ewvelocity: Mapped[float]
+    nsvelocity: Mapped[float]
+    baro: Mapped[bool]
+    vertrate: Mapped[float]
+    geominurbaro: Mapped[float]  # typo confirmed
+    heading: Mapped[float]
+    velocity: Mapped[float]
+
+    # Whatever, we pick this one as primary key BUT
+    #   - this is not true
+    #   - we still need one column with a primary key
+    hour: Mapped[pd.Timestamp] = mapped_column(primary_key=True)
+
+
+class FlarmRaw(Base):
+    __tablename__ = "flarm_raw"
+
+    sensortype: Mapped[str]
+    sensorlatitude: Mapped[float]
+    sensorlongitude: Mapped[float]
+    sensoraltitude: Mapped[int]
+    timeatserver: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
+    timeatsensor: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
+    timestamp: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
+    rawmessage: Mapped[str]
+    crc: Mapped[str]
+    rawsoftmessage: Mapped[str]
+    sensorname: Mapped[str]
+    ntperror: Mapped[float]
+    userfreqcorrection: Mapped[float]
+    autofreqcorrection: Mapped[float]
+    frequency: Mapped[float]
+    channel: Mapped[int]
+    snrdetector: Mapped[float]
+    snrdemodulator: Mapped[float]
+    typeogn: Mapped[bool]
+    crccorrect: Mapped[bool]
 
     # Whatever, we pick this one as primary key BUT
     #   - this is not true
