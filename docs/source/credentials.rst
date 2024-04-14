@@ -4,14 +4,10 @@ Credentials
 Apply for access
 ----------------
 
-Access to the Impala database can be granted provide you meet the conditions
-defined by The OpenSky Network. Please apply here:
-https://opensky-network.org/data/impala 
-
-Access to the Trino database requires separate a login, please create an account on
+Access to the Trino database will be granted provided you meet the conditions
+defined by The OpenSky Network. Please create an account on
 https://trino.opensky-network.org, and then send an email to
 contact@opensky-network.org with your Trino username to request for activation.
-
 
 Configuration
 -------------
