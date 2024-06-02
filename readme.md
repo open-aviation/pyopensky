@@ -2,7 +2,7 @@
 
 The `pyopensky` Python library provides functions to download data from the OpenSky Network live API and historical databases. It aims at making ADS-B and Mode S data from OpenSky easily accessible in the Python programming environment.
 
-Full documentation on [https://open-aviation.github.io/pyopensky](https://open-aviation.github.io/pyopensky)
+Full documentation on <https://open-aviation.github.io/pyopensky>
 
 ## Installation
 
