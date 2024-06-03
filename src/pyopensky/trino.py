@@ -297,7 +297,7 @@ class Trino(OpenSkyDBAPI):
             else start_ts + pd.Timedelta("1d")
         )
 
-        stmt = select(Table).with_only_columns(  # type: ignore
+        stmt = select(Table).with_only_columns(
             Table.icao24,
             Table.firstseen,
             Table.estdepartureairport,
@@ -308,21 +308,17 @@ class Trino(OpenSkyDBAPI):
             *(extra_columns if extra_columns is not None else []),
         )
 
-        stmt = self.stmt_where_str(stmt, icao24, Table.icao24)  # type: ignore
-        stmt = self.stmt_where_str(
-            stmt,
-            callsign,
-            Table.callsign,  # type: ignore
-        )
+        stmt = self.stmt_where_str(stmt, icao24, Table.icao24)
+        stmt = self.stmt_where_str(stmt, callsign, Table.callsign)
         stmt = self.stmt_where_str(
             stmt,
             departure_airport,
-            Table.estdepartureairport,  # type: ignore
+            Table.estdepartureairport,
         )
         stmt = self.stmt_where_str(
             stmt,
             arrival_airport,
-            Table.estarrivalairport,  # type: ignore
+            Table.estarrivalairport,
         )
         if airport is not None and arrival_airport is not None:
             raise RuntimeError("airport may not be set if arrival_airport is")
@@ -331,8 +327,8 @@ class Trino(OpenSkyDBAPI):
         stmt = self.stmt_where_str(
             stmt,
             airport,
-            Table.estdepartureairport,  # type: ignore
-            Table.estarrivalairport,  # type: ignore
+            Table.estdepartureairport,
+            Table.estarrivalairport,
         )
 
         if departure_airport is not None:
