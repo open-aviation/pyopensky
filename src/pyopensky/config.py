@@ -98,6 +98,7 @@ class Resolution(TypedDict, total=False):
 NAME_RESOLUTION: dict[str, Resolution] = {
     # Cache configuration
     "cache_dir": dict(
+        environment_variable="OPENSKY_CACHE",
         opensky_category="cache",
         opensky_name="path",
         traffic_category="cache",
