@@ -307,6 +307,14 @@ def test_icao24_lowcase() -> None:
     )
     assert df is not None
 
+    df = trino.history(
+        "2023-01-01 16:19:00",
+        "2023-01-01 18:50:45",
+        icao24="485A35",
+        limit=30,
+    )
+    assert df is not None
+
 
 def test_flarm() -> None:
     df = trino.flarm(
