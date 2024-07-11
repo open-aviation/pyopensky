@@ -1,9 +1,12 @@
 [tool.poetry]
 name = "pyopensky"
-version = "2.7"
+version = "2.8"
 description = "A Python interface for OpenSky database"
 repository = "https://github.com/open-aviation/pyopensky/"
-authors = ["Xavier Olive <git@xoolive.org>", "Junzi Sun <j.sun-1@tudelft.nl>"]
+authors = [
+  "Xavier Olive <git@xoolive.org>",
+  "Junzi Sun <j.sun-1@tudelft.nl>"
+]
 license = "MIT"
 readme = "readme.md"
 include = [
@@ -21,7 +24,7 @@ tqdm = ">=4.65.0"
 pyarrow = ">=11.0.0"
 typing-extensions = ">=4.5.0"
 pyjwt = ">=2.7.0"
-paramiko = ">=2.7"
+httpx = "^0.27.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = ">=3.1.1"
@@ -29,8 +32,6 @@ mypy = ">=1.0.1"
 ruff = ">=0.0.253"
 pytest = ">=7.2.1"
 ipykernel = ">=6.21.2"
-types-requests = ">=2.28.11.15"
-types-paramiko = ">=3.3.0.0"
 Sphinx = ">=5.1"
 sphinx-design = ">=0.4.1"
 sphinx-rtd-theme = ">=0.5.2"

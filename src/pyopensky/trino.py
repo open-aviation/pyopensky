@@ -8,8 +8,8 @@ from multiprocessing.pool import ThreadPool
 from operator import or_
 from typing import Any, Iterable, Type, TypedDict, cast
 
+import httpx
 import jwt
-import requests
 from sqlalchemy import (
     Connection,
     CursorResult,
@@ -77,7 +77,7 @@ class Trino(OpenSkyDBAPI):
             return self._token["access_token"]
 
         _log.info("Requesting authentication token")
-        result = requests.post(
+        result = httpx.post(
             "https://auth.opensky-network.org/auth/realms/"
             "opensky-network/protocol/openid-connect/token",
             data={

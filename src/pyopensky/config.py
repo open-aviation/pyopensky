@@ -18,11 +18,11 @@ DEFAULT_CONFIG = """
 username =
 password =
 
-# If you use both Impala and Trino, uncomment the following
-# [impala]
-# username =
-# password =
-#
+# Uncomment the following if you have access to the s3 server
+# secret_key =
+# access_key =
+
+# If you need a different account on Trino, uncomment the following
 # [trino]
 # username =
 # password =
@@ -112,12 +112,6 @@ NAME_RESOLUTION: dict[str, Resolution] = {
         traffic_category="network",
         traffic_name="http_proxy",
     ),
-    "ssh_proxycommand": dict(
-        opensky_category="impala",
-        opensky_name="ssh.proxycommand",
-        traffic_category="opensky",
-        traffic_name="ssh.proxycommand",
-    ),
     # Credentials configuration
     "access_key": dict(
         opensky_category="s3",
@@ -153,16 +147,6 @@ NAME_RESOLUTION: dict[str, Resolution] = {
     "trino_password": dict(
         environment_variable="OPENSKY_TRINO_PASSWORD",
         opensky_category="trino",
-        opensky_name="password",
-    ),
-    "impala_username": dict(
-        environment_variable="OPENSKY_IMPALA_USERNAME",
-        opensky_category="impala",
-        opensky_name="username",
-    ),
-    "impala_password": dict(
-        environment_variable="OPENSKY_IMPALA_PASSWORD",
-        opensky_category="impala",
         opensky_name="password",
     ),
 }
@@ -216,16 +200,6 @@ def __getattr__(name: str) -> None | str:
         return get_config(**NAME_RESOLUTION["username"])
 
     if name == "trino_password":
-        if value := get_config(**NAME_RESOLUTION[name]):
-            return value
-        return get_config(**NAME_RESOLUTION["password"])
-
-    if name == "impala_username":
-        if value := get_config(**NAME_RESOLUTION[name]):
-            return value
-        return get_config(**NAME_RESOLUTION["username"])
-
-    if name == "impala_password":
         if value := get_config(**NAME_RESOLUTION[name]):
             return value
         return get_config(**NAME_RESOLUTION["password"])

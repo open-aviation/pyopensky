@@ -6,7 +6,7 @@ from datetime import timedelta
 from json import JSONDecodeError
 from typing import Any, cast
 
-import requests
+import httpx
 
 import pandas as pd
 
@@ -55,7 +55,7 @@ class REST:
         self.password = password
         self.auth = cast(tuple[str, str], (username, password))
 
-        self.session = requests.Session()
+        self.client = httpx.Client()
 
     def states(
         self,
@@ -120,7 +120,7 @@ class REST:
 
             what += f"?lamin={south}&lamax={north}&lomin={west}&lomax={east}"
 
-        c = self.session.get(
+        c = self.client.get(
             f"https://opensky-network.org/api/states/{what}", auth=self.auth
         )
         try:
@@ -185,7 +185,7 @@ class REST:
 
         """
         time = int(to_datetime(time).timestamp()) if time is not None else 0
-        c = self.session.get(
+        c = self.client.get(
             f"https://opensky-network.org/api/tracks/"
             f"?icao24={icao24}&time={time}"
         )
@@ -208,7 +208,7 @@ class REST:
 
     def routes(self, callsign: str) -> tuple[str, str]:
         """Returns the route associated to a callsign."""
-        c = self.session.get(
+        c = self.client.get(
             f"https://opensky-network.org/api/routes?callsign={callsign}"
         )
         c.raise_for_status()
@@ -243,7 +243,7 @@ class REST:
         else:
             end_ts = to_datetime(end)
 
-        c = self.session.get(
+        c = self.client.get(
             f"https://opensky-network.org/api/flights/aircraft"
             f"?icao24={icao24}&begin={begin_ts.timestamp():.0f}&"
             f"end={end_ts.timestamp():.0f}"
@@ -276,7 +276,7 @@ class REST:
         today = pd.Timestamp("now", tz="utc").floor("1d")
         if day is not None:
             today = to_datetime(day)
-        c = self.session.get(
+        c = self.client.get(
             f"https://opensky-network.org/api/sensor/myStats"
             f"?days={today.timestamp():.0f}",
             auth=self.auth,
@@ -298,7 +298,7 @@ class REST:
             day = pd.Timestamp("now", tz="utc").floor("1d")
         day_ts = to_datetime(day)
 
-        c = self.session.get(
+        c = self.client.get(
             f"https://opensky-network.org/api/range/days?"
             f"days={day_ts.timestamp():.0f}&serials={serial}"
         )
@@ -314,7 +314,7 @@ class REST:
             day = pd.Timestamp("now", tz="utc").floor("1d")
         day_ts = to_datetime(day)
 
-        c = self.session.get(
+        c = self.client.get(
             f"https://opensky-network.org/api/range/coverage?"
             f"day={day_ts.timestamp():.0f}"
         )
@@ -353,7 +353,7 @@ class REST:
         else:
             end_ts = to_datetime(end)
 
-        c = self.session.get(
+        c = self.client.get(
             f"https://opensky-network.org/api/flights/arrival"
             f"?begin={begin_ts.timestamp():.0f}&airport={airport}&"
             f"end={end_ts.timestamp():.0f}"
@@ -413,7 +413,7 @@ class REST:
         else:
             end_ts = to_datetime(end)
 
-        c = self.session.get(
+        c = self.client.get(
             f"https://opensky-network.org/api/flights/departure"
             f"?begin={begin_ts.timestamp():.0f}&airport={airport}&"
             f"end={end_ts.timestamp():.0f}"
