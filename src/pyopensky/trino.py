@@ -194,14 +194,16 @@ class Trino(OpenSkyDBAPI):
         ) as download_bar:
             sequence_rows = async_result.get()
             download_bar.update(len(sequence_rows))
-            yield pd.DataFrame.from_records(sequence_rows, columns=res.keys())
+            yield pd.DataFrame.from_records(
+                sequence_rows, columns=res.keys()
+            ).convert_dtypes(dtype_backend="pyarrow")
 
             while len(sequence_rows) == batch_size:
                 sequence_rows = res.fetchmany(batch_size)
                 download_bar.update(len(sequence_rows))
                 yield pd.DataFrame.from_records(
                     sequence_rows, columns=res.keys()
-                )
+                ).convert_dtypes(dtype_backend="pyarrow")
 
     ## Specific queries
 
