@@ -2,17 +2,14 @@ name: tests
 
 on:
   push:
-    branches:
-      - master
   pull_request_target:
-  schedule:
-    - cron: "42 7 * * 0" # Every Sunday morning when I am fast asleep :)
-    # This is useful for keeping the cache fit and ready
+  schedule: # This is useful for keeping the cache fit and ready
+    - cron: "42 3 * * 0" # Every Sunday morning when I am fast asleep :)
   workflow_dispatch:
 
 jobs:
   deploy:
-    name: python-${{ matrix.os }}
+    name: python-${{ matrix.python-version }} on ${{ matrix.os }}
 
     strategy:
       matrix:
@@ -35,6 +32,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up uv
         if: ${{ matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest' }}
@@ -71,7 +70,7 @@ jobs:
           uv run ruff format --check
 
       - name: Run tests
-        if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12' }}
+        # if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12' }}
         env:
           OPENSKY_USERNAME: ${{ secrets.OPENSKY_USERNAME }}
           OPENSKY_PASSWORD: ${{ secrets.OPENSKY_PASSWORD }}
