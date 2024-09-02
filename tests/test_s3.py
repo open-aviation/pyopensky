@@ -2,9 +2,9 @@ import logging
 from pathlib import Path
 
 import pytest
-from pyopensky.s3 import S3Client
 
 import pandas as pd
+from pyopensky.s3 import S3Client
 
 logging.getLogger().setLevel(logging.INFO)
 opensky = S3Client()

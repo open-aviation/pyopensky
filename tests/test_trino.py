@@ -1,9 +1,9 @@
 import pytest
-from pyopensky.schema import FlightsData4, StateVectorsData4
-from pyopensky.trino import Trino
 from sqlalchemy import func, not_, select
 
 import pandas as pd
+from pyopensky.schema import FlightsData4, StateVectorsData4
+from pyopensky.trino import Trino
 
 trino = Trino()
 
