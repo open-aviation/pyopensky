@@ -58,8 +58,8 @@ jobs:
         id: cache-folder
         with:
           path: |
-            ~/.cache/opensky/
-          key: opensky
+            ${{ github.workspace }}/cache_opensky
+          key: opensky-${{ runner.os }}-${{ hashFiles('uv.lock') }}
 
       - name: Install the project
         run: uv sync --all-extras --dev --python ${{ matrix.python-version }}
@@ -74,6 +74,7 @@ jobs:
         env:
           OPENSKY_USERNAME: ${{ secrets.OPENSKY_USERNAME }}
           OPENSKY_PASSWORD: ${{ secrets.OPENSKY_PASSWORD }}
+          OPENSKY_CACHE: ${{ github.workspace }}/cache_opensky
         run: uv run pytest
 
       - name: Minimize uv cache
