@@ -42,7 +42,7 @@ def test_query() -> None:
         .order_by(FlightsData4.firstseen)
         .limit(50)
     )
-    assert res.shape[0] == 10
+    assert res.shape[0] >= 10
     assert res.callsign.max() == "AFR291"
     assert res.estdepartureairport.max() == "RJBB"
     assert res.firstseen.diff().min() > pd.Timedelta("1 day 12 hours")

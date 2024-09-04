@@ -25,6 +25,7 @@ dependencies = [
 
 [project.optional-dependencies]
 cartes = ["cartes>=0.8.0"]
+decoding = ["pymodes>=2.18", "rs1090>=0.3.0"]
 
 [build-system]
 requires = ["hatchling"]
