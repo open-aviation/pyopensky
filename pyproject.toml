@@ -1,6 +1,6 @@
 [project]
 name = "pyopensky"
-version = "2.8"
+version = "2.9"
 description = "A Python interface for OpenSky database"
 repository = "https://github.com/open-aviation/pyopensky/"
 authors = [
