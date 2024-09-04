@@ -13,13 +13,13 @@ The library is also available on conda-forge:
 
     conda install -c conda-forge pyopensky
 
-Development mode (with poetry):
+Development mode (with uv):
 
 .. code::
 
-    git clone https://github.com/open-aviation/pyopensky
-    cd pyopensky
-    poetry install
+    curl -LsSf https://astral.sh/uv/install.sh | sh  # Linux and MacOS
+    irm https://astral.sh/uv/install.ps1 | iex  # Windows
+    uv sync --dev
 
 .. hint::
 
