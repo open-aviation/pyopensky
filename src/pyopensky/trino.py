@@ -20,12 +20,14 @@ from sqlalchemy import (
     func,
     select,
 )
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.sql import ColumnExpressionArgument
 from sqlalchemy.sql.expression import text
 from tqdm import tqdm
 from trino.auth import JWTAuthentication, OAuth2Authentication
+from trino.exceptions import TrinoQueryError
 from trino.sqlalchemy import URL
 
 import pandas as pd
@@ -43,6 +45,22 @@ from .schema import (
 from .time import timelike, to_datetime
 
 _log = logging.getLogger(__name__)
+
+limit_resources_msg = """
+*********************************************************************
+
+You have hit the limit of your available queries.
+(2 concurrent queries + 2 queued queries)
+
+If you want to monitor your running queries, connect to
+https://trino.opensky-network.org/ui/
+
+- filter the queries based on your user id
+- kill the irrelevant queries (click on the query id then press kill)
+- try running your code again
+
+*********************************************************************
+"""
 
 
 class Token(TypedDict):
@@ -155,13 +173,32 @@ class Trino(OpenSkyDBAPI):
         with self.connect().execution_options(**exec_kw) as connect:
             # There are steps here, that will not appear in the progress bar
             # but that you can check on https://trino.opensky-network.org/ui/
-            res = pd.concat(self.process_result(connect.execute(query)))
+            try:
+                res = connect.execute(query)
+            except DBAPIError as exc:
+                if isinstance(exc.orig, TrinoQueryError):
+                    if exc.orig.error_name == "QUERY_QUEUE_FULL":
+                        _log.error(limit_resources_msg)
+                        res = exc  # type: ignore
+                    else:
+                        raise exc
+                else:
+                    raise exc
+
+            # The point of this error is to limit the traceback to a minimum
+            # If we raise the exception inside the try/except, we get a really
+            # long traceback that could discourage users to read the errors.
+
+            if isinstance(res, DBAPIError):
+                raise RuntimeError(str(res.orig))
+
+            df = pd.concat(self.process_result(res))
 
         if cached:
             _log.info(f"Saving results to {cache_file}")
-            res.to_parquet(cache_file)
+            df.to_parquet(cache_file)
 
-        return res
+        return df
 
     def process_result(
         self,
@@ -560,6 +597,7 @@ class Trino(OpenSkyDBAPI):
                 # I just don't want to add the shapely dependency here
                 west, south, east, north = getattr(bounds, "bounds")
             else:
+                assert isinstance(bounds, tuple)
                 west, south, east, north = bounds
 
             stmt = stmt.where(
@@ -882,6 +920,7 @@ class Trino(OpenSkyDBAPI):
                     # I just don't want to add the shapely dependency here
                     west, south, east, north = getattr(bounds, "bounds")
                 else:
+                    assert isinstance(bounds, tuple)
                     west, south, east, north = bounds
 
                 flight_table = flight_table.where(

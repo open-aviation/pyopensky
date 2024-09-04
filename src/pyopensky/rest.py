@@ -57,6 +57,75 @@ class REST:
 
         self.client = httpx.Client()
 
+    def get(self, query: str, retry: int = 5) -> Any:
+        c = self.client.get(query, auth=self.auth)
+        try:
+            if limit := c.headers.get("X-Rate-Limit-Remaining", None):
+                limit = int(limit)
+                if limit < 100:
+                    _log.warning(f"Rate limiting: Only {limit} calls remaining")
+            c.raise_for_status()
+            return c.json()
+        except httpx.HTTPStatusError:
+            if c.status_code == 503 and retry > 0:
+                retry = retry - 1
+                _log.warning(
+                    "Error 503 (Service unavailable): "
+                    f"Retrying in 1 second... {retry} more time before failing"
+                )
+                time.sleep(1)
+                return self.get(query, retry=retry)
+            if c.status_code == 429:
+                retry_after = c.headers.get(
+                    "X-Rate-Limit-Retry-After-Seconds", None
+                )
+                if retry_after is not None:
+                    s = int(retry_after)
+                    _log.warning(
+                        "Error 429 (Too many requests): "
+                        f"Retry after {s} seconds"
+                    )
+                    time.sleep(s)
+                    return self.get(query, retry=retry)
+            raise
+        except JSONDecodeError:
+            _log.warning(c.content)
+            raise
+
+    async def async_get(
+        self, client: httpx.AsyncClient, query: str, retry: int = 5
+    ) -> pd.DataFrame:
+        c = await client.get(query, auth=self.auth)
+        try:
+            if limit := c.headers.get("X-Rate-Limit-Remaining", None):
+                limit = int(limit)
+                if limit < 100:
+                    _log.warning(f"Rate limiting: Only {limit} calls remaining")
+            c.raise_for_status()
+            return c.json()
+        except httpx.HTTPStatusError:
+            if c.status_code == 503 and retry > 0:
+                retry = retry - 1
+                _log.warning(
+                    "Error 503 (Service unavailable): "
+                    f"Retrying in 1 second... {retry} more time before failing"
+                )
+                time.sleep(1)
+                return await self.async_get(client, query, retry=retry)
+            if c.status_code == 429:
+                retry_after = c.headers.get(
+                    "X-Rate-Limit-Retry-After-Seconds", None
+                )
+                if retry_after is not None:
+                    s = int(retry_after)
+                    _log.warning(
+                        "Error 429 (Too many requests): "
+                        f"Retry after {s} seconds"
+                    )
+                    time.sleep(s)
+                    return await self.async_get(client, query, retry=retry)
+            raise
+
     def states(
         self,
         own: bool = False,
@@ -116,29 +185,21 @@ class REST:
                 # I just don't want to add the shapely dependency here
                 west, south, east, north = getattr(bounds, "bounds")
             else:
+                assert isinstance(bounds, tuple)
                 west, south, east, north = bounds
 
             what += f"?lamin={south}&lamax={north}&lomin={west}&lomax={east}"
 
-        c = self.client.get(
-            f"https://opensky-network.org/api/states/{what}", auth=self.auth
-        )
-        try:
-            c.raise_for_status()
-            json = c.json()
-            columns = list(self._json_columns)
-            # For some reason, OpenSky may return 18 fields instead of 17
-            if len(json["states"]) > 0:
-                if len(json["states"][0]) > len(self._json_columns):
-                    columns.append("_")
-            r = pd.DataFrame.from_records(json["states"], columns=columns)
-        except Exception:
-            if retry > 0:
-                retry = retry - 1
-                _log.warning("Retrying in 10 seconds... {retry} more time")
-                time.sleep(10)
-                return self.states(own, bounds, retry=retry)
-            raise
+        json = self.get(f"https://opensky-network.org/api/states/{what}")
+        columns: list[str] = list(self._json_columns)
+
+        # For some reason, OpenSky may return 18 fields instead of 17
+        if len(json["states"]) > 0:
+            if len(json["states"][0]) > len(self._json_columns):
+                columns.append("_")
+        r = pd.DataFrame.from_records(
+            json["states"], columns=columns
+        ).convert_dtypes(dtype_backend="pyarrow")
 
         return r.assign(
             timestamp=lambda df: pd.to_datetime(
@@ -150,7 +211,7 @@ class REST:
             callsign=lambda df: df.callsign.str.strip(),
         )
 
-    def tracks(self, icao24: str, time: None | timelike = None) -> pd.DataFrame:
+    def tracks(self, icao24: str, ts: None | timelike = None) -> pd.DataFrame:
         """Returns a Flight corresponding to a given aircraft.
 
         Official documentation
@@ -184,35 +245,41 @@ class REST:
         detailed track information.
 
         """
-        time = int(to_datetime(time).timestamp()) if time is not None else 0
-        c = self.client.get(
+        ts_int = int(to_datetime(ts).timestamp()) if ts is not None else 0
+        json = self.get(
             f"https://opensky-network.org/api/tracks/"
-            f"?icao24={icao24}&time={time}"
+            f"?icao24={icao24}&time={ts_int}"
         )
-        c.raise_for_status()
-        json = c.json()
 
-        df = pd.DataFrame.from_records(
-            json["path"],
-            columns=[
-                "timestamp",
-                "latitude",
-                "longitude",
-                "altitude",
-                "track",
-                "onground",
-            ],
-        ).assign(icao24=json["icao24"], callsign=json["callsign"])
+        df = (
+            pd.DataFrame.from_records(
+                json["path"],
+                columns=[
+                    "timestamp",
+                    "latitude",
+                    "longitude",
+                    "altitude",
+                    "track",
+                    "onground",
+                ],
+            )
+            .assign(
+                timestamp=lambda df: pd.to_datetime(
+                    df.timestamp, utc=True, unit="s"
+                ),
+                icao24=json["icao24"],
+                callsign=json["callsign"],
+            )
+            .convert_dtypes(dtype_backend="pyarrow")
+        )
 
         return df
 
     def routes(self, callsign: str) -> tuple[str, str]:
         """Returns the route associated to a callsign."""
-        c = self.client.get(
+        json = self.get(
             f"https://opensky-network.org/api/routes?callsign={callsign}"
         )
-        c.raise_for_status()
-        json = c.json()
 
         return tuple(json["route"])
 
@@ -236,21 +303,22 @@ class REST:
 
         if begin is None:
             begin_ts = pd.Timestamp("now", tz="utc").floor("1d")
-        begin_ts = to_datetime(begin)
+        else:
+            begin_ts = to_datetime(begin)
 
         if end is None:
             end_ts = begin_ts + pd.Timedelta("1d")
         else:
             end_ts = to_datetime(end)
 
-        c = self.client.get(
+        json = self.get(
             f"https://opensky-network.org/api/flights/aircraft"
             f"?icao24={icao24}&begin={begin_ts.timestamp():.0f}&"
             f"end={end_ts.timestamp():.0f}"
         )
-        c.raise_for_status()
         return (
-            pd.DataFrame.from_records(c.json())[
+            pd.DataFrame.from_records(json)
+            .convert_dtypes(dtype_backend="pyarrow")[
                 [
                     "firstSeen",
                     "lastSeen",
@@ -276,14 +344,12 @@ class REST:
         today = pd.Timestamp("now", tz="utc").floor("1d")
         if day is not None:
             today = to_datetime(day)
-        c = self.client.get(
+        json = self.get(
             f"https://opensky-network.org/api/sensor/myStats"
             f"?days={today.timestamp():.0f}",
-            auth=self.auth,
         )
-        c.raise_for_status()
         try:
-            return set(c.json()[0]["stats"].keys())
+            return set(json[0]["stats"].keys())
         except JSONDecodeError:
             return set()
 
@@ -298,32 +364,20 @@ class REST:
             day = pd.Timestamp("now", tz="utc").floor("1d")
         day_ts = to_datetime(day)
 
-        c = self.client.get(
+        return self.get(
             f"https://opensky-network.org/api/range/days?"
             f"days={day_ts.timestamp():.0f}&serials={serial}"
         )
-        c.raise_for_status()
-        try:
-            return c.json()
-        except JSONDecodeError:
-            _log.warning(c.content)
-            raise
 
     def global_coverage(self, day: None | timelike = None) -> Any:
         if day is None:
             day = pd.Timestamp("now", tz="utc").floor("1d")
         day_ts = to_datetime(day)
 
-        c = self.client.get(
+        return self.client.get(
             f"https://opensky-network.org/api/range/coverage?"
             f"day={day_ts.timestamp():.0f}"
         )
-        c.raise_for_status()
-        try:
-            return c.json()
-        except JSONDecodeError:
-            _log.warning(c.content)
-            raise
 
     def arrival(
         self,
@@ -353,15 +407,15 @@ class REST:
         else:
             end_ts = to_datetime(end)
 
-        c = self.client.get(
+        json = self.get(
             f"https://opensky-network.org/api/flights/arrival"
             f"?begin={begin_ts.timestamp():.0f}&airport={airport}&"
             f"end={end_ts.timestamp():.0f}"
         )
-        c.raise_for_status()
 
         return (
-            pd.DataFrame.from_records(c.json())[
+            pd.DataFrame.from_records(json)
+            .convert_dtypes(dtype_backend="pyarrow")[
                 [
                     "firstSeen",
                     "lastSeen",
@@ -413,15 +467,15 @@ class REST:
         else:
             end_ts = to_datetime(end)
 
-        c = self.client.get(
+        json = self.get(
             f"https://opensky-network.org/api/flights/departure"
             f"?begin={begin_ts.timestamp():.0f}&airport={airport}&"
             f"end={end_ts.timestamp():.0f}"
         )
-        c.raise_for_status()
 
         return (
-            pd.DataFrame.from_records(c.json())[
+            pd.DataFrame.from_records(json)
+            .convert_dtypes(dtype_backend="pyarrow")[
                 [
                     "firstSeen",
                     "lastSeen",
