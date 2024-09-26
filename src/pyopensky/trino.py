@@ -166,7 +166,9 @@ class Trino(OpenSkyDBAPI):
         if (cache_file := (cache_path / digest).with_suffix(suffix)).exists():
             if cached:
                 _log.info(f"Reading results from {cache_file}")
-                return pd.read_parquet(cache_file)
+                return pd.read_parquet(cache_file).convert_dtypes(
+                    dtype_backend="pyarrow"
+                )
             else:
                 cache_file.unlink(missing_ok=True)
 
