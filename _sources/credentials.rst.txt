@@ -4,10 +4,10 @@ Credentials
 Apply for access
 ----------------
 
-Access to the Trino database will be granted provided you meet the conditions
-defined by The OpenSky Network. Please create an account on
-https://trino.opensky-network.org, and then send an email to
-contact@opensky-network.org with your Trino username to request for activation.
+Access to the Trino database will be granted provided you meet the `conditions
+defined by The OpenSky Network <https://opensky-network.org/about/faq#q5>`_. Please create an account on
+https://trino.opensky-network.org, and then apply at https://opensky-network.org/data/apply
+with your Trino username to request for activation.
 
 Configuration
 -------------
