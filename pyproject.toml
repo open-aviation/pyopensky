@@ -2,14 +2,12 @@
 name = "pyopensky"
 version = "2.9"
 description = "A Python interface for OpenSky database"
-repository = "https://github.com/open-aviation/pyopensky/"
 authors = [
   { name = "Xavier Olive", email = "git@xoolive.org" },
   { name = "Junzi Sun", email = "j.sun-1@tudelft.nl" },
 ]
 license = "MIT"
 readme = "readme.md"
-include = ["license.txt", "py.typed"]
 requires-python = ">=3.9"
 dependencies = [
   "appdirs >= 1.4.4",
@@ -23,6 +21,9 @@ dependencies = [
   "typing-extensions >= 4.12.2",
 ]
 
+[project.urls]
+Repository = "https://github.com/open-aviation/pyopensky/"
+
 [project.optional-dependencies]
 cartes = ["cartes>=0.8.0"]
 decoding = ["pymodes>=2.18", "rs1090>=0.3.0"]
@@ -30,6 +31,9 @@ decoding = ["pymodes>=2.18", "rs1090>=0.3.0"]
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+include = ["license.txt", "py.typed"]
 
 [tool.uv]
 dev-dependencies = [
@@ -56,13 +60,13 @@ lint.select = [
   "RUF",
 ]
 line-length = 80
-target-version = "py38"
+target-version = "py39"
 
 [tool.ruff.lint.isort]
 known-first-party = ["numpy", "pandas"]
 
 [tool.mypy]
-python_version = 3.8
+python_version = "3.9"
 platform = "posix"
 color_output = true
 pretty = true
