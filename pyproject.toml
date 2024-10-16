@@ -25,7 +25,11 @@ dependencies = [
 Repository = "https://github.com/open-aviation/pyopensky/"
 
 [project.optional-dependencies]
-cartes = ["cartes>=0.8.0"]
+cartes = [
+    "cartes>=0.8.0",
+    "pyproj<3.7.0; python_version<'3.10'",
+    "pyproj >=3.7.0; python_version>='3.10'"
+]
 decoding = ["pymodes>=2.18", "rs1090>=0.3.8"]
 
 [build-system]
