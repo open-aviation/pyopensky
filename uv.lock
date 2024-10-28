@@ -2123,7 +2123,7 @@ decoding = [
     { name = "rs1090" },
 ]
 
-[package.dev-dependencies]
+[package.dependency-groups]
 dev = [
     { name = "ipykernel" },
     { name = "mypy" },
@@ -2152,7 +2152,7 @@ requires-dist = [
     { name = "typing-extensions", specifier = ">=4.12.2" },
 ]
 
-[package.metadata.requires-dev]
+[package.metadata.dependency-groups]
 dev = [
     { name = "ipykernel", specifier = ">=6.29.5" },
     { name = "mypy", specifier = ">=1.11.2" },
