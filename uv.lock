@@ -2100,7 +2100,7 @@ wheels = [
 
 [[package]]
 name = "pyopensky"
-version = "2.9"
+version = "2.10"
 source = { editable = "." }
 dependencies = [
     { name = "appdirs" },
@@ -2123,7 +2123,7 @@ decoding = [
     { name = "rs1090" },
 ]
 
-[package.dependency-groups]
+[package.dev-dependencies]
 dev = [
     { name = "ipykernel" },
     { name = "mypy" },
@@ -2152,7 +2152,7 @@ requires-dist = [
     { name = "typing-extensions", specifier = ">=4.12.2" },
 ]
 
-[package.metadata.dependency-groups]
+[package.metadata.requires-dev]
 dev = [
     { name = "ipykernel", specifier = ">=6.29.5" },
     { name = "mypy", specifier = ">=1.11.2" },
