@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      PYTHON_VERSION: "3.12"
       UV_CACHE_DIR: /tmp/.uv-cache
 
     steps:
@@ -23,6 +24,9 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
 
       - name: Cache folder for uv
         uses: actions/cache@v4
