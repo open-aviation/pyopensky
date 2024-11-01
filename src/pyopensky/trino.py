@@ -166,9 +166,15 @@ class Trino(OpenSkyDBAPI):
         if (cache_file := (cache_path / digest).with_suffix(suffix)).exists():
             if cached:
                 _log.info(f"Reading results from {cache_file}")
-                return pd.read_parquet(cache_file).convert_dtypes(
-                    dtype_backend="pyarrow"
-                )
+                df = pd.read_parquet(cache_file)
+                df = df.convert_dtypes(dtype_backend="pyarrow")
+
+                for column in df.select_dtypes(include=["datetime"]):
+                    if df[column].dtype.pyarrow_dtype.tz is None:
+                        df = df.assign(
+                            **{column: df[column].dt.tz_localize("UTC")}
+                        )
+                return df
             else:
                 cache_file.unlink(missing_ok=True)
 
@@ -195,6 +201,11 @@ class Trino(OpenSkyDBAPI):
                 raise RuntimeError(str(res.orig))
 
             df = pd.concat(self.process_result(res))
+
+        df = df.convert_dtypes(dtype_backend="pyarrow")
+        for column in df.select_dtypes(include=["datetime"]):
+            if df[column].dtype.pyarrow_dtype.tz is None:
+                df = df.assign(**{column: df[column].dt.tz_localize("UTC")})
 
         if cached:
             _log.info(f"Saving results to {cache_file}")
@@ -233,16 +244,14 @@ class Trino(OpenSkyDBAPI):
         ) as download_bar:
             sequence_rows = async_result.get()
             download_bar.update(len(sequence_rows))
-            yield pd.DataFrame.from_records(
-                sequence_rows, columns=res.keys()
-            ).convert_dtypes(dtype_backend="pyarrow")
+            yield pd.DataFrame.from_records(sequence_rows, columns=res.keys())
 
             while len(sequence_rows) == batch_size:
                 sequence_rows = res.fetchmany(batch_size)
                 download_bar.update(len(sequence_rows))
                 yield pd.DataFrame.from_records(
                     sequence_rows, columns=res.keys()
-                ).convert_dtypes(dtype_backend="pyarrow")
+                )
 
     ## Specific queries
 
