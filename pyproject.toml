@@ -19,6 +19,7 @@ dependencies = [
   "tqdm >= 4.66.5",
   "trino[sqlalchemy] >= 0.329.0",
   "typing-extensions >= 4.12.2",
+  "tzdata>=2024.2",
 ]
 
 [project.urls]
