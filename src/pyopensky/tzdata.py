@@ -45,4 +45,4 @@ def download_tzdata_windows(
         "https://raw.githubusercontent.com/unicode-org/cldr/master/common/supplemental/windowsZones.xml"
     )
     c.raise_for_status()
-    (extracted_folder / "windowsZone.xml").write_bytes(c.content)
+    (extracted_folder / "windowsZones.xml").write_bytes(c.content)
