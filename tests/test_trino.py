@@ -1,15 +1,9 @@
-import logging
-import os
-from pathlib import Path
-
 import pytest
 from sqlalchemy import func, not_, select
 
 import pandas as pd
 from pyopensky.schema import FlightsData4, StateVectorsData4
 from pyopensky.trino import Trino
-
-_log = logging.getLogger()
 
 trino = Trino()
 
@@ -28,19 +22,6 @@ def test_alive() -> None:
 
 
 def test_query() -> None:
-    _log.info((Path(os.path.expanduser("~")) / "Downloads"))
-    _log.info((Path(os.path.expanduser("~")) / "Downloads").exists())
-    _log.info(list((Path(os.path.expanduser("~")) / "Downloads").glob("**")))
-    _log.info(
-        list(
-            (Path(os.path.expanduser("~")) / "Downloads").glob(
-                "tzdata/windowsZones.xml"
-            )
-        )
-    )
-    _log.info(
-        list((Path(os.path.expanduser("~")) / "Downloads").glob("tzdata/*"))
-    )
     res = trino.query(
         select(FlightsData4)
         .with_only_columns(
