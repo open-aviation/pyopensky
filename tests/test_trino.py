@@ -32,6 +32,13 @@ def test_query() -> None:
     _log.info((Path(os.path.expanduser("~")) / "Downloads").exists())
     _log.info(list((Path(os.path.expanduser("~")) / "Downloads").glob("**")))
     _log.info(
+        list(
+            (Path(os.path.expanduser("~")) / "Downloads").glob(
+                "tzdata/windowsZones.xml"
+            )
+        )
+    )
+    _log.info(
         list((Path(os.path.expanduser("~")) / "Downloads").glob("tzdata/*"))
     )
     res = trino.query(
