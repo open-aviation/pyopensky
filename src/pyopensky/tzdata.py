@@ -19,9 +19,14 @@ def download_tzdata_windows(
     name: str = "tzdata",
     base_dir: None | Path = None,
 ) -> None:
-    folder = (
-        base_dir if base_dir else Path(os.path.expanduser("~")) / "Downloads"
-    )
+    if base_dir is None:
+        conda_env_path = os.getenv('CONDA_PREFIX', None)
+        if conda_env_path:
+            base_dir = Path(conda_env_path) / "Lib" / "site-packages" / "tzdata"
+        else:
+            base_dir = Path(os.path.expanduser("~")) / "Downloads"
+
+    folder = base_dir
 
     if (folder / name).is_dir():
         return

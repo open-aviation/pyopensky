@@ -1,5 +1,7 @@
+import os
 import sys
 from importlib.metadata import version
+from pathlib import Path
 
 from .tzdata import download_tzdata_windows
 
@@ -10,4 +12,10 @@ __version__ = version("pyopensky")
 # artifact that has been retained for compatibility with older versions of
 # Python.
 if sys.platform == "win32":
-    download_tzdata_windows(year=2022)
+    conda_env_path = os.getenv('CONDA_PREFIX', None)
+    if conda_env_path:
+        base_dir = Path(conda_env_path) / "Lib" / "site-packages" / "tzdata"
+    else:
+        base_dir = Path(os.path.expanduser("~")) / "Downloads"
+
+    download_tzdata_windows(year=2022, base_dir=base_dir)
