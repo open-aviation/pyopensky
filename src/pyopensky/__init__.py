@@ -12,7 +12,7 @@ __version__ = version("pyopensky")
 # artifact that has been retained for compatibility with older versions of
 # Python.
 if sys.platform == "win32":
-    conda_env_path = os.getenv('CONDA_PREFIX', None)
+    conda_env_path = os.getenv("CONDA_PREFIX", None)
     if conda_env_path:
         base_dir = Path(conda_env_path) / "Lib" / "site-packages" / "tzdata"
     else:
