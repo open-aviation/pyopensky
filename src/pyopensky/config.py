@@ -6,11 +6,13 @@ import os
 from pathlib import Path
 from typing import TypedDict
 
+import dotenv
 from appdirs import user_cache_dir, user_config_dir
 
 import pandas as pd
 
 _log = logging.getLogger(__name__)
+dotenv.load_dotenv()
 
 
 DEFAULT_CONFIG = """
@@ -32,7 +34,7 @@ password =
 ## for storing possibly large files.
 ## Default settings:
 ## - $HOME/.cache/opensky (Linux)
-## - $HOME/Library/Caches/opensky (MacOS)
+## - $HOME/Library/Caches/opensky (MacOS) (unless XDG_CONFIG_HOME is set)
 ## - C:\\Users\\<username>\\AppData\\Local\\opensky\\Cache (Windows)
 ##
 # path =
@@ -44,7 +46,10 @@ password =
 purge = 90 days
 """
 
-opensky_config_dir = Path(user_config_dir("pyopensky"))
+if (xdg_config := os.environ.get("XDG_CONFIG_HOME")) is not None:
+    opensky_config_dir = Path(xdg_config) / "pyopensky"
+else:
+    opensky_config_dir = Path(user_config_dir("pyopensky"))
 opensky_config = configparser.ConfigParser()
 
 if (opensky_config_file := opensky_config_dir / "settings.conf").exists():
@@ -57,7 +62,10 @@ else:
         opensky_config_dir.mkdir(parents=True)
     opensky_config_file.write_text(DEFAULT_CONFIG)
 
-traffic_config_dir = Path(user_config_dir("traffic"))
+if xdg_config is not None:
+    traffic_config_dir = Path(xdg_config) / "traffic"
+else:
+    traffic_config_dir = Path(user_config_dir("traffic"))
 traffic_config = configparser.ConfigParser()
 
 if (traffic_config_file := traffic_config_dir / "traffic.conf").exists():

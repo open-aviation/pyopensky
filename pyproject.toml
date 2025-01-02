@@ -16,6 +16,7 @@ dependencies = [
   "pandas >= 2.2.2",
   "pyarrow >= 17.0.0",
   "pyjwt >= 2.9.0",
+  "python-dotenv>=1.0.1",
   "tqdm >= 4.66.5",
   "trino[sqlalchemy] >= 0.329.0",
   "typing-extensions >= 4.12.2",
