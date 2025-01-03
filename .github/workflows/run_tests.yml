@@ -46,7 +46,8 @@ jobs:
         id: cache-folder
         with:
           path: |
-            ${{ github.workspace }}/cache_opensky
+            cache_opensky
+          enableCrossOsArchive: true
           key: opensky-${{ hashFiles('uv.lock') }}
 
       - name: Install the project
