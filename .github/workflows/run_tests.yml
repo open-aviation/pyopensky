@@ -59,7 +59,7 @@ jobs:
           uv run ruff format --check
 
       - name: Run tests
-        if: ${{ (matrix.python-version == '3.12' && matrix.os == 'ubuntu') || steps.cache-folder.outputs.cache-hit == 'true' }}
+        if: ${{ (matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest') || steps.cache-folder.outputs.cache-hit == 'true' }}
         env:
           OPENSKY_USERNAME: ${{ secrets.OPENSKY_USERNAME }}
           OPENSKY_PASSWORD: ${{ secrets.OPENSKY_PASSWORD }}
