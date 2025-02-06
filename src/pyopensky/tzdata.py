@@ -12,6 +12,8 @@ from pathlib import Path
 
 import httpx
 
+rk = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders"
+
 
 def download_tzdata_windows(
     year: int = 2022,
@@ -19,12 +21,22 @@ def download_tzdata_windows(
     name: str = "tzdata",
     base_dir: None | Path = None,
 ) -> None:
+    # This module only exists in Windows
+    from winreg import HKEY_CURRENT_USER, OpenKey, QueryValueEx  # type: ignore
+
     if base_dir is None:
         conda_env_path = os.getenv("CONDA_PREFIX", None)
         if conda_env_path:
             base_dir = Path(conda_env_path) / "Lib" / "site-packages" / "tzdata"
         else:
-            base_dir = Path(os.path.expanduser("~")) / "Downloads"
+            # This \o/ line finds the Downloads directory for the current user
+            with OpenKey(HKEY_CURRENT_USER, rk) as key:
+                download_path, _ = QueryValueEx(
+                    key,
+                    # don't ask what this uuid stands for...
+                    "{374DE290-123F-4565-9164-39C4925E467B}",
+                )
+                base_dir = Path(download_path)
 
     folder = base_dir
 
