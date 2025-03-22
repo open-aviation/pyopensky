@@ -21,6 +21,7 @@ username =
 password =
 
 # Uncomment the following if you have access to the s3 server
+# [s3]
 # secret_key =
 # access_key =
 
