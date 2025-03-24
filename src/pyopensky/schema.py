@@ -208,24 +208,24 @@ class Base(DeclarativeBase):
 class StateVectorsData4(Base):
     __tablename__ = "state_vectors_data4"
 
-    time: Mapped[pd.Timestamp]
-    icao24: Mapped[Address]
-    lat: Mapped[float]
-    lon: Mapped[float]
-    velocity: Mapped[float]
-    heading: Mapped[float]
-    vertrate: Mapped[float]
-    callsign: Mapped[Callsign]
-    onground: Mapped[bool]
-    alert: Mapped[bool]
-    spi: Mapped[bool]
-    squawk: Mapped[str]
-    baroaltitude: Mapped[float]
-    geoaltitude: Mapped[float]
-    lastposupdate: Mapped[float]
-    lastcontact: Mapped[float]
+    time: Mapped[pd.Timestamp] # Unix timestamp: The time at which the state vector was valid.
+    icao24: Mapped[Address] # string: The unique 24-bit transponder ID assigned to the aircraft.
+    lat: Mapped[float] # double: The last known latitude (WGS84 format).
+    lon: Mapped[float] # double: The last known longitude (WGS84 format).
+    velocity: Mapped[float] # double: Speed over ground in meters per second.
+    heading: Mapped[float] # double: The direction of movement in degrees from geographic north.
+    vertrate: Mapped[float] # double: Vertical speed in meters per second (positive = ascending, negative = descending).
+    callsign: Mapped[Callsign] # string: The flight identifier broadcast by the aircraft.
+    onground: Mapped[bool] # boolean: Indicates if the aircraft is on the ground (true) or airborne (false).
+    alert: Mapped[bool] # boolean: Special ATC indicators: alert squawk.
+    spi: Mapped[bool] # boolean: Special ATC indicators: special position indicator.
+    squawk: Mapped[str] # string: The 4-digit octal transponder code assigned by ATC.
+    baroaltitude: Mapped[float] # double: Barometric altitude measured by the aircraft.
+    geoaltitude: Mapped[float] # double: Geometric altitude determined by GNSS (GPS).
+    lastposupdate: Mapped[float] # double: The timestamp of the last recorded position update.
+    lastcontact: Mapped[float] # double: The last time OpenSky received a signal from the aircraft.
     serials: Mapped[List[int]] = mapped_column(ARRAY(Integer))  # TODO
-    hour: Mapped[pd.Timestamp] = mapped_column(primary_key=True)
+    hour: Mapped[pd.Timestamp] = mapped_column(primary_key=True) # int: The start of the hour this data belongs to.
 
 
 class FlightsData4(Base):
