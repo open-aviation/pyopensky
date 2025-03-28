@@ -208,24 +208,41 @@ class Base(DeclarativeBase):
 class StateVectorsData4(Base):
     __tablename__ = "state_vectors_data4"
 
-    time: Mapped[pd.Timestamp] # Unix timestamp: The time at which the state vector was valid.
-    icao24: Mapped[Address] # string: The unique 24-bit transponder ID assigned to the aircraft.
-    lat: Mapped[float] # double: The last known latitude (WGS84 format).
-    lon: Mapped[float] # double: The last known longitude (WGS84 format).
-    velocity: Mapped[float] # double: Speed over ground in meters per second.
-    heading: Mapped[float] # double: The direction of movement in degrees from geographic north.
-    vertrate: Mapped[float] # double: Vertical speed in meters per second (positive = ascending, negative = descending).
-    callsign: Mapped[Callsign] # string: The flight identifier broadcast by the aircraft.
-    onground: Mapped[bool] # boolean: Indicates if the aircraft is on the ground (true) or airborne (false).
-    alert: Mapped[bool] # boolean: Special ATC indicators: alert squawk.
-    spi: Mapped[bool] # boolean: Special ATC indicators: special position indicator.
-    squawk: Mapped[str] # string: The 4-digit octal transponder code assigned by ATC.
-    baroaltitude: Mapped[float] # double: Barometric altitude measured by the aircraft.
-    geoaltitude: Mapped[float] # double: Geometric altitude determined by GNSS (GPS).
-    lastposupdate: Mapped[float] # double: The timestamp of the last recorded position update.
-    lastcontact: Mapped[float] # double: The last time OpenSky received a signal from the aircraft.
+    # The time at which the state vector was valid.
+    time: Mapped[pd.Timestamp] 
+    # The unique 24-bit transponder ID assigned to the aircraft.
+    icao24: Mapped[Address] 
+    # The last known latitude and longitude (WGS84 format).
+    lat: Mapped[float]
+    lon: Mapped[float] 
+    # Speed over ground in meters per second.
+    velocity: Mapped[float] 
+    # The direction of movement in degrees from geographic north.
+    heading: Mapped[float]
+    # Vertical speed in meters per second 
+    # (positive = ascending, negative = descending). 
+    vertrate: Mapped[float] 
+    # The flight identifier broadcast by the aircraft.
+    callsign: Mapped[Callsign] 
+    # Indicates if the aircraft is on the ground (true) or airborne (false).
+    onground: Mapped[bool] 
+    # Special ATC indicators: alert squawk.
+    alert: Mapped[bool] 
+    # Special ATC indicators: special position indicator.
+    spi: Mapped[bool]
+    # The 4-digit octal transponder code assigned by ATC. 
+    squawk: Mapped[str] 
+    # Barometric altitude measured by the aircraft in meters.
+    baroaltitude: Mapped[float] 
+    # Geometric altitude determined by GNSS (GPS).
+    geoaltitude: Mapped[float] 
+    # The timestamp of the last recorded position update.
+    lastposupdate: Mapped[float] 
+    # The last time OpenSky received a signal from the aircraft.
+    lastcontact: Mapped[float] 
     serials: Mapped[List[int]] = mapped_column(ARRAY(Integer))  # TODO
-    hour: Mapped[pd.Timestamp] = mapped_column(primary_key=True) # int: The start of the hour this data belongs to.
+    # The start of the hour this data belongs to.
+    hour: Mapped[pd.Timestamp] = mapped_column(primary_key=True) 
 
 
 class FlightsData4(Base):
