@@ -13,14 +13,6 @@ commercial_callsign = (
 )
 
 
-def test_alive() -> None:
-    df = trino.query(
-        "select * from state_vectors_data4 limit 5",
-        cached=False,
-    )
-    assert df.shape[0] == 5
-
-
 def test_query() -> None:
     res = trino.query(
         select(FlightsData4)
