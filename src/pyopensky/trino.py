@@ -132,6 +132,7 @@ class Trino(OpenSkyDBAPI):
                 user=trino_username,
                 catalog="minio",
                 schema="osky",
+                source="pyopensky",
             ),
             connect_args=dict(
                 auth=JWTAuthentication(token)
