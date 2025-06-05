@@ -19,16 +19,13 @@ DEFAULT_CONFIG = """
 [default]
 username =
 password =
+client_id =
+client_secret =
 
 # Uncomment the following if you have access to the s3 server
 # [s3]
 # secret_key =
 # access_key =
-
-# If you need a different account on Trino, uncomment the following
-# [trino]
-# username =
-# password =
 
 [cache]
 ## You may set a different cache folder here if you have a preferred space
@@ -147,6 +144,16 @@ NAME_RESOLUTION: dict[str, Resolution] = {
         opensky_name="password",
         traffic_category="opensky",
         traffic_name="password",
+    ),
+    "client_id": dict(
+        environment_variable="OPENSKY_CLIENT_ID",
+        opensky_category="default",
+        opensky_name="client_id",
+    ),
+    "client_secret": dict(
+        environment_variable="OPENSKY_CLIENT_SECRET",
+        opensky_category="default",
+        opensky_name="client_secret",
     ),
     "trino_username": dict(
         environment_variable="OPENSKY_TRINO_USERNAME",
