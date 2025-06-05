@@ -1,20 +1,29 @@
 from __future__ import annotations
 
+import datetime
 import logging
 import time
 from datetime import timedelta
 from json import JSONDecodeError
-from typing import Any, cast
+from typing import Any, TypedDict, cast
 
 import httpx
 
 import pandas as pd
 
 from .api import HasBounds
-from .config import password, username
+from .config import client_id, client_secret, password, username
 from .time import timelike, to_datetime
 
 _log = logging.getLogger(__name__)
+
+
+class TokenDict(TypedDict):
+    access_token: str
+    expires_in: int
+    token_type: str
+    # Added for convenience, not in the API response
+    expiration: datetime.datetime
 
 
 class REST:
@@ -53,12 +62,50 @@ class REST:
     def __init__(self) -> None:
         self.username = username
         self.password = password
-        self.auth = cast(tuple[str, str], (username, password))
+        self.client_id = client_id
+        self.client_secret = client_secret
+        # self.auth = cast(tuple[str, str], (username, password))
+        self._token: None | TokenDict = None
 
         self.client = httpx.Client()
 
+    @property
+    def token(self) -> None | TokenDict:
+        """Returns the OpenSky token for the current user."""
+
+        if self._token is not None:
+            now = datetime.datetime.now(tz=datetime.timezone.utc)
+            if "expiration" in self._token and self._token["expiration"] > now:
+                return self._token
+
+        if self.client_id is None or self.client_secret is None:
+            return None
+
+        url = "https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token"
+        c = self.client.post(
+            url=url,
+            data=dict(
+                grant_type="client_credentials",
+                client_id=self.client_id,
+                client_secret=self.client_secret,
+            ),
+        )
+        c.raise_for_status()
+        self._token = c.json()
+        assert self._token is not None
+        if "access_token" not in self._token:
+            raise RuntimeError("No access token found in response")
+        return self._token
+
+    @property
+    def headers(self) -> dict[str, str]:
+        """Returns the headers to use for OpenSky requests."""
+        if self.token is None:
+            return {}
+        return {"Authorization": f"Bearer {self.token['access_token']}"}
+
     def get(self, query: str, retry: int = 5) -> Any:
-        c = self.client.get(query, auth=self.auth)
+        c = self.client.get(query, headers=self.headers)
         try:
             if limit := c.headers.get("X-Rate-Limit-Remaining", None):
                 limit = int(limit)
@@ -95,7 +142,7 @@ class REST:
     async def async_get(
         self, client: httpx.AsyncClient, query: str, retry: int = 5
     ) -> pd.DataFrame:
-        c = await client.get(query, auth=self.auth)
+        c = await client.get(query, headers=self.headers)
         try:
             if limit := c.headers.get("X-Rate-Limit-Remaining", None):
                 limit = int(limit)
@@ -170,7 +217,7 @@ class REST:
 
         """
 
-        what = "own" if (own and self.auth is not None) else "all"
+        what = "own" if (own and self.headers != {}) else "all"
 
         if bounds is not None:
             if isinstance(bounds, str):
@@ -275,13 +322,13 @@ class REST:
 
         return df
 
-    def routes(self, callsign: str) -> tuple[str, str]:
-        """Returns the route associated to a callsign."""
-        json = self.get(
-            f"https://opensky-network.org/api/routes?callsign={callsign}"
-        )
+    # def routes(self, callsign: str) -> tuple[str, str]:
+    #     """Returns the route associated to a callsign."""
+    #     json = self.get(
+    #         f"https://opensky-network.org/api/routes?callsign={callsign}"
+    #     )
 
-        return tuple(json["route"])
+    #     return tuple(json["route"])
 
     def aircraft(
         self,
