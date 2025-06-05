@@ -53,10 +53,11 @@
 <li class="toctree-l4"><a class="reference internal" href="#pyopensky.rest.REST.aircraft"><code class="docutils literal notranslate"><span class="pre">REST.aircraft()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyopensky.rest.REST.arrival"><code class="docutils literal notranslate"><span class="pre">REST.arrival()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyopensky.rest.REST.departure"><code class="docutils literal notranslate"><span class="pre">REST.departure()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyopensky.rest.REST.headers"><code class="docutils literal notranslate"><span class="pre">REST.headers</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyopensky.rest.REST.range"><code class="docutils literal notranslate"><span class="pre">REST.range()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pyopensky.rest.REST.routes"><code class="docutils literal notranslate"><span class="pre">REST.routes()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyopensky.rest.REST.sensors"><code class="docutils literal notranslate"><span class="pre">REST.sensors()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyopensky.rest.REST.states"><code class="docutils literal notranslate"><span class="pre">REST.states()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyopensky.rest.REST.token"><code class="docutils literal notranslate"><span class="pre">REST.token</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyopensky.rest.REST.tracks"><code class="docutils literal notranslate"><span class="pre">REST.tracks()</span></code></a></li>
 </ul>
 </li>
@@ -160,6 +161,12 @@ body.</p>
 </section>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="pyopensky.rest.REST.headers">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">headers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pyopensky.rest.REST.headers" title="Link to this definition"></a></dt>
+<dd><p>Returns the headers to use for OpenSky requests.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="pyopensky.rest.REST.range">
 <span class="sig-name descname"><span class="pre">range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">serial</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">day</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.range" title="Link to this definition"></a></dt>
@@ -169,17 +176,6 @@ specific day (as a string, as an epoch or as a datetime)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pyopensky.rest.REST.routes">
-<span class="sig-name descname"><span class="pre">routes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">callsign</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rest.REST.routes" title="Link to this definition"></a></dt>
-<dd><p>Returns the route associated to a callsign.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -230,6 +226,12 @@ to access the API. The rate limitations for OpenSky users are:</p>
 <p>That means, if the time parameter was set to t , the API will return
 state vectors for time t-(t mod 5).</p>
 </section>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pyopensky.rest.REST.token">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">token</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">TokenDict</span></em><a class="headerlink" href="#pyopensky.rest.REST.token" title="Link to this definition"></a></dt>
+<dd><p>Returns the OpenSky token for the current user.</p>
 </dd></dl>
 
 <dl class="py method">
