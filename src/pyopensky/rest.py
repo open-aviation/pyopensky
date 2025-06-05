@@ -81,6 +81,7 @@ class REST:
         if self.client_id is None or self.client_secret is None:
             return None
 
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
         url = "https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token"
         c = self.client.post(
             url=url,
@@ -95,6 +96,9 @@ class REST:
         assert self._token is not None
         if "access_token" not in self._token:
             raise RuntimeError("No access token found in response")
+        self._token["expiration"] = now + timedelta(
+            seconds=self._token["expires_in"]
+        )
         return self._token
 
     @property
