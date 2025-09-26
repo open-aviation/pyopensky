@@ -34,8 +34,8 @@ decoding = ["pymodes>=2.18", "rs1090>=0.3.8"]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
   "pre-commit >= 3.8.0",
   "mypy >= 1.11.2",
   "ruff >= 0.6.3",
