@@ -27,7 +27,7 @@ dependencies = [
 Repository = "https://github.com/open-aviation/pyopensky/"
 
 [project.optional-dependencies]
-cartes = ["cartes>=0.8.1"]
+cartes = ["cartes>=0.8.5; python_version>='3.10'"]
 decoding = ["pymodes>=2.18", "rs1090>=0.3.8"]
 
 [build-system]
@@ -40,7 +40,7 @@ dev = [
   "mypy >= 1.11.2",
   "ruff >= 0.6.3",
   "pytest >= 8.3.2",
-  "ipykernel >= 6.29.5",
+  "ipykernel >= 7.1.0; python_version>='3.10'",
   "sphinx >= 7.4.7; python_version>'3.11'",
   "sphinx-design >= 0.6.1; python_version>'3.11'",
   "sphinx-rtd-theme >= 2.0.0; python_version>'3.11'",
