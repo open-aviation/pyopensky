@@ -35,12 +35,18 @@ import pandas as pd
 from .api import HasBounds, OpenSkyDBAPI
 from .config import cache_path, trino_password, trino_username
 from .schema import (
+    AcasData4,
+    AllcallRepliesData4,
     FlarmRaw,
     FlightsData4,
     FlightsData5,
+    IdentificationData4,
+    OperationalStatusData4,
+    PositionData4,
     RawTable,
     RollcallRepliesData4,
     StateVectorsData4,
+    VelocityData4,
 )
 from .time import timelike, to_datetime
 
@@ -744,7 +750,14 @@ class Trino(OpenSkyDBAPI):
         cached: bool = True,
         compress: bool = False,
         limit: None | int = None,
-        Table: Type[RawTable] = RollcallRepliesData4,
+        Table: Type[RawTable]
+        | Type[AcasData4]
+        | Type[AllcallRepliesData4]
+        | Type[IdentificationData4]
+        | Type[OperationalStatusData4]
+        | Type[PositionData4]
+        | Type[RollcallRepliesData4]
+        | Type[VelocityData4] = RollcallRepliesData4,
         extra_columns: tuple[InstrumentedAttribute[Any], ...] = (),
         **kwargs: Any,
     ) -> None | pd.DataFrame:
