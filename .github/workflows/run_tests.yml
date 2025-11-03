@@ -53,7 +53,7 @@ jobs:
           key: opensky-${{ hashFiles('uv.lock') }}
 
       - name: Install the project
-        run: uv sync --all-extras --dev --python ${{ matrix.python-version }}
+        run: uv sync --dev --python ${{ matrix.python-version }}
 
       - name: Linting and formatting
         run: |
