@@ -10,7 +10,6 @@ on:
 jobs:
   deploy:
     name: python-${{ matrix.python-version }} on ${{ matrix.os }}
-
     strategy:
       matrix:
         os:
@@ -25,6 +24,11 @@ jobs:
           - "3.13"
           - "3.14"
           - "3.14t"
+        exclude:
+          # greenlet v3.2.4 is not available for Python 3.14t on Windows
+          # and fails to compile there. Not much we can do about that right now.
+          - os: windows-latest
+            python-version: "3.14t"
 
       fail-fast: false
 
