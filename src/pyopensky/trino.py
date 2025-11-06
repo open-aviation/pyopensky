@@ -10,6 +10,7 @@ from typing import Any, Iterable, Type, TypedDict, cast
 
 import httpx
 import jwt
+import pyModeS as pms
 from sqlalchemy import (
     Connection,
     CursorResult,
@@ -30,6 +31,7 @@ from trino.auth import JWTAuthentication, OAuth2Authentication
 from trino.exceptions import TrinoQueryError
 from trino.sqlalchemy import URL
 
+import numpy as np
 import pandas as pd
 
 from .api import HasBounds, OpenSkyDBAPI
@@ -993,3 +995,207 @@ class Trino(OpenSkyDBAPI):
             return None
 
         return res
+
+    def rebuild_flight(
+        self,
+        icao24: str,
+        start: timelike,
+        stop: timelike,
+        cached: bool = True,
+        compress: bool = False,
+        **kwargs: Any,
+    ) -> None | pd.DataFrame:
+        """Rebuild flight trajectory from raw ADS-B position and velocity messages.
+
+        This method queries the PositionData4 and VelocityData4 tables to reconstruct
+        a flight trajectory by decoding raw ADS-B messages and combining position and
+        velocity information.
+
+        :param icao24: a string identifying the transponder code of the aircraft
+        :param start: a string (default to UTC), epoch or datetime (native
+            Python or pandas) for the start of the flight
+        :param stop: a string (default to UTC), epoch or datetime (native Python
+            or pandas) for the end of the flight
+
+        **Useful options for debug**
+
+        :param cached: (default: True) switch to False to force a new request to
+            the database regardless of the cached files. This option also
+            deletes previous cache files;
+        :param compress: (default: False) compress cache files. Reduces disk
+            space occupied at the expense of slightly increased time
+            to load.
+
+        """
+
+        start_ts = to_datetime(start)
+        stop_ts = to_datetime(stop)
+
+        pos = self.query(
+            select(PositionData4)
+            .with_only_columns(
+                PositionData4.icao24,
+                PositionData4.mintime,
+                PositionData4.rawmsg,
+                PositionData4.lat,
+                PositionData4.lon,
+                PositionData4.alt,
+                PositionData4.odd,
+                PositionData4.surface,
+                # PositionData4.sensors,
+            )
+            .where(PositionData4.icao24.like(icao24.lower()))
+            .where(PositionData4.mintime >= start_ts)
+            .where(PositionData4.mintime <= stop_ts)
+            .where(PositionData4.hour >= start_ts.floor("1h"))
+            .where(PositionData4.hour <= stop_ts.ceil("1h"))
+            .order_by(PositionData4.mintime),
+            cached=cached,
+            compress=compress,
+        )
+
+        spd = self.query(
+            select(VelocityData4)
+            .with_only_columns(
+                VelocityData4.icao24,
+                VelocityData4.mintime,
+                VelocityData4.rawmsg,
+                VelocityData4.velocity,
+                VelocityData4.heading,
+                VelocityData4.vertrate,
+                # VelocityData4.sensors,
+            )
+            .where(VelocityData4.icao24.like(icao24.lower()))
+            .where(VelocityData4.mintime >= start_ts)
+            .where(VelocityData4.mintime <= stop_ts)
+            .where(VelocityData4.hour >= start_ts.floor("1h"))
+            .where(VelocityData4.hour <= stop_ts.ceil("1h"))
+            .order_by(VelocityData4.mintime),
+            cached=cached,
+            compress=compress,
+        )
+
+        if pos.shape[0] == 0 or spd.shape[0] == 0:
+            return None
+
+        pos = (
+            pos.drop_duplicates("rawmsg")
+            .query("lat==lat")
+            .eval("baroaltitude=alt")
+            .assign(timestamp=lambda x: pd.to_datetime(x.mintime, unit="s"))
+        )
+        spd = (
+            spd.drop_duplicates("rawmsg")
+            .dropna()
+            .assign(timestamp=lambda x: pd.to_datetime(x.mintime, unit="s"))
+        )
+
+        pos_new = (
+            pd.concat(
+                [
+                    pd.merge_asof(
+                        pos.query("odd")[
+                            ["timestamp", "icao24", "mintime", "rawmsg"]
+                        ],
+                        pos.query("not odd")[
+                            ["timestamp", "icao24", "mintime", "rawmsg"]
+                        ],
+                        on="timestamp",
+                        by="icao24",
+                        tolerance=pd.Timedelta("10s"),
+                    ),
+                    pd.merge_asof(
+                        pos.query("not odd")[
+                            ["timestamp", "icao24", "mintime", "rawmsg"]
+                        ],
+                        pos.query("odd")[
+                            ["timestamp", "icao24", "mintime", "rawmsg"]
+                        ],
+                        on="timestamp",
+                        by="icao24",
+                        tolerance=pd.Timedelta("10s"),
+                    ),
+                ]
+            )
+            .sort_values("timestamp")
+            .dropna()
+        )
+
+        lats = []
+        lons = []
+        alts = []
+
+        for _, r in pos_new.iterrows():
+            try:
+                latlon = pms.adsb.position(
+                    r.rawmsg_x, r.rawmsg_y, r.mintime_x, r.mintime_y
+                )
+
+                if latlon is not None:
+                    lats.append(latlon[0])
+                    lons.append(latlon[1])
+                else:
+                    lats.append(None)
+                    lons.append(None)
+            except Exception:
+                lats.append(None)
+                lons.append(None)
+
+            alts.append(pms.adsb.altitude(r.rawmsg_x))
+
+        pos_new = (
+            pos_new.assign(lat=lats, lon=lons, alt=alts)
+            .assign(
+                lat_ref_1=lambda x: x.lat.shift(5),
+                lon_ref_1=lambda x: x.lon.shift(5),
+            )
+            .assign(
+                lat_ref_2=lambda x: x.lat.shift(10),
+                lon_ref_2=lambda x: x.lon.shift(10),
+            )
+            .dropna()
+        )
+
+        latlon_1 = []
+        latlon_2 = []
+
+        for _, r in pos_new.iterrows():
+            ll1 = pms.adsb.position_with_ref(
+                r.rawmsg_x, lat_ref=r.lat_ref_1, lon_ref=r.lon_ref_1
+            )
+            ll2 = pms.adsb.position_with_ref(
+                r.rawmsg_x, lat_ref=r.lat_ref_2, lon_ref=r.lon_ref_2
+            )
+            latlon_1.append(ll1)
+            latlon_2.append(ll2)
+
+        latlon_1 = np.array(latlon_1)
+        latlon_2 = np.array(latlon_2)
+
+        pos_new = (
+            pos_new.assign(lat_1=latlon_1[:, 0], lon_1=latlon_1[:, 1])
+            .assign(lat_2=latlon_1[:, 0], lon_2=latlon_1[:, 1])
+            .dropna()
+            .eval("dlat_1=abs(lat-lat_1)")
+            .eval("dlon_1=abs(lon-lon_1)")
+            .eval("dlat_2=abs(lat-lat_2)")
+            .eval("dlon_2=abs(lon-lon_2)")
+            .query("dlat_1<0.1 and dlon_1<0.1 and dlat_2<0.1 and dlon_2<0.1")
+        )
+
+        state_vector = pd.merge_asof(
+            (
+                pos_new[["timestamp", "icao24", "lat", "lon", "alt"]]
+                .rename(columns={"alt": "baroaltitude"})
+                .eval(
+                    "baroaltitude = baroaltitude * 0.3048"
+                )  # meters as osn state vectors
+            ),
+            spd.drop("rawmsg", axis=1),
+            on="timestamp",
+            by="icao24",
+            tolerance=pd.Timedelta("3s"),
+            direction="nearest",
+        ).sort_values("timestamp")
+
+        return state_vector
