@@ -344,10 +344,10 @@ to load.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="pyopensky.trino.Trino.rebuild_flight">
 <span class="sig-name descname"><span class="pre">rebuild_flight</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">icao24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.trino.Trino.rebuild_flight" title="Link to this definition"></a></dt>
-<dd><p>Rebuild flight trajectory from raw ADS-B position and velocity messages.</p>
-<p>This method queries the PositionData4 and VelocityData4 tables to reconstruct
-a flight trajectory by decoding raw ADS-B messages and combining position and
-velocity information.</p>
+<dd><p>Rebuild trajectory from raw ADS-B position and velocity messages.</p>
+<p>This method queries the PositionData4 and VelocityData4 tables to
+reconstruct a flight trajectory by decoding raw ADS-B messages and
+combining position and velocity information.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
