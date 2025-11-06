@@ -53,6 +53,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#pyopensky.trino.Trino.flightlist"><code class="docutils literal notranslate"><span class="pre">Trino.flightlist()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyopensky.trino.Trino.history"><code class="docutils literal notranslate"><span class="pre">Trino.history()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyopensky.trino.Trino.rawdata"><code class="docutils literal notranslate"><span class="pre">Trino.rawdata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyopensky.trino.Trino.rebuild_flight"><code class="docutils literal notranslate"><span class="pre">Trino.rebuild_flight()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -335,6 +336,42 @@ deletes previous cache files;</p></li>
 space occupied at the expense of slightly increased time
 to load.</p></li>
 <li><p><strong>limit</strong> (<span class="sphinx_autodoc_typehints-type">None | int</span>) – maximum number of records requested, LIMIT keyword in SQL.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyopensky.trino.Trino.rebuild_flight">
+<span class="sig-name descname"><span class="pre">rebuild_flight</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">icao24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.trino.Trino.rebuild_flight" title="Link to this definition"></a></dt>
+<dd><p>Rebuild flight trajectory from raw ADS-B position and velocity messages.</p>
+<p>This method queries the PositionData4 and VelocityData4 tables to reconstruct
+a flight trajectory by decoding raw ADS-B messages and combining position and
+velocity information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>icao24</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – a string identifying the transponder code of the aircraft</p></li>
+<li><p><strong>start</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Real" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Real</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>]</span>) – a string (default to UTC), epoch or datetime (native
+Python or pandas) for the start of the flight</p></li>
+<li><p><strong>stop</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Real" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Real</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>]</span>) – a string (default to UTC), epoch or datetime (native Python
+or pandas) for the end of the flight</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a> | <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+<p><strong>Useful options for debug</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cached</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – (default: True) switch to False to force a new request to
+the database regardless of the cached files. This option also
+deletes previous cache files;</p></li>
+<li><p><strong>compress</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – (default: False) compress cache files. Reduces disk
+space occupied at the expense of slightly increased time
+to load.</p></li>
 </ul>
 </dd>
 </dl>
