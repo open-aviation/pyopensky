@@ -996,7 +996,7 @@ class Trino(OpenSkyDBAPI):
 
         return res
 
-    def rebuild_flight(
+    def rebuild(
         self,
         icao24: str,
         start: timelike,

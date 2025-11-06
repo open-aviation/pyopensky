@@ -318,8 +318,8 @@ def test_flarm() -> None:
     assert df is not None
 
 
-def test_rebuild_flight() -> None:
-    df = trino.rebuild_flight(
+def test_rebuild() -> None:
+    df = trino.rebuild(
         icao24="400A0E",
         start="2023-01-03 16:00:00",
         stop="2023-01-03 20:00:00",

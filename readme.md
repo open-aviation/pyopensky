@@ -2,7 +2,16 @@
 
 The `pyopensky` Python library provides functions to download data from the OpenSky Network live API and historical databases. It aims at making ADS-B and Mode S data from OpenSky easily accessible in the Python programming environment.
 
-Full documentation on <https://open-aviation.github.io/pyopensky>
+**Key features:**
+
+- Access to **live** aircraft state vectors and flight information via REST API
+- Query **historical** ADS-B and Mode S data from the Trino database
+- Decode and rebuild flight trajectories from raw messages
+- Support for spatial and temporal filtering
+- Built-in caching for efficient data retrieval
+- Integration with pandas DataFrames for easy data analysis
+
+Full documentation on <https://mode-s.org/pyopensky/>
 
 ## Installation
 
@@ -26,36 +35,142 @@ uv sync --dev
 
 ## Credentials
 
-See details in the [documentation](https://open-aviation.github.io/pyopensky/credentials.html)
+Access to the OpenSky Network historical database requires authentication. See details in the [documentation](https://open-aviation.github.io/pyopensky/credentials.html) on how to:
+
+- Apply an OpenSky Network account
+- Configure your credentials for API access
+- Set up authentication for the Trino database
 
 ## Usage
 
+### 1. REST API
+
 > [!IMPORTANT]
-> The Impala shell is now deprecated. Please upgrade to Trino.
+> Do NOT use REST API for historical data, use trino instead!
 
-- from the [REST API](https://open-aviation.github.io/pyopensky/rest.html):
+Access **live** and recent flight data.
 
-  ```python
-  from pyopensky.rest import REST
+#### Functions
 
-  rest = REST()
+```python
+from pyopensky.rest import REST
 
-  rest.states()
-  rest.tracks(icao24)
-  rest.routes(callsign)
-  rest.aircraft(icao24, begin, end)
-  rest.arrival(airport, begin, end)
-  rest.departure(airport, begin, end)
-  ```
+rest = REST()
 
-- from the [Trino](https://open-aviation.github.io/pyopensky/trino.html) database (requires authentication):
+rest.states()
+rest.tracks(icao24)
+rest.routes(callsign)
+rest.aircraft(icao24, begin, end)
+rest.arrival(airport, begin, end)
+rest.departure(airport, begin, end)
+```
 
-  ```python
-  from pyopensky.trino import Trino
+#### Examples
 
-  trino = Trino()
-  # full description of the whole set of parameters in the documentation
-  trino.flightlist(start, stop, *, airport, callsign, icao24)
-  trino.history(start, stop, *, callsign, icao24, bounds)
-  trino.rawdata(start, stop, *, callsign, icao24, bounds)
-  ```
+```python
+from pyopensky.rest import REST
+
+rest = REST()
+
+# Get current state vectors for all aircraft
+rest.states()
+
+# Get trajectory for a specific aircraft
+rest.tracks(icao24="3c6444")
+
+# Get route information for a callsign
+rest.routes(callsign="AFR292")
+
+# Get flights for a specific aircraft in a time range
+# NOTE: do NOT use REST for historical data, use trino instead!!
+rest.aircraft(icao24="3c6444", begin="2024-01-01", end="2024-01-02")
+
+# Get arrivals at an airport
+# NOTE: do NOT use REST for historical data, use trino instead!!
+rest.arrival(airport="EHAM", begin="2024-01-01 12:00", end="2024-01-01 13:00")
+
+# Get departures from an airport
+# NOTE: do NOT use REST for historical data, use trino instead!!
+rest.departure(airport="LFPG", begin="2024-01-01 12:00", end="2024-01-01 13:00")
+```
+
+### 2. Trino Interface
+
+Query **historical** ADS-B and Mode S data with advanced selection and processing.
+
+Functions
+
+```python
+from pyopensky.trino import Trino
+
+trino = Trino()
+# full description of the whole set of parameters in the documentation
+trino.flightlist(start, stop, *, airport, callsign, icao24)
+trino.rawdata(start, stop, *, callsign, icao24, bounds)
+trino.history(start, stop, *, callsign, icao24, bounds)
+trino.rebuild(icao24, start, stop)
+```
+
+
+#### Key Parameters
+
+- **Time ranges**: Accept strings (ISO format), timestamps, or datetime objects
+- **Wildcards**: Use `%` for any sequence and `_` for any character (e.g., `"KLM%"`)
+- **Bounds**: Specify geographic area as `(west, south, east, north)` tuple
+- **Caching**: Results are cached by default for faster subsequent queries
+- **Filtering**: Combine multiple filters (airport, callsign, icao24, bounds, etc.)
+
+#### Examples
+
+```python
+from pyopensky.trino import Trino
+
+trino = Trino()
+
+# Get list of flights with flexible selection
+trino.flightlist(
+    start="2023-01-01",
+    stop="2023-01-10",
+    callsign="AFR%",
+    arrival_airport="RJBB",
+)
+
+# Get raw ADS-B messages for advanced analysis
+trino.rawdata(
+    start="2023-01-03 16:00:00",
+    stop="2023-01-03 20:00:00",
+    icao24="400A0E",
+    bounds=(-1, 40.0, 15, 53.0)
+)
+
+# Get detailed trajectory data (state vectors)
+trino.history(
+    start="2019-11-01 09:00",
+    stop="2019-11-01 12:00",
+    departure_airport="LFBO",
+    arrival_airport="LFBO",
+    callsign="AIB04%",
+)
+
+# Query with geographical bounds and sensor filters
+trino.history(
+    start="2021-08-24 09:00",
+    stop="2021-08-24 09:10",
+    bounds=(17.8936, 59.6118, 17.9894, 59.6716),  # (W, S, E, N)
+    serials=(-1408232560, -1408232534),
+)
+```
+
+#### Rebuilding Flight Trajectories
+
+The `rebuild()` method reconstructs flight trajectories from raw ADS-B position and velocity messages. This approach is slower than `history()` but produces more accurate results with fewer outliers by decoding raw messages directly.
+
+```python
+trino.rebuild(
+    icao24="400A0E",
+    start="2023-01-03 16:00:00",
+    stop="2023-01-03 20:00:00",
+)
+```
+
+This method provides more accurate position decoding from CPR (Compact Position Reporting), resulting in fewer outliers and position jumps through better handling of message pairs for position calculation. However, it is slower than `history()` due to the message decoding overhead and only supports filtering by `icao24` and time range.
