@@ -1005,11 +1005,11 @@ class Trino(OpenSkyDBAPI):
         compress: bool = False,
         **kwargs: Any,
     ) -> None | pd.DataFrame:
-        """Rebuild flight trajectory from raw ADS-B position and velocity messages.
+        """Rebuild trajectory from raw ADS-B position and velocity messages.
 
-        This method queries the PositionData4 and VelocityData4 tables to reconstruct
-        a flight trajectory by decoding raw ADS-B messages and combining position and
-        velocity information.
+        This method queries the PositionData4 and VelocityData4 tables to
+        reconstruct a flight trajectory by decoding raw ADS-B messages and
+        combining position and velocity information.
 
         :param icao24: a string identifying the transponder code of the aircraft
         :param start: a string (default to UTC), epoch or datetime (native
