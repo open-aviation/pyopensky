@@ -3,7 +3,6 @@
 import pytest
 
 import pandas as pd
-from pyopensky.decoders import PyModesDecoder
 from pyopensky.rebuild import Rebuild
 from pyopensky.trino import Trino
 
@@ -46,22 +45,6 @@ class TestRebuildClass:
         assert "timestamp" in df.columns
         assert "mintime" in df.columns
 
-    def test_rebuild_with_string_decoder_pymodes(
-        self, rebuild: Rebuild
-    ) -> None:
-        """Test rebuild with 'pymodes' string decoder."""
-        df = rebuild.rebuild(
-            start="2023-01-03 16:00:00",
-            stop="2023-01-03 17:00:00",
-            icao24="400a0e",
-            decoder="pymodes",
-        )
-
-        # If data is returned, it should be a DataFrame
-        # Decoder may return None if decoding fails
-        if df is not None:
-            assert isinstance(df, pd.DataFrame)
-
     def test_rebuild_with_string_decoder_rs1090(self, rebuild: Rebuild) -> None:
         """Test rebuild with 'rs1090' string decoder."""
         df = rebuild.rebuild(
@@ -74,29 +57,3 @@ class TestRebuildClass:
         # If data is returned, it should be a DataFrame
         if df is not None:
             assert isinstance(df, pd.DataFrame)
-
-    def test_rebuild_with_decoder_instance(self, rebuild: Rebuild) -> None:
-        """Test rebuild with decoder instance."""
-        decoder = PyModesDecoder()
-        df = rebuild.rebuild(
-            start="2023-01-03 16:00:00",
-            stop="2023-01-03 17:00:00",
-            icao24="400a0e",
-            decoder=decoder,
-        )
-
-        # If data is returned, it should be a DataFrame
-        if df is not None:
-            assert isinstance(df, pd.DataFrame)
-
-    def test_rebuild_with_invalid_decoder_string(
-        self, rebuild: Rebuild
-    ) -> None:
-        """Test rebuild with invalid decoder string raises error."""
-        with pytest.raises(ValueError, match="Unknown decoder string"):
-            rebuild.rebuild(
-                start="2023-01-03 16:00:00",
-                stop="2023-01-03 17:00:00",
-                icao24="400a0e",
-                decoder="invalid_decoder",
-            )

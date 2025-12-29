@@ -89,7 +89,7 @@ def purge_cache(cache_path: Path) -> None:
         for cache_file in cache_path.glob("*"):
             ctime = cache_file.stat().st_ctime
             if ctime < expiration.timestamp():
-                _log.warn(f"Removing {cache_file} created on {ctime}")
+                _log.warning(f"Removing {cache_file} created on {ctime}")
                 cache_file.unlink()
 
 

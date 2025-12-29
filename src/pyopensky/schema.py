@@ -39,7 +39,7 @@ class UTCTimestampInteger(TypeDecorator[pd.Timestamp]):
         self, value: Any | None, dialect: Dialect
     ) -> pd.Timestamp | None:
         if value is None:
-            return pd.NaT
+            return pd.NaT  # ty: ignore[invalid-return-type]
         if isinstance(value, (int, float)):
             return pd.to_datetime(value, unit="s", utc=True)
         return super().process_result_value(value, dialect)

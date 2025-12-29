@@ -87,7 +87,7 @@ class Trino(OpenSkyDBAPI):
 
     def token(self, **kwargs: Any) -> None | str:
         if trino_username is None or trino_password is None:
-            _log.warn(
+            _log.warning(
                 "No credentials provided, "
                 "falling back to browser authentication"
             )

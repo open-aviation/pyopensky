@@ -60,12 +60,15 @@ jobs:
           key: opensky-${{ hashFiles('uv.lock') }}
 
       - name: Install the project
-        run: uv sync --dev --python ${{ matrix.python-version }}
+        run: uv sync --dev --python ${{ matrix.python-version }} --extra rs1090 --extra cartes
 
       - name: Linting and formatting
         run: |
           uv run ruff check
           uv run ruff format --check
+
+      - name: Type checking
+        run: uvx ty check src tests
 
       - name: Run tests
         if: ${{ (matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest') || steps.cache-folder.outputs.cache-hit == 'true' }}
