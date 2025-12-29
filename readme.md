@@ -19,18 +19,16 @@ Full documentation on <https://mode-s.org/pyopensky/>
 pip install pyopensky
 ```
 
-The library is also available on conda-forge:
+or add it in your project with
+
+```sh
+uv add pyopensky
+```
+
+The library is also available on conda-forge, although this approach is no longer recommended:
 
 ```sh
 conda install -c conda-forge pyopensky
-```
-
-Development mode (with uv):
-
-```sh
-curl -LsSf https://astral.sh/uv/install.sh | sh  # Linux and MacOS
-irm https://astral.sh/uv/install.ps1 | iex  # Windows
-uv sync --dev
 ```
 
 ## Credentials
@@ -111,91 +109,5 @@ trino.history(start, stop, *, callsign, icao24, bounds)
 trino.rebuild(start, stop, *, icao24, bounds)
 ```
 
-
-#### Key Parameters
-
-- **Time ranges**: Accept strings (ISO format), timestamps, or datetime objects
-- **Wildcards**: Use `%` for any sequence and `_` for any character (e.g., `"KLM%"`)
-- **Bounds**: Specify geographic area as `(west, south, east, north)` tuple
-- **Caching**: Results are cached by default for faster subsequent queries
-- **Filtering**: Combine multiple filters (airport, callsign, icao24, bounds, etc.)
-
-#### Examples
-
-```python
-from pyopensky.trino import Trino
-
-trino = Trino()
-
-# Get list of flights with flexible selection
-trino.flightlist(
-    start="2023-01-01",
-    stop="2023-01-10",
-    callsign="AFR%",
-    arrival_airport="RJBB",
-)
-
-# Get raw ADS-B messages for advanced analysis
-trino.rawdata(
-    start="2023-01-03 16:00:00",
-    stop="2023-01-03 20:00:00",
-    icao24="400A0E",
-    bounds=(-1, 40.0, 15, 53.0)
-)
-
-# Get detailed trajectory data (state vectors)
-trino.history(
-    start="2019-11-01 09:00",
-    stop="2019-11-01 12:00",
-    departure_airport="LFBO",
-    arrival_airport="LFBO",
-    callsign="AIB04%",
-)
-
-# Query with geographical bounds and sensor filters
-trino.history(
-    start="2021-08-24 09:00",
-    stop="2021-08-24 09:10",
-    bounds=(17.8936, 59.6118, 17.9894, 59.6716),  # (W, S, E, N)
-    serials=(-1408232560, -1408232534),
-)
-```
-
-#### Downloading Raw ADS-B Data
-
-The `rebuild()` method downloads raw ADS-B messages from multiple tables (position, velocity, identification, and rollcall) and merges them using time-based joins to create a comprehensive dataset for trajectory reconstruction.
-
-This approach separates data download from decoding, giving you flexibility to choose your preferred decoder (pymodes or rs1090) or to implement custom decoding logic.
-
-```python
-# Download and merge raw data from all relevant tables
-data = trino.rebuild(
-    start="2023-01-03 16:00:00",
-    stop="2023-01-03 20:00:00",
-    icao24="400A0E",
-)
-
-# The result is a merged DataFrame with columns from all tables:
-# - timestamp, icao24, rawmsg (raw message)
-# - lat, lon, altitude, groundspeed, track (from position)
-# - velocity, vertical_rate, geominurbaro (from velocity)
-# - callsign (from identification)
-# - squawk (from rollcall)
-
-# You can also filter by geographic bounds
-data = trino.rebuild(
-    start="2023-01-03 16:00:00",
-    stop="2023-01-03 20:00:00",
-    bounds=(west, south, east, north),
-)
-```
-
-**Decoding raw messages:**
-
-The downloaded raw messages can be decoded using external libraries. Install the optional decoding dependencies:
-
-```sh
-pip install pyopensky[decoding]
-```
-
-This includes both `pymodes` (pure Python) and `rs1090` (Rust-based, faster) decoders. You can then use the decode functions from the scripts directory or implement your own decoding logic.
+> [!IMPORTANT]
+> Refer to the [documentation](https://mode-s.org/pyopensky) for advanced usage and parameter details.
