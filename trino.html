@@ -53,7 +53,14 @@
 <li class="toctree-l4"><a class="reference internal" href="#pyopensky.trino.Trino.flightlist"><code class="docutils literal notranslate"><span class="pre">Trino.flightlist()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyopensky.trino.Trino.history"><code class="docutils literal notranslate"><span class="pre">Trino.history()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyopensky.trino.Trino.rawdata"><code class="docutils literal notranslate"><span class="pre">Trino.rawdata()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pyopensky.trino.Trino.rebuild"><code class="docutils literal notranslate"><span class="pre">Trino.rebuild()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyopensky.rebuild.Rebuild"><code class="docutils literal notranslate"><span class="pre">Rebuild</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyopensky.rebuild.Rebuild.rebuild"><code class="docutils literal notranslate"><span class="pre">Rebuild.rebuild()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyopensky.rebuild.Rebuild.redecode_identification"><code class="docutils literal notranslate"><span class="pre">Rebuild.redecode_identification()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyopensky.rebuild.Rebuild.redecode_position"><code class="docutils literal notranslate"><span class="pre">Rebuild.redecode_position()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyopensky.rebuild.Rebuild.redecode_rollcall"><code class="docutils literal notranslate"><span class="pre">Rebuild.redecode_rollcall()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyopensky.rebuild.Rebuild.redecode_velocity"><code class="docutils literal notranslate"><span class="pre">Rebuild.redecode_velocity()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -341,38 +348,164 @@ to load.</p></li>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyopensky.rebuild.Rebuild">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyopensky.rebuild.</span></span><span class="sig-name descname"><span class="pre">Rebuild</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trino</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rebuild.Rebuild" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class for rebuilding state vectors from raw ADS-B messages.</p>
+<p>This class provides methods to download and decode raw ADS-B messages
+from different data tables and merge them into complete state vectors.</p>
+<p><strong>Example usage</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.trino</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trino</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.rebuild</span><span class="w"> </span><span class="kn">import</span> <span class="n">Rebuild</span>
+
+<span class="n">trino</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">()</span>
+<span class="n">rebuild</span> <span class="o">=</span> <span class="n">Rebuild</span><span class="p">(</span><span class="n">trino</span><span class="p">)</span>
+
+<span class="c1"># Without decoding</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400A0E&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># With pymodes or rs1090 decoding</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400A0E&quot;</span><span class="p">,</span>
+    <span class="n">decoder</span><span class="o">=</span><span class="s2">&quot;pymodes&quot;</span>  <span class="c1"># or &quot;rs1090&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
 <dl class="py method">
-<dt class="sig sig-object py" id="pyopensky.trino.Trino.rebuild">
-<span class="sig-name descname"><span class="pre">rebuild</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">icao24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.trino.Trino.rebuild" title="Link to this definition"></a></dt>
-<dd><p>Rebuild trajectory from raw ADS-B position and velocity messages.</p>
-<p>This method queries the PositionData4 and VelocityData4 tables to
-reconstruct a flight trajectory by decoding raw ADS-B messages and
-combining position and velocity information.</p>
+<dt class="sig sig-object py" id="pyopensky.rebuild.Rebuild.rebuild">
+<span class="sig-name descname"><span class="pre">rebuild</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">icao24</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_rollcall</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rebuild.Rebuild.rebuild" title="Link to this definition"></a></dt>
+<dd><p>Rebuild state vectors by downloading and merging all data tables.</p>
+<p>This method downloads data from position, velocity, identification,
+and optionally rollcall tables, then merges them using time-based
+joins to reconstruct complete state vectors.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>icao24</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – a string identifying the transponder code of the aircraft</p></li>
-<li><p><strong>start</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Real" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Real</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>]</span>) – a string (default to UTC), epoch or datetime (native
-Python or pandas) for the start of the flight</p></li>
-<li><p><strong>stop</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Real" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Real</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>]</span>) – a string (default to UTC), epoch or datetime (native Python
-or pandas) for the end of the flight</p></li>
+<li><p><strong>start</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Real" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Real</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>]</span>) – start of time range</p></li>
+<li><p><strong>stop</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Real" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Real</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>]</span>) – end of time range</p></li>
+<li><p><strong>icao24</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – aircraft transponder code(s)</p></li>
+<li><p><strong>bounds</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a> | <code class="xref py py-class docutils literal notranslate"><span class="pre">HasBounds</span></code> | <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span>) – geographical footprint</p></li>
+<li><p><strong>cached</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – use cached data</p></li>
+<li><p><strong>compress</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – compress cache files</p></li>
+<li><p><strong>decoder</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Decoder</span></code>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code></a>[<code class="docutils literal notranslate"><span class="pre">'pymodes'</span></code>, <code class="docutils literal notranslate"><span class="pre">'rs1090'</span></code>]]</span>) – decoder for decoding raw messages (e.g. PyModesDecoder)</p></li>
+<li><p><strong>include_rollcall</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – include rollcall (squawk) data in merge</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a> | <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
 </dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame with merged state vectors</p>
+</dd>
 </dl>
-<p><strong>Useful options for debug</strong></p>
+<p><strong>Example usage</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Without decoding (use database decoded values)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400A0E&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># With pymodes or rs1090 decoding</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400A0E&quot;</span><span class="p">,</span>
+    <span class="n">decoder</span><span class="o">=</span><span class="s2">&quot;pymodes&quot;</span>  <span class="c1"># or &quot;rs1090&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyopensky.rebuild.Rebuild.redecode_identification">
+<span class="sig-name descname"><span class="pre">redecode_identification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">icao24</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rebuild.Rebuild.redecode_identification" title="Link to this definition"></a></dt>
+<dd><p>Download and optionally redecode identification (callsign) data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>decoder</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a> | <code class="xref py py-class docutils literal notranslate"><span class="pre">Decoder</span></code></span>) – decoder implementing decode_identification(df) method</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a> | <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyopensky.rebuild.Rebuild.redecode_position">
+<span class="sig-name descname"><span class="pre">redecode_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">icao24</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rebuild.Rebuild.redecode_position" title="Link to this definition"></a></dt>
+<dd><p>Download and optionally redecode position data from raw messages.</p>
+<p>Downloads position data with raw ADS-B messages, pairs odd/even CPR
+frames, and optionally decodes them using a visitor pattern.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>cached</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – (default: True) switch to False to force a new request to
-the database regardless of the cached files. This option also
-deletes previous cache files;</p></li>
-<li><p><strong>compress</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – (default: False) compress cache files. Reduces disk
-space occupied at the expense of slightly increased time
-to load.</p></li>
+<li><p><strong>start</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Real" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Real</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>]</span>) – start of time range</p></li>
+<li><p><strong>stop</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/numbers.html#numbers.Real" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Real</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Timestamp</span></code>]</span>) – end of time range</p></li>
+<li><p><strong>icao24</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – aircraft transponder code(s)</p></li>
+<li><p><strong>bounds</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a> | <code class="xref py py-class docutils literal notranslate"><span class="pre">HasBounds</span></code> | <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]</span>) – geographical footprint</p></li>
+<li><p><strong>cached</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – use cached data</p></li>
+<li><p><strong>compress</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – compress cache files</p></li>
+<li><p><strong>decoder</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a> | <code class="xref py py-class docutils literal notranslate"><span class="pre">Decoder</span></code></span>) – decoder object implementing decode_position(df) method
+that decodes raw messages. If None, returns raw data.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a> | <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame with position data (decoded if visitor provided)</p>
+</dd>
+</dl>
+<p><strong>Example usage</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a pymodes decoder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.decoders</span><span class="w"> </span><span class="kn">import</span> <span class="n">PyModesDecoder</span>
+<span class="n">decoder</span> <span class="o">=</span> <span class="n">PyModesDecoder</span><span class="p">()</span>
+
+<span class="c1"># Redecode positions</span>
+<span class="n">pos</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">redecode_position</span><span class="p">(</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400A0E&quot;</span><span class="p">,</span>
+    <span class="n">decoder</span><span class="o">=</span><span class="n">decoder</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyopensky.rebuild.Rebuild.redecode_rollcall">
+<span class="sig-name descname"><span class="pre">redecode_rollcall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">icao24</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rebuild.Rebuild.redecode_rollcall" title="Link to this definition"></a></dt>
+<dd><p>Download and optionally redecode rollcall (squawk) data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>decoder</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a> | <code class="xref py py-class docutils literal notranslate"><span class="pre">Decoder</span></code></span>) – decoder implementing decode_rollcall(df) method</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a> | <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyopensky.rebuild.Rebuild.redecode_velocity">
+<span class="sig-name descname"><span class="pre">redecode_velocity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">icao24</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.rebuild.Rebuild.redecode_velocity" title="Link to this definition"></a></dt>
+<dd><p>Download and optionally redecode velocity data from raw messages.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>decoder</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a> | <code class="xref py py-class docutils literal notranslate"><span class="pre">Decoder</span></code></span>) – decoder implementing decode_velocity(df) method</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a> | <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
