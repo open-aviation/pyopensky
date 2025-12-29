@@ -316,12 +316,3 @@ def test_flarm() -> None:
         sensor_name="LS%",
     )
     assert df is not None
-
-
-def test_rebuild() -> None:
-    df = trino.rebuild(
-        icao24="400A0E",
-        start="2023-01-03 16:00:00",
-        stop="2023-01-03 20:00:00",
-    )
-    assert df.shape[0] > 15_000

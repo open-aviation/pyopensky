@@ -2,10 +2,7 @@
 name = "pyopensky"
 version = "2.15"
 description = "A Python interface for OpenSky database"
-authors = [
-  { name = "Xavier Olive", email = "git@xoolive.org" },
-  { name = "Junzi Sun", email = "j.sun-1@tudelft.nl" },
-]
+authors = [{ name = "Xavier Olive", email = "git@xoolive.org" }, { name = "Junzi Sun", email = "j.sun-1@tudelft.nl" }]
 license = "MIT"
 readme = "readme.md"
 requires-python = ">=3.9"
@@ -17,7 +14,6 @@ dependencies = [
   "pandas >= 2.2.2",
   "pyarrow >= 17.0.0",
   "pyjwt >= 2.9.0",
-  "pymodes>=2.21.1",
   "python-dotenv>=1.0.1",
   "tqdm >= 4.66.5",
   "trino[sqlalchemy] >= 0.329.0",
@@ -30,7 +26,8 @@ Repository = "https://github.com/open-aviation/pyopensky/"
 
 [project.optional-dependencies]
 cartes = ["cartes>=0.8.5; python_version>='3.10'"]
-decoding = ["pymodes>=2.18", "rs1090>=0.3.8"]
+pymodes = ["pymodes>=2.18"]
+rs1090 = ["rs1090>=0.3.8"]
 
 [build-system]
 requires = ["hatchling"]

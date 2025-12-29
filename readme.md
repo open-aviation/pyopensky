@@ -108,7 +108,7 @@ trino = Trino()
 trino.flightlist(start, stop, *, airport, callsign, icao24)
 trino.rawdata(start, stop, *, callsign, icao24, bounds)
 trino.history(start, stop, *, callsign, icao24, bounds)
-trino.rebuild(icao24, start, stop)
+trino.rebuild(start, stop, *, icao24, bounds)
 ```
 
 
@@ -161,16 +161,41 @@ trino.history(
 )
 ```
 
-#### Rebuilding Flight Trajectories
+#### Downloading Raw ADS-B Data
 
-The `rebuild()` method reconstructs flight trajectories from raw ADS-B position and velocity messages. This approach is slower than `history()` but produces more accurate results with fewer outliers by decoding raw messages directly.
+The `rebuild()` method downloads raw ADS-B messages from multiple tables (position, velocity, identification, and rollcall) and merges them using time-based joins to create a comprehensive dataset for trajectory reconstruction.
+
+This approach separates data download from decoding, giving you flexibility to choose your preferred decoder (pymodes or rs1090) or to implement custom decoding logic.
 
 ```python
-trino.rebuild(
-    icao24="400A0E",
+# Download and merge raw data from all relevant tables
+data = trino.rebuild(
     start="2023-01-03 16:00:00",
     stop="2023-01-03 20:00:00",
+    icao24="400A0E",
+)
+
+# The result is a merged DataFrame with columns from all tables:
+# - timestamp, icao24, rawmsg (raw message)
+# - lat, lon, altitude, groundspeed, track (from position)
+# - velocity, vertical_rate, geominurbaro (from velocity)
+# - callsign (from identification)
+# - squawk (from rollcall)
+
+# You can also filter by geographic bounds
+data = trino.rebuild(
+    start="2023-01-03 16:00:00",
+    stop="2023-01-03 20:00:00",
+    bounds=(west, south, east, north),
 )
 ```
 
-This method provides more accurate position decoding from CPR (Compact Position Reporting), resulting in fewer outliers and position jumps through better handling of message pairs for position calculation. However, it is slower than `history()` due to the message decoding overhead and only supports filtering by `icao24` and time range.
+**Decoding raw messages:**
+
+The downloaded raw messages can be decoded using external libraries. Install the optional decoding dependencies:
+
+```sh
+pip install pyopensky[decoding]
+```
+
+This includes both `pymodes` (pure Python) and `rs1090` (Rust-based, faster) decoders. You can then use the decode functions from the scripts directory or implement your own decoding logic.

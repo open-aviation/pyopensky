@@ -3089,7 +3089,6 @@ dependencies = [
     { name = "pyarrow", version = "21.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "pyarrow", version = "22.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "pyjwt" },
-    { name = "pymodes" },
     { name = "python-dotenv" },
     { name = "tqdm" },
     { name = "trino", extra = ["sqlalchemy"] },
@@ -3101,8 +3100,10 @@ dependencies = [
 cartes = [
     { name = "cartes", marker = "python_full_version >= '3.10'" },
 ]
-decoding = [
+pymodes = [
     { name = "pymodes" },
+]
+rs1090 = [
     { name = "rs1090", version = "0.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "rs1090", version = "0.4.15", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
 ]
@@ -3132,16 +3133,15 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.2.2" },
     { name = "pyarrow", specifier = ">=17.0.0" },
     { name = "pyjwt", specifier = ">=2.9.0" },
-    { name = "pymodes", specifier = ">=2.21.1" },
-    { name = "pymodes", marker = "extra == 'decoding'", specifier = ">=2.18" },
+    { name = "pymodes", marker = "extra == 'pymodes'", specifier = ">=2.18" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
-    { name = "rs1090", marker = "extra == 'decoding'", specifier = ">=0.3.8" },
+    { name = "rs1090", marker = "extra == 'rs1090'", specifier = ">=0.3.8" },
     { name = "tqdm", specifier = ">=4.66.5" },
     { name = "trino", extras = ["sqlalchemy"], specifier = ">=0.329.0" },
     { name = "typing-extensions", specifier = ">=4.12.2" },
     { name = "tzdata", specifier = ">=2024.2" },
 ]
-provides-extras = ["cartes", "decoding"]
+provides-extras = ["cartes", "pymodes", "rs1090"]
 
 [package.metadata.requires-dev]
 dev = [
