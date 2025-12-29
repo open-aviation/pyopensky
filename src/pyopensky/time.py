@@ -37,8 +37,8 @@ def split_times(
     by: timedelta = timedelta(hours=1),
 ) -> Iterator[timetuple]:
     seq = pd.date_range(
-        to_datetime(before).floor(by),
-        to_datetime(after).ceil(by),
+        to_datetime(before).floor(by),  # ty: ignore[invalid-argument-type]
+        to_datetime(after).ceil(by),  # ty: ignore[invalid-argument-type]
         freq=by,
     )
 
