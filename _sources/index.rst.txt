@@ -26,5 +26,8 @@ use in your future studies. All functions return pandas :class:`~pandas.DataFram
 
    installation
    credentials
-   api_reference
+   rest
+   trino
+   trino_advanced
+   rebuild
 

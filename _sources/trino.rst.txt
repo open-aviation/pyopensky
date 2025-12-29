@@ -6,10 +6,3 @@ The Trino database
     :inherited-members:
     :no-undoc-members:
     :show-inheritance:
-
-.. autoclass:: pyopensky.rebuild.Rebuild
-    :members:
-    :inherited-members:
-    :no-undoc-members:
-    :show-inheritance:
-

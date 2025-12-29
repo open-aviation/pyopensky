@@ -1,0 +1,452 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced Trino queries &mdash; pyopensky 2.15 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/main_stylesheet.css?v=0065971f" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=d19175c4"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Rebuilding trajectories" href="rebuild.html" />
+    <link rel="prev" title="The Trino database" href="trino.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            pyopensky
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="credentials.html">Credentials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest.html">The REST API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trino.html">The Trino database</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Advanced Trino queries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#using-schema-objects-with-sqlalchemy">Using schema objects with SQLAlchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#selecting-specific-columns">Selecting specific columns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#spatial-queries-with-bounds">Spatial queries with bounds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#spatial-functions-with-sqlalchemy">Spatial functions with SQLAlchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ring-shaped-area-queries">Ring-shaped area queries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#query-data-from-specific-ads-b-receivers">Query data from specific ADS-B receivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#extending-temporal-range-for-airport-queries">Extending temporal range for airport queries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#filtering-with-boolean-expressions">Filtering with boolean expressions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pattern-matching-with-like">Pattern matching with like()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#filtering-for-non-null-values">Filtering for non-null values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inspecting-database-schema">Inspecting database schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#available-tables">Available tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#see-also">See also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rebuild.html">Rebuilding trajectories</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyopensky</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Advanced Trino queries</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/trino_advanced.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="advanced-trino-queries">
+<h1>Advanced Trino queries<a class="headerlink" href="#advanced-trino-queries" title="Link to this heading"></a></h1>
+<p>This section demonstrates advanced query patterns for working with the OpenSky Trino database.</p>
+<section id="using-schema-objects-with-sqlalchemy">
+<h2>Using schema objects with SQLAlchemy<a class="headerlink" href="#using-schema-objects-with-sqlalchemy" title="Link to this heading"></a></h2>
+<p>PyOpenSky provides schema classes for all Trino tables. You can use SQLAlchemy’s query builder for complex queries:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">select</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">StateVectorsData4</span><span class="p">,</span> <span class="n">FlightsData4</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.trino</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trino</span>
+
+<span class="n">trino</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">()</span>
+
+<span class="c1"># Select specific columns</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">select</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_only_columns</span><span class="p">(</span>
+        <span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+        <span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">icao24</span><span class="p">,</span>
+        <span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">lat</span><span class="p">,</span>
+        <span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span>
+        <span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">baroaltitude</span><span class="p">,</span>
+        <span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">callsign</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">callsign</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;AFR&quot;</span><span class="p">))</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">hour</span> <span class="o">&gt;=</span> <span class="s2">&quot;2023-01-01&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;</span> <span class="s2">&quot;2023-01-02&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="selecting-specific-columns">
+<h2>Selecting specific columns<a class="headerlink" href="#selecting-specific-columns" title="Link to this heading"></a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">with_only_columns()</span></code> to reduce data transfer and improve query performance:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">StateVectorsData4</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.trino</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trino</span>
+
+<span class="n">trino</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">()</span>
+
+<span class="c1"># Minimal trajectory data</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400a0e&quot;</span><span class="p">,</span>
+    <span class="n">selected_columns</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">&quot;time&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;icao24&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;lat&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;lon&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;baroaltitude&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;velocity&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;heading&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Column names can be specified as:</p>
+<ul class="simple">
+<li><p>String: <code class="docutils literal notranslate"><span class="pre">&quot;lat&quot;</span></code> (automatically prefixed with table name)</p></li>
+<li><p>Schema attribute: <code class="docutils literal notranslate"><span class="pre">StateVectorsData4.lat</span></code></p></li>
+<li><p>Qualified string: <code class="docutils literal notranslate"><span class="pre">&quot;StateVectorsData4.lat&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;FlightsData4.estdepartureairport&quot;</span></code></p></li>
+</ul>
+</div>
+</section>
+<section id="spatial-queries-with-bounds">
+<h2>Spatial queries with bounds<a class="headerlink" href="#spatial-queries-with-bounds" title="Link to this heading"></a></h2>
+<p>Filter data by geographic bounding box:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.trino</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trino</span>
+
+<span class="n">trino</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">()</span>
+
+<span class="c1"># Download data within geographic bounds (west, south, east, north)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-07-01&quot;</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-07-02&quot;</span><span class="p">,</span>
+    <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="mf">1.06</span><span class="p">,</span> <span class="mf">43.38</span><span class="p">,</span> <span class="mf">1.74</span><span class="p">,</span> <span class="mf">43.85</span><span class="p">),</span>  <span class="c1"># Toulouse area</span>
+    <span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">baroaltitude</span> <span class="o">&lt;</span> <span class="mi">3048</span><span class="p">,</span>  <span class="c1"># Below 10,000 ft</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="spatial-functions-with-sqlalchemy">
+<h2>Spatial functions with SQLAlchemy<a class="headerlink" href="#spatial-functions-with-sqlalchemy" title="Link to this heading"></a></h2>
+<p>Use Trino’s geospatial functions for advanced filtering:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">func</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">StateVectorsData4</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.trino</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trino</span>
+
+<span class="n">trino</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">()</span>
+
+<span class="c1"># Aircraft within 50 nautical miles of an airport</span>
+<span class="n">airport_lat</span><span class="p">,</span> <span class="n">airport_lon</span> <span class="o">=</span> <span class="mf">52.308601</span><span class="p">,</span> <span class="mf">4.76389</span>  <span class="c1"># Amsterdam Schiphol</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
+    <span class="s2">&quot;2023-03-01 12:00&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;2023-03-01 13:00&quot;</span><span class="p">,</span>
+    <span class="n">func</span><span class="o">.</span><span class="n">ST_Distance</span><span class="p">(</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">to_spherical_geography</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">ST_Point</span><span class="p">(</span><span class="n">airport_lon</span><span class="p">,</span> <span class="n">airport_lat</span><span class="p">)),</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">to_spherical_geography</span><span class="p">(</span>
+            <span class="n">func</span><span class="o">.</span><span class="n">ST_Point</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span> <span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">lat</span><span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">50</span> <span class="o">*</span> <span class="mi">1852</span><span class="p">,</span>  <span class="c1"># 50 nautical miles in meters</span>
+    <span class="n">arrival_airport</span><span class="o">=</span><span class="s2">&quot;EHAM&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>The example above finds aircraft within a circular area. This is more accurate than
+rectangular bounds for airport vicinity queries.</p>
+</div>
+</section>
+<section id="ring-shaped-area-queries">
+<h2>Ring-shaped area queries<a class="headerlink" href="#ring-shaped-area-queries" title="Link to this heading"></a></h2>
+<p>Query aircraft in a specific distance range (e.g., for approach patterns):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">func</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">StateVectorsData4</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.trino</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trino</span>
+
+<span class="n">trino</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">()</span>
+
+<span class="n">airport_lat</span><span class="p">,</span> <span class="n">airport_lon</span> <span class="o">=</span> <span class="mf">47.464722</span><span class="p">,</span> <span class="mf">8.549167</span>  <span class="c1"># Zurich Airport</span>
+
+<span class="c1"># Aircraft between 49 and 50 nautical miles from airport</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-01&quot;</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-02-01&quot;</span><span class="p">,</span>
+    <span class="n">func</span><span class="o">.</span><span class="n">ST_Distance</span><span class="p">(</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">to_spherical_geography</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">ST_Point</span><span class="p">(</span><span class="n">airport_lon</span><span class="p">,</span> <span class="n">airport_lat</span><span class="p">)),</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">to_spherical_geography</span><span class="p">(</span>
+            <span class="n">func</span><span class="o">.</span><span class="n">ST_Point</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span> <span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">lat</span><span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">50</span> <span class="o">*</span> <span class="mi">1852</span><span class="p">,</span>
+    <span class="n">func</span><span class="o">.</span><span class="n">ST_Distance</span><span class="p">(</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">to_spherical_geography</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">ST_Point</span><span class="p">(</span><span class="n">airport_lon</span><span class="p">,</span> <span class="n">airport_lat</span><span class="p">)),</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">to_spherical_geography</span><span class="p">(</span>
+            <span class="n">func</span><span class="o">.</span><span class="n">ST_Point</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span> <span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">lat</span><span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">49</span> <span class="o">*</span> <span class="mi">1852</span><span class="p">,</span>
+    <span class="n">arrival_airport</span><span class="o">=</span><span class="s2">&quot;LSZH&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="query-data-from-specific-ads-b-receivers">
+<h2>Query data from specific ADS-B receivers<a class="headerlink" href="#query-data-from-specific-ads-b-receivers" title="Link to this heading"></a></h2>
+<p>Filter by sensor serial numbers to get data from specific ground stations:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.trino</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trino</span>
+
+<span class="n">trino</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">()</span>
+
+<span class="c1"># Data from specific sensors</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2021-08-24 09:00&quot;</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2021-08-24 09:10&quot;</span><span class="p">,</span>
+    <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="mf">17.8936</span><span class="p">,</span> <span class="mf">59.6118</span><span class="p">,</span> <span class="mf">17.9894</span><span class="p">,</span> <span class="mf">59.6716</span><span class="p">),</span>
+    <span class="n">serials</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1408232560</span><span class="p">,</span> <span class="o">-</span><span class="mi">1408232534</span><span class="p">),</span>  <span class="c1"># Specific receiver IDs</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Serial numbers can be positive or negative integers. Use a single integer or tuple of integers.</p>
+</div>
+</section>
+<section id="extending-temporal-range-for-airport-queries">
+<h2>Extending temporal range for airport queries<a class="headerlink" href="#extending-temporal-range-for-airport-queries" title="Link to this heading"></a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">time_buffer</span></code> to include aircraft that departed/arrived slightly outside the time window:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.trino</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trino</span>
+
+<span class="n">trino</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">()</span>
+
+<span class="c1"># Get flights with 30-minute buffer before/after time window</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2024-03-16 09:00&quot;</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2024-03-16 11:00&quot;</span><span class="p">,</span>
+    <span class="n">airport</span><span class="o">=</span><span class="s2">&quot;UGTB&quot;</span><span class="p">,</span>
+    <span class="n">time_buffer</span><span class="o">=</span><span class="s2">&quot;30m&quot;</span><span class="p">,</span>  <span class="c1"># Also accepts &quot;1h&quot;, &quot;45min&quot;, etc.</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>This is useful when you want complete flight trajectories that may start or end outside your time range.</p>
+</section>
+<section id="filtering-with-boolean-expressions">
+<h2>Filtering with boolean expressions<a class="headerlink" href="#filtering-with-boolean-expressions" title="Link to this heading"></a></h2>
+<p>Use SQLAlchemy expressions for complex filtering:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">not_</span><span class="p">,</span> <span class="n">func</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">StateVectorsData4</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.trino</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trino</span>
+
+<span class="n">trino</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">()</span>
+
+<span class="c1"># Non-commercial aircraft (negative lookahead for commercial pattern)</span>
+<span class="n">commercial_pattern</span> <span class="o">=</span> <span class="s2">&quot;^([A-Z]</span><span class="si">{3}</span><span class="s2">)[0-9](([0-9]{0,3})|([0-9]{0,2})([A-Z])|([0-9]?)([A-Z]</span><span class="si">{2}</span><span class="s2">))</span><span class="se">\\</span><span class="s2">s*$&quot;</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
+    <span class="s2">&quot;2023-07-13&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;2023-07-14&quot;</span><span class="p">,</span>
+    <span class="n">not_</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">regexp_like</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">callsign</span><span class="p">,</span> <span class="n">commercial_pattern</span><span class="p">)),</span>
+    <span class="n">limit</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="pattern-matching-with-like">
+<h2>Pattern matching with like()<a class="headerlink" href="#pattern-matching-with-like" title="Link to this heading"></a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">.like()</span></code> for SQL pattern matching with wildcards:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">select</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">StateVectorsData4</span><span class="p">,</span> <span class="n">FlightsData4</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.trino</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trino</span>
+
+<span class="n">trino</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">()</span>
+
+<span class="c1"># French registered aircraft (icao24 starting with 39)</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">select</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">icao24</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="s2">&quot;39%&quot;</span><span class="p">))</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">hour</span> <span class="o">&gt;=</span> <span class="s2">&quot;2023-01-01&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;</span> <span class="s2">&quot;2023-01-02&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+
+<span class="c1"># Multiple character wildcard patterns</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">select</span><span class="p">(</span><span class="n">FlightsData4</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">callsign</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="s2">&quot;AFR%&quot;</span><span class="p">))</span>  <span class="c1"># Air France flights</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;=</span> <span class="s2">&quot;2023-01-01&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="s2">&quot;2023-02-01&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>SQL wildcards: <code class="docutils literal notranslate"><span class="pre">%</span></code> matches any sequence of characters, <code class="docutils literal notranslate"><span class="pre">_</span></code> matches a single character.</p>
+</div>
+</section>
+<section id="filtering-for-non-null-values">
+<h2>Filtering for non-null values<a class="headerlink" href="#filtering-for-non-null-values" title="Link to this heading"></a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">!=</span> <span class="pre">None</span></code> to filter out rows with missing data:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">select</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlightsData4</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.trino</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trino</span>
+
+<span class="n">trino</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">()</span>
+
+<span class="c1"># Only flights with known arrival airport</span>
+<span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">select</span><span class="p">(</span><span class="n">FlightsData4</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">with_only_columns</span><span class="p">(</span>
+        <span class="n">FlightsData4</span><span class="o">.</span><span class="n">icao24</span><span class="p">,</span>
+        <span class="n">FlightsData4</span><span class="o">.</span><span class="n">callsign</span><span class="p">,</span>
+        <span class="n">FlightsData4</span><span class="o">.</span><span class="n">firstseen</span><span class="p">,</span>
+        <span class="n">FlightsData4</span><span class="o">.</span><span class="n">lastseen</span><span class="p">,</span>
+        <span class="n">FlightsData4</span><span class="o">.</span><span class="n">estdepartureairport</span><span class="p">,</span>
+        <span class="n">FlightsData4</span><span class="o">.</span><span class="n">estarrivalairport</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">callsign</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="s2">&quot;AFR%&quot;</span><span class="p">))</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;=</span> <span class="s2">&quot;2023-01-01&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="s2">&quot;2023-02-01&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">estarrivalairport</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is useful for filtering flights with complete metadata, especially when working with estimated airport fields that may be null.</p>
+</div>
+</section>
+<section id="inspecting-database-schema">
+<h2>Inspecting database schema<a class="headerlink" href="#inspecting-database-schema" title="Link to this heading"></a></h2>
+<p>Discover available tables and columns:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetaData</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.trino</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trino</span>
+
+<span class="n">trino</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">()</span>
+<span class="n">connection</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+
+<span class="c1"># Reflect database schema</span>
+<span class="n">metadata</span> <span class="o">=</span> <span class="n">MetaData</span><span class="p">()</span>
+<span class="n">metadata</span><span class="o">.</span><span class="n">reflect</span><span class="p">(</span><span class="n">connection</span><span class="p">)</span>
+
+<span class="c1"># List all tables</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Available tables:&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="n">metadata</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># List columns in a specific table</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Columns in state_vectors_data4:&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">metadata</span><span class="o">.</span><span class="n">tables</span><span class="p">[</span><span class="s2">&quot;state_vectors_data4&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">column</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">column</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="available-tables">
+<h2>Available tables<a class="headerlink" href="#available-tables" title="Link to this heading"></a></h2>
+<p>Common tables in the OpenSky Trino database:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">state_vectors_data4</span></code>: Historical ADS-B state vectors (position, velocity, altitude)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">flights_data4</span></code>: Flight metadata (departure/arrival airports, times)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">flights_data5</span></code>: Enhanced flight data with takeoff/landing times</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">position_data4</span></code>: Raw position messages</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">velocity_data4</span></code>: Raw velocity messages</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">identification_data4</span></code>: Raw identification/callsign messages</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rollcall_replies_data4</span></code>: Mode S rollcall replies (squawk, BDS registers)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">adsc</span></code>: ADS-C messages (for oceanic/remote areas)</p></li>
+</ul>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="trino.html"><span class="doc">The Trino database</span></a> - Complete API reference for the Trino class</p></li>
+<li><p><a class="reference internal" href="rebuild.html"><span class="doc">Rebuilding trajectories</span></a> - Reconstructing trajectories from raw messages</p></li>
+<li><p><a class="reference external" href="https://docs.sqlalchemy.org/en/latest/core/tutorial.html">SQLAlchemy Query API</a></p></li>
+<li><p><a class="reference external" href="https://trino.io/docs/current/functions.html">Trino SQL Functions</a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="trino.html" class="btn btn-neutral float-left" title="The Trino database" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rebuild.html" class="btn btn-neutral float-right" title="Rebuilding trajectories" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Xavier Olive, Junzi Sun.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

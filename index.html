@@ -46,7 +46,10 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="credentials.html">Credentials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest.html">The REST API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trino.html">The Trino database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trino_advanced.html">Advanced Trino queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rebuild.html">Rebuilding trajectories</a></li>
 </ul>
 
         </div>
@@ -100,9 +103,36 @@ library. traffic wraps the same pyopensky queries and returns
 <li class="toctree-l2"><a class="reference internal" href="credentials.html#fallback-configuration">Fallback configuration</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="rest.html">The REST API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="trino.html">The Trino database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rest.html">The REST API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rest.html#pyopensky.rest.REST"><code class="docutils literal notranslate"><span class="pre">REST</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="trino.html">The Trino database</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="trino.html#pyopensky.trino.Trino"><code class="docutils literal notranslate"><span class="pre">Trino</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="trino_advanced.html">Advanced Trino queries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="trino_advanced.html#using-schema-objects-with-sqlalchemy">Using schema objects with SQLAlchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trino_advanced.html#selecting-specific-columns">Selecting specific columns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trino_advanced.html#spatial-queries-with-bounds">Spatial queries with bounds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trino_advanced.html#spatial-functions-with-sqlalchemy">Spatial functions with SQLAlchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trino_advanced.html#ring-shaped-area-queries">Ring-shaped area queries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trino_advanced.html#query-data-from-specific-ads-b-receivers">Query data from specific ADS-B receivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trino_advanced.html#extending-temporal-range-for-airport-queries">Extending temporal range for airport queries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trino_advanced.html#filtering-with-boolean-expressions">Filtering with boolean expressions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trino_advanced.html#pattern-matching-with-like">Pattern matching with like()</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trino_advanced.html#filtering-for-non-null-values">Filtering for non-null values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trino_advanced.html#inspecting-database-schema">Inspecting database schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trino_advanced.html#available-tables">Available tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trino_advanced.html#see-also">See also</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rebuild.html">Rebuilding trajectories</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rebuild.html#when-to-use-the-rebuild-functionality">When to use the rebuild functionality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rebuild.html#rebuilding-without-custom-decoding">Rebuilding without custom decoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rebuild.html#rebuilding-with-custom-decoding">Rebuilding with custom decoding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rebuild.html#available-decoders">Available decoders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rebuild.html#performance-considerations">Performance considerations</a></li>
 </ul>
 </li>
 </ul>
