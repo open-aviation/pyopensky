@@ -68,6 +68,7 @@ jobs:
           uv run ruff format --check
 
       - name: Type checking
+        if: ${{ matrix.python-version != '3.9' }}
         run: uvx ty check src tests
 
       - name: Run tests
