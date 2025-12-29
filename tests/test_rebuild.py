@@ -3,7 +3,7 @@
 import pytest
 
 import pandas as pd
-from pyopensky.decoders import PyModesDecoder, Rs1090Decoder
+from pyopensky.decoders import PyModesDecoder
 from pyopensky.rebuild import Rebuild
 from pyopensky.trino import Trino
 

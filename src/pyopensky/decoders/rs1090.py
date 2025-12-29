@@ -25,9 +25,9 @@ if sys.version_info < (3, 12):
     def batched(
         iterable: Iterator[Tuple[T, ...]], n: int = 1
     ) -> Iterator[Tuple[T, ...]]:
-        l = len(iterable)  # type: ignore
-        for ndx in range(0, l, n):
-            yield iterable[ndx : min(ndx + n, l)]  # type: ignore
+        length = len(iterable)  # type: ignore
+        for ndx in range(0, length, n):
+            yield iterable[ndx : min(ndx + n, length)]  # type: ignore
 
 else:
     from itertools import batched
