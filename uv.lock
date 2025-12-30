@@ -3078,7 +3078,7 @@ wheels = [
 
 [[package]]
 name = "pyopensky"
-version = "2.15"
+version = "2.16"
 source = { editable = "." }
 dependencies = [
     { name = "appdirs" },

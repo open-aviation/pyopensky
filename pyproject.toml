@@ -1,6 +1,6 @@
 [project]
 name = "pyopensky"
-version = "2.15"
+version = "2.16"
 description = "A Python interface for OpenSky database"
 authors = [{ name = "Xavier Olive", email = "git@xoolive.org" }, { name = "Junzi Sun", email = "j.sun-1@tudelft.nl" }]
 license = "MIT"
