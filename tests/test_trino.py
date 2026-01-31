@@ -69,7 +69,9 @@ def test_flightlist() -> None:
     assert df is not None
 
     expected = {"AFR", "ANA", "FDX", "JAL"}
-    assert expected.intersection(df.callsign.str[:3].unique()) == expected
+    assert (
+        expected.intersection(df.callsign.str.slice(0, 3).unique()) == expected
+    )
 
     df = trino.flightlist(
         "2019-11-01",
