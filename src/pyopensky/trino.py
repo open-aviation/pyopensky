@@ -351,7 +351,7 @@ class Trino(OpenSkyDBAPI):
         stop_ts = (
             to_datetime(stop)
             if stop is not None
-            else start_ts + pd.Timedelta("1d")
+            else start_ts + pd.Timedelta("1D")
         )
 
         stmt = select(Table).with_only_columns(
@@ -392,15 +392,15 @@ class Trino(OpenSkyDBAPI):
             stmt = stmt.where(
                 Table.firstseen >= start_ts,
                 Table.firstseen <= stop_ts,
-                Table.day >= start_ts.floor("1d"),
-                Table.day < stop_ts.ceil("1d"),
+                Table.day >= start_ts.floor("1D"),
+                Table.day < stop_ts.ceil("1D"),
             )
         else:
             stmt = stmt.where(
                 Table.lastseen >= start_ts,
                 Table.lastseen <= stop_ts,
-                Table.day >= start_ts.floor("1d"),
-                Table.day < stop_ts.ceil("1d"),
+                Table.day >= start_ts.floor("1D"),
+                Table.day < stop_ts.ceil("1D"),
             )
 
         for condition in args:
@@ -520,7 +520,7 @@ class Trino(OpenSkyDBAPI):
         stop_ts = (
             to_datetime(stop)
             if stop is not None
-            else start_ts + pd.Timedelta("1d")
+            else start_ts + pd.Timedelta("1D")
         )
 
         airports_params = [airport, departure_airport, arrival_airport]
@@ -540,8 +540,8 @@ class Trino(OpenSkyDBAPI):
                     FlightsData4.estarrivalairport,
                 )
                 .where(
-                    FlightsData4.day >= start_ts.floor("1d"),
-                    FlightsData4.day <= stop_ts.ceil("1d"),
+                    FlightsData4.day >= start_ts.floor("1D"),
+                    FlightsData4.day <= stop_ts.ceil("1D"),
                 )
             )
 
@@ -695,7 +695,7 @@ class Trino(OpenSkyDBAPI):
         stop_ts = (
             to_datetime(stop)
             if stop is not None
-            else start_ts + pd.Timedelta("1d")
+            else start_ts + pd.Timedelta("1D")
         )
         stmt = select(FlarmRaw).with_only_columns(
             FlarmRaw.sensoraltitude,
@@ -830,7 +830,7 @@ class Trino(OpenSkyDBAPI):
         stop_ts = (
             to_datetime(stop)
             if stop is not None
-            else start_ts + pd.Timedelta("1d")
+            else start_ts + pd.Timedelta("1D")
         )
 
         airports_params = [airport, departure_airport, arrival_airport]
@@ -871,8 +871,8 @@ class Trino(OpenSkyDBAPI):
                     FlightsData4.estarrivalairport,
                 )
                 .where(
-                    FlightsData4.day >= start_ts.floor("1d"),
-                    FlightsData4.day <= stop_ts.ceil("1d"),
+                    FlightsData4.day >= start_ts.floor("1D"),
+                    FlightsData4.day <= stop_ts.ceil("1D"),
                 )
             )
 
