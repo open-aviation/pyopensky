@@ -69,10 +69,10 @@ jobs:
 
       - name: Type checking
         if: ${{ matrix.python-version != '3.9' }}
-        run: uvx ty check src tests
+        run: uv run ty check src tests
 
       - name: Run tests
-        if: ${{ (matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest') || steps.cache-folder.outputs.cache-hit == 'true' }}
+        if: ${{ (matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest' && secrets.OPENSKY_USERNAME != '' && secrets.OPENSKY_PASSWORD != '') || steps.cache-folder.outputs.cache-hit == 'true' }}
         env:
           OPENSKY_USERNAME: ${{ secrets.OPENSKY_USERNAME }}
           OPENSKY_PASSWORD: ${{ secrets.OPENSKY_PASSWORD }}

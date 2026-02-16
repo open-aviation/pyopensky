@@ -23,7 +23,7 @@ def download_tzdata_windows(
     base_dir: None | Path = None,
 ) -> None:
     if sys.platform != "win32":
-        raise RuntimeError("This function only supported on Windows")
+        raise RuntimeError("This function is only supported on Windows")
 
     # This module only exists in Windows
     from winreg import (
