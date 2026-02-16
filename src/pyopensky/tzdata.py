@@ -22,7 +22,11 @@ def download_tzdata_windows(
     base_dir: None | Path = None,
 ) -> None:
     # This module only exists in Windows
-    from winreg import HKEY_CURRENT_USER, OpenKey, QueryValueEx  # type: ignore
+    from winreg import (  # type: ignore[attr-defined]
+        HKEY_CURRENT_USER,
+        OpenKey,
+        QueryValueEx,
+    )
 
     if base_dir is None:
         conda_env_path = os.getenv("CONDA_PREFIX", None)
