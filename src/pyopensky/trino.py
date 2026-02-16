@@ -654,7 +654,7 @@ class Trino(OpenSkyDBAPI):
                     "StateVectorsData4": StateVectorsData4,
                     "FlightsData4": fd4,
                 }
-                return getattr(MATCH[table], column) 
+                return getattr(MATCH[table], column)
             if candidate := getattr(StateVectorsData4, col, None):
                 return candidate
             if candidate := getattr(fd4, col, None):

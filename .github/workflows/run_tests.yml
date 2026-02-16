@@ -78,12 +78,9 @@ jobs:
           OPENSKY_PASSWORD: ${{ secrets.OPENSKY_PASSWORD }}
           OPENSKY_CACHE: ${{ github.workspace }}/cache_opensky
         run: |
-          # If cache hit, run tests regardless. Otherwise require Opensky credentials.
-          if [ "${{ steps.cache-folder.outputs.cache-hit }}" != "true" ]; then
-            if [ -z "${OPENSKY_USERNAME}" ] || [ -z "${OPENSKY_PASSWORD}" ]; then
-              echo "OPENSKY credentials not set — skipping tests."
-              exit 0
-            fi
+          if [ -z "${OPENSKY_USERNAME}" ] || [ -z "${OPENSKY_PASSWORD}" ]; then
+            echo "OPENSKY credentials not set: skipping tests."
+            exit 0
           fi
           uv run pytest
 
