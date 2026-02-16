@@ -35,7 +35,6 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
-  "pre-commit >= 3.8.0",
   "mypy >= 1.11.2",
   "ruff >= 0.6.3",
   "pytest >= 8.3.2",
