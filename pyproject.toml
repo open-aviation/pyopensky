@@ -77,3 +77,13 @@ warn_no_return = true
 warn_redundant_casts = true
 warn_unused_configs = true
 warn_unused_ignores = true
+
+[tool.ty.src]
+exclude = ["src/pyopensky/decoders/pymodes.py"]
+
+[[tool.ty.overrides]]
+# Target the file where the pandas datetime conversion happens
+# This addresse the dt.tz_localize() typing issue
+# Note that this rule is only an issue in Linux, not Windows or MacOS
+include = ["src/pyopensky/rest.py"]
+rules = { "unresolved-attribute" = "ignore" }

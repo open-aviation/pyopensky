@@ -382,10 +382,10 @@ class REST:
             .assign(
                 firstSeen=lambda df: pd.to_datetime(
                     df.firstSeen * 1e9
-                ).dt.tz_localize("utc"),  # type: ignore[attr-defined]
+                ).dt.tz_localize("utc"),
                 lastSeen=lambda df: pd.to_datetime(
                     df.lastSeen * 1e9
-                ).dt.tz_localize("utc"),  # type: ignore[attr-defined]
+                ).dt.tz_localize("utc"),
             )
             .sort_values("lastSeen")
         )
