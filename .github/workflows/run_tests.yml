@@ -72,12 +72,20 @@ jobs:
         run: uv run ty check src tests
 
       - name: Run tests
-        if: ${{ (matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest' && secrets.OPENSKY_USERNAME != '' && secrets.OPENSKY_PASSWORD != '') || steps.cache-folder.outputs.cache-hit == 'true' }}
+        if: ${{ (matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest') || steps.cache-folder.outputs.cache-hit == 'true' }}
         env:
           OPENSKY_USERNAME: ${{ secrets.OPENSKY_USERNAME }}
           OPENSKY_PASSWORD: ${{ secrets.OPENSKY_PASSWORD }}
           OPENSKY_CACHE: ${{ github.workspace }}/cache_opensky
-        run: uv run pytest
+        run: |
+          # If cache hit, run tests regardless. Otherwise require Opensky credentials.
+          if [ "${{ steps.cache-folder.outputs.cache-hit }}" != "true" ]; then
+            if [ -z "${OPENSKY_USERNAME}" ] || [ -z "${OPENSKY_PASSWORD}" ]; then
+              echo "OPENSKY credentials not set — skipping tests."
+              exit 0
+            fi
+          fi
+          uv run pytest
 
       - name: Minimize uv cache
         run: uv cache prune --ci
