@@ -127,7 +127,7 @@ class Trino(OpenSkyDBAPI):
                 options={"verify_signature": False},
             ),
         }
-        return payload["access_token"]  # type: ignore[no-any-return]
+        return payload["access_token"]
 
     def engine(self) -> Engine:
         token = self.token()
@@ -194,7 +194,7 @@ class Trino(OpenSkyDBAPI):
                 if isinstance(exc.orig, TrinoQueryError):
                     if exc.orig.error_name == "QUERY_QUEUE_FULL":
                         _log.error(limit_resources_msg)
-                        res = exc  # type: ignore[assignment]
+                        res = exc
                     else:
                         raise exc
                 else:
@@ -654,11 +654,11 @@ class Trino(OpenSkyDBAPI):
                     "StateVectorsData4": StateVectorsData4,
                     "FlightsData4": fd4,
                 }
-                return getattr(MATCH[table], column)  # type: ignore[no-any-return]
+                return getattr(MATCH[table], column) 
             if candidate := getattr(StateVectorsData4, col, None):
-                return candidate  # type: ignore[no-any-return]
+                return candidate
             if candidate := getattr(fd4, col, None):
-                return candidate  # type: ignore[no-any-return]
+                return candidate
             raise ValueError(f"Unknown column: {col}")
 
         if len(selected_columns) > 0:
