@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import os
+import sys
 import tarfile
 from pathlib import Path
 
@@ -21,8 +22,15 @@ def download_tzdata_windows(
     name: str = "tzdata",
     base_dir: None | Path = None,
 ) -> None:
+    if sys.platform != "win32":
+        raise RuntimeError("This function is only supported on Windows")
+
     # This module only exists in Windows
-    from winreg import HKEY_CURRENT_USER, OpenKey, QueryValueEx  # type: ignore
+    from winreg import (
+        HKEY_CURRENT_USER,
+        OpenKey,
+        QueryValueEx,
+    )
 
     if base_dir is None:
         conda_env_path = os.getenv("CONDA_PREFIX", None)

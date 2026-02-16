@@ -49,7 +49,7 @@ class PyModesDecoder(Decoder):
     def __init__(self) -> None:
         """Initialize PyModesDecoder and import pyModeS library."""
         try:
-            import pyModeS as pms  # ty: ignore[unresolved-import]
+            import pyModeS as pms
 
             self.pms = pms
         except ImportError as e:
