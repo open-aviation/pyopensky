@@ -96,7 +96,7 @@ class Trino(OpenSkyDBAPI):
 
         # take a little margin (one minute)
         now = pd.Timestamp("now", tz="utc") - pd.Timedelta("1 min")
-        if self._token is not None and self._token["exp"] < now.timestamp():
+        if self._token is not None and self._token["exp"] > now.timestamp():
             _log.info(f"Token still valid until {self._token['exp']}")
             return self._token["access_token"]
 
