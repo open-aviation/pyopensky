@@ -228,14 +228,22 @@ def test_complex_queries() -> None:
 
 def test_time_buffer() -> None:
     df = trino.history(
-        start="2024-03-16 09:00",
-        stop="2024-03-16 11:00",
+        start="2024-03-16 09:25",
+        stop="2024-03-16 10:50",
         time_buffer="25m",
         airport="UGTB",
         bounds=(44.958636, 41.665760, 44.965417, 41.670505),
     )
     assert df is not None
-    assert len(df.groupby(["icao24", "callsign"])) == 4
+
+    before = df.query('time <= "2024-03-16 09:25Z"')
+    assert before is not None
+    print(before)
+    assert "QTR91M" in before.callsign.values
+
+    after = df.query('time >= "2024-03-16 10:50Z"')
+    assert after is not None
+    assert "QTR256" in after.callsign.values
 
 
 def test_specific_columns() -> None:

@@ -71,6 +71,7 @@ https://trino.opensky-network.org/ui/
 
 class Token(TypedDict):
     access_token: str
+    preferred_username: str
     iat: int
     exp: int
 
@@ -145,6 +146,9 @@ class Trino(OpenSkyDBAPI):
                 if token is not None
                 else OAuth2Authentication(),
                 http_scheme="https",
+                user=self._token["preferred_username"]
+                if self._token is not None
+                else None,
                 # https://github.com/trinodb/trino-python-client/discussions/456
                 legacy_prepared_statements=True,
             ),
