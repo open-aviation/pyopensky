@@ -182,11 +182,8 @@ class Trino(OpenSkyDBAPI):
         params_raw = str(s.params)
         _log.debug("cache-key sql   repr: %r", sql_raw)
         _log.debug("cache-key params repr: %r", params_raw)
-        query_str = (
-            f"{sql_raw}\n{params_raw}"
-            .replace("\r\n", "\n")
-            .replace("\r", "\n")
-        )
+        query_str = f"{sql_raw}\n{params_raw}"
+        query_str = query_str.replace("\r\n", "\n").replace("\r", "\n")
         _log.debug("cache-key final repr: %r", query_str)
         _log.info(f"Processing query {query_str}")
 

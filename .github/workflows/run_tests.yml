@@ -118,8 +118,6 @@ jobs:
 
       - name: Run tests
         env:
-          OPENSKY_USERNAME: ${{ secrets.OPENSKY_USERNAME }}
-          OPENSKY_PASSWORD: ${{ secrets.OPENSKY_PASSWORD }}
           OPENSKY_CACHE: ${{ github.workspace }}/cache_opensky
         run: uv run pytest ${{ ! matrix.rest && '--ignore=tests/test_rest.py' || '' }}
 

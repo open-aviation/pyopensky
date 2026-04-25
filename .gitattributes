@@ -1,0 +1,4 @@
+# Ensure consistent line endings across platforms
+# uv.lock must hash identically on Linux, macOS and Windows so that
+# the GitHub Actions cache key is the same on all runners.
+uv.lock text eol=lf
