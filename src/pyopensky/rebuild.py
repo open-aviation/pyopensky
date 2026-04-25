@@ -6,7 +6,7 @@ multiple tables and reconstructing complete state vectors.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -459,7 +459,7 @@ class Rebuild:
                 on="timestamp",
                 by="icao24",
                 direction="nearest",
-                tolerance=pd.Timedelta(seconds=5),
+                tolerance=cast(pd.Timedelta, pd.Timedelta(seconds=5)),
                 suffixes=("_pos", "_vel"),
             )
 
@@ -508,7 +508,7 @@ class Rebuild:
                 on="timestamp",
                 by="icao24",
                 direction="nearest",
-                tolerance=pd.Timedelta(seconds=5),
+                tolerance=cast(pd.Timedelta, pd.Timedelta(seconds=5)),
             )
 
         # Optionally get and merge rollcall data
@@ -530,7 +530,7 @@ class Rebuild:
                     on="timestamp",
                     by="icao24",
                     direction="nearest",
-                    tolerance=pd.Timedelta(seconds=5),
+                    tolerance=cast(pd.Timedelta, pd.Timedelta(seconds=5)),
                 )
             else:
                 pos_data = pd.concat([pos_data, rollcall_data], axis=0)

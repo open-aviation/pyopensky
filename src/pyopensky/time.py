@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from numbers import Real
-from typing import Any, Iterator, Tuple, Union
+from typing import Any, Iterator, Tuple, Union, cast
 
 import pandas as pd
 
@@ -13,21 +13,21 @@ timetuple = Tuple[datetime, datetime, datetime, datetime]
 
 def to_timedelta(delta: deltalike, **kwargs: Any) -> pd.Timedelta:
     if isinstance(delta, Real):
-        delta = pd.Timedelta(seconds=float(delta))
-    elif isinstance(delta, (str, timedelta)):
-        delta = pd.Timedelta(delta)
-    elif delta is None:
-        delta = pd.Timedelta(**kwargs)
+        return cast(pd.Timedelta, pd.Timedelta(seconds=float(delta)))
+    if isinstance(delta, (str, timedelta)):
+        return cast(pd.Timedelta, pd.Timedelta(delta))
+    if delta is None:
+        return cast(pd.Timedelta, pd.Timedelta(**kwargs))
     return delta
 
 
 def to_datetime(time: timelike) -> pd.Timestamp:
     if isinstance(time, str):
-        time = pd.Timestamp(time, tz="utc")
-    elif isinstance(time, datetime):
-        time = pd.to_datetime(time, utc=True)
-    elif isinstance(time, Real):
-        time = pd.Timestamp(float(time), unit="s", tz="utc")
+        return cast(pd.Timestamp, pd.Timestamp(time, tz="utc"))
+    if isinstance(time, datetime):
+        return pd.to_datetime(time, utc=True)
+    if isinstance(time, Real):
+        return cast(pd.Timestamp, pd.Timestamp(float(time), unit="s", tz="utc"))
     return time
 
 

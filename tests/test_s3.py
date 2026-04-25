@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -9,7 +10,7 @@ from pyopensky.s3 import S3Client
 logging.getLogger().setLevel(logging.INFO)
 opensky = S3Client()
 
-timestamp = pd.Timestamp("2022-07-07 18:00Z")
+timestamp = cast(pd.Timestamp, pd.Timestamp("2022-07-07 18:00Z"))
 stem = "part-r-00169-1cb1ad83-4e0f-4ae8-8a3a-9ca53b4e0f3e.snappy"
 
 

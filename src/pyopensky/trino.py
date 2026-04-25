@@ -594,7 +594,7 @@ class Trino(OpenSkyDBAPI):
             fd4 = aliased(FlightsData4, alias=flight_query, adapt_on_names=True)
 
             if isinstance(time_buffer, str):
-                time_buffer = pd.Timedelta(time_buffer)
+                time_buffer = cast(pd.Timedelta, pd.Timedelta(time_buffer))
 
             stmt = select(StateVectorsData4).join(
                 flight_query,

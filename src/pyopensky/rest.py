@@ -419,9 +419,8 @@ class REST:
         specific day (as a string, as an epoch or as a datetime)
         """
 
-        if day is None:
-            day = pd.Timestamp("now", tz="utc").floor("1d")
-        day_ts = to_datetime(day)
+        now = cast(pd.Timestamp, pd.Timestamp("now", tz="utc").floor("1D"))
+        day_ts = to_datetime(day) if day is not None else now
 
         return self.get(
             f"https://opensky-network.org/api/range/days?"
@@ -429,9 +428,8 @@ class REST:
         )
 
     def global_coverage(self, day: None | timelike = None) -> Any:
-        if day is None:
-            day = pd.Timestamp("now", tz="utc").floor("1d")
-        day_ts = to_datetime(day)
+        now = cast(pd.Timestamp, pd.Timestamp("now", tz="utc").floor("1D"))
+        day_ts = to_datetime(day) if day is not None else now
 
         return self.client.get(
             f"https://opensky-network.org/api/range/coverage?"
@@ -458,13 +456,12 @@ class REST:
 
         """
 
-        if begin is None:
-            begin = pd.Timestamp("now", tz="utc").floor("1d")
-        begin_ts = to_datetime(begin)
-        if end is None:
-            end_ts = begin_ts + pd.Timedelta("1d")
-        else:
-            end_ts = to_datetime(end)
+        now = cast(pd.Timestamp, pd.Timestamp("now", tz="utc").floor("1D"))
+        begin_ts = to_datetime(begin) if begin is not None else now
+        end_ts = (
+            to_datetime(end) if end is not None
+            else cast(pd.Timestamp, begin_ts + pd.Timedelta("1D"))
+        )
 
         json = self.get(
             f"https://opensky-network.org/api/flights/arrival"
@@ -518,13 +515,12 @@ class REST:
 
         """
 
-        if begin is None:
-            begin = pd.Timestamp("now", tz="utc").floor("1d")
-        begin_ts = to_datetime(begin)
-        if end is None:
-            end_ts = begin_ts + timedelta(days=1)
-        else:
-            end_ts = to_datetime(end)
+        now = cast(pd.Timestamp, pd.Timestamp("now", tz="utc").floor("1D"))
+        begin_ts = to_datetime(begin) if begin is not None else now
+        end_ts = (
+            to_datetime(end) if end is not None
+            else cast(pd.Timestamp, begin_ts + timedelta(days=1))
+        )
 
         json = self.get(
             f"https://opensky-network.org/api/flights/departure"

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Iterator, Literal, cast, overload
@@ -9,6 +8,8 @@ from typing import Any, Iterator, Literal, cast, overload
 import urllib3
 from minio import Minio, datatypes
 from tqdm import tqdm
+
+from .time import timelike, to_datetime
 
 _log = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ class S3Client:
 
     def list_objects(
         self,
-        hour: datetime,
+        hour: timelike,
         table: str = "state_vectors",
         folder: str = "tables_v4",
         **kwargs: Any,
@@ -72,16 +73,18 @@ class S3Client:
         """
 
         if folder == "raw":
+            hour_ts = to_datetime(hour)
             yield from self.s3client.list_objects(
                 "opensky-hdfs-backup",
-                prefix=f"{folder}/{table}/{hour:%Y/%m/%d/%H}",
+                prefix=f"{folder}/{table}/{hour_ts:%Y/%m/%d/%H}",
                 **kwargs,
             )
 
         granularity = "day" if table == "flights" else "hour"
+        hour_ts = to_datetime(hour)
         yield from self.s3client.list_objects(
             "opensky-hdfs-backup",
-            prefix=f"{folder}/{table}/{granularity}={hour.timestamp():.0f}",
+            prefix=f"{folder}/{table}/{granularity}={hour_ts.timestamp():.0f}",
             **kwargs,
         )
 

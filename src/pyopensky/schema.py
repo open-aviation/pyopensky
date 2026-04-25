@@ -3,7 +3,7 @@ from __future__ import annotations
 import operator
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, ClassVar, Dict, List, Protocol
+from typing import Any, ClassVar, Dict, List, Protocol, cast
 
 from sqlalchemy import ARRAY, Float, Integer, String, TypeDecorator
 from sqlalchemy.engine.interfaces import Dialect
@@ -128,7 +128,9 @@ class TrackRow:
 
     def __post_init__(self) -> None:
         if isinstance(self.time, int):
-            self.time = pd.Timestamp(self.time, unit="s", tz="utc")
+            self.time = cast(
+                pd.Timestamp, pd.Timestamp(self.time, unit="s", tz="utc")
+            )
 
 
 @dataclass
