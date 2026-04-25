@@ -97,6 +97,10 @@ jobs:
           # and fails to compile there. Not much we can do about that right now.
           - os: windows-latest
             python-version: "3.14t"
+        include:
+          - os: ubuntu-latest
+            python-version: "3.13"
+            rest: true
     steps:
       - uses: actions/checkout@v6
         with:
@@ -116,9 +120,7 @@ jobs:
 
       - name: Run tests
         env:
-          OPENSKY_USERNAME: ${{ secrets.OPENSKY_USERNAME }}
-          OPENSKY_PASSWORD: ${{ secrets.OPENSKY_PASSWORD }}
           OPENSKY_CACHE: ${{ github.workspace }}/cache_opensky
-        run: uv run pytest
+        run: uv run pytest ${{ ! matrix.rest && '--ignore=tests/test_rest.py' || '' }}
 
       - run: uv cache prune --ci

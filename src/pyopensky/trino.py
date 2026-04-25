@@ -177,7 +177,8 @@ class Trino(OpenSkyDBAPI):
         if isinstance(query, str):
             query = text(query)
 
-        query_str = f"{(s := query.compile())}\n{s.params}"
+        s = query.compile()
+        query_str = f"{s}\n{s.params}".replace("\r\n", "\n").replace("\r", "\n")
         _log.info(f"Processing query {query_str}")
 
         digest = hashlib.md5(query_str.encode("utf8")).hexdigest()
@@ -219,7 +220,8 @@ class Trino(OpenSkyDBAPI):
             if isinstance(res, DBAPIError):
                 raise RuntimeError(str(res.orig))
 
-            df = pd.concat(self.process_result(res))
+            chunks = list(self.process_result(res))
+            df = pd.concat(chunks) if chunks else pd.DataFrame()
 
         df = df.convert_dtypes(dtype_backend="pyarrow")
         for column in df.select_dtypes(include=["datetime"]):
