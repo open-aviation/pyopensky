@@ -3,14 +3,79 @@ name: tests
 on:
   push:
   pull_request_target:
-  schedule: # This is useful for keeping the cache fit and ready
-    - cron: "42 3 * * 0" # Every Sunday morning when I am fast asleep :)
+  schedule: # keep the cache warm
+    - cron: "42 3 * * 0" # every Sunday morning
   workflow_dispatch:
 
 jobs:
-  deploy:
+  lint:
+    name: lint and format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+
+      - run: uv sync --dev --extra rs1090 --extra cartes
+      - run: uv run ruff check
+      - run: uv run ruff format --check
+      - run: uv cache prune --ci
+
+  typing:
+    name: type checking
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+
+      - run: uv sync --dev --extra rs1090 --extra cartes
+      - run: uv run ty check src tests
+      - run: uv cache prune --ci
+
+  fill_cache:
+    name: fill trino cache
+    runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache.outputs.cache-hit }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: cache_opensky
+          enableCrossOsArchive: true
+          key: opensky-${{ hashFiles('uv.lock') }}
+
+      - run: uv sync --dev --extra rs1090 --extra cartes
+
+      - name: Fill cache with Trino queries
+        if: steps.cache.outputs.cache-hit != 'true'
+        env:
+          OPENSKY_USERNAME: ${{ secrets.OPENSKY_USERNAME }}
+          OPENSKY_PASSWORD: ${{ secrets.OPENSKY_PASSWORD }}
+          OPENSKY_CACHE: ${{ github.workspace }}/cache_opensky
+        run: uv run pytest tests/test_trino.py tests/test_rebuild.py
+
+      - run: uv cache prune --ci
+
+  tests:
     name: python-${{ matrix.python-version }} on ${{ matrix.os }}
+    needs: fill_cache
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-latest
@@ -32,47 +97,24 @@ jobs:
           # and fails to compile there. Not much we can do about that right now.
           - os: windows-latest
             python-version: "3.14t"
-
-      fail-fast: false
-
-    runs-on: ${{ matrix.os }}
-
-    env:
-      UV_CACHE_DIR: /tmp/.uv-cache
-
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v8.1.0
+      - uses: astral-sh/setup-uv@v8.1.0
         with:
           enable-cache: true
 
-      - name: Cache folder for data
-        uses: actions/cache@v5
-        id: cache-folder
+      - uses: actions/cache@v4
         with:
-          path: |
-            cache_opensky
+          path: cache_opensky
           enableCrossOsArchive: true
           key: opensky-${{ hashFiles('uv.lock') }}
 
-      - name: Install the project
-        run: uv sync --dev --python ${{ matrix.python-version }} --extra rs1090 --extra cartes
-
-      - name: Linting and formatting
-        run: |
-          uv run ruff check
-          uv run ruff format --check
-
-      - name: Type checking
-        if: ${{ matrix.python-version != '3.9' }}
-        run: uv run ty check src tests
+      - run: uv sync --dev --python ${{ matrix.python-version }} --extra rs1090 --extra cartes
 
       - name: Run tests
-        if: ${{ (matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest') || steps.cache-folder.outputs.cache-hit == 'true' }}
         env:
           OPENSKY_USERNAME: ${{ secrets.OPENSKY_USERNAME }}
           OPENSKY_PASSWORD: ${{ secrets.OPENSKY_PASSWORD }}
@@ -84,5 +126,4 @@ jobs:
           fi
           uv run pytest
 
-      - name: Minimize uv cache
-        run: uv cache prune --ci
+      - run: uv cache prune --ci
