@@ -38,10 +38,8 @@ jobs:
       - run: uv cache prune --ci
 
   fill_cache:
-    name: fill trino cache
+    name: fill trino cache (linux)
     runs-on: ubuntu-latest
-    outputs:
-      cache-hit: ${{ steps.cache.outputs.cache-hit }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -61,7 +59,35 @@ jobs:
       - run: uv sync --dev --extra rs1090 --extra cartes
 
       - name: Fill cache with Trino queries
-        if: steps.cache.outputs.cache-hit != 'true'
+        env:
+          OPENSKY_USERNAME: ${{ secrets.OPENSKY_USERNAME }}
+          OPENSKY_PASSWORD: ${{ secrets.OPENSKY_PASSWORD }}
+          OPENSKY_CACHE: ${{ github.workspace }}/cache_opensky
+        run: uv run pytest tests/test_trino.py tests/test_rebuild.py
+
+      - run: uv cache prune --ci
+
+  fill_cache_windows:
+    name: fill trino cache (windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+
+      - uses: actions/cache@v5
+        id: cache
+        with:
+          path: cache_opensky
+          key: opensky-windows-${{ hashFiles('uv.lock') }}
+
+      - run: uv sync --dev --extra rs1090 --extra cartes
+
+      - name: Fill cache with Trino queries
         env:
           OPENSKY_USERNAME: ${{ secrets.OPENSKY_USERNAME }}
           OPENSKY_PASSWORD: ${{ secrets.OPENSKY_PASSWORD }}
@@ -72,7 +98,7 @@ jobs:
 
   tests:
     name: python-${{ matrix.python-version }} on ${{ matrix.os }}
-    needs: fill_cache
+    needs: [fill_cache, fill_cache_windows]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -114,12 +140,14 @@ jobs:
         with:
           path: cache_opensky
           enableCrossOsArchive: true
-          key: opensky-${{ hashFiles('uv.lock') }}
+          key: opensky-${{ runner.os == 'Windows' && 'windows-' || '' }}${{ hashFiles('uv.lock') }}
 
       - run: uv sync --dev --python ${{ matrix.python-version }} --extra rs1090 --extra cartes
 
       - name: Run tests
         env:
+          OPENSKY_USERNAME: ${{ secrets.OPENSKY_USERNAME }}
+          OPENSKY_PASSWORD: ${{ secrets.OPENSKY_PASSWORD }}
           OPENSKY_CACHE: ${{ github.workspace }}/cache_opensky
         run: uv run pytest ${{ ! matrix.rest && '--ignore=tests/test_rest.py' || '' }}
 

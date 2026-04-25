@@ -178,7 +178,7 @@ class Trino(OpenSkyDBAPI):
             query = text(query)
 
         s = query.compile()
-        query_str = f"{s}\n{s.params}".replace("\r\n", "\n").replace("\r", "\n")
+        query_str = f"{s}\n{s.params}"
         _log.info(f"Processing query {query_str}")
 
         digest = hashlib.md5(query_str.encode("utf8")).hexdigest()
