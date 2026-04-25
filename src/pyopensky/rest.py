@@ -7,7 +7,9 @@ from datetime import timedelta
 from json import JSONDecodeError
 from typing import Any, TypedDict, cast
 
+import httpcore
 import httpx
+import stamina
 
 import pandas as pd
 
@@ -108,6 +110,12 @@ class REST:
             return {}
         return {"Authorization": f"Bearer {self.token['access_token']}"}
 
+    @stamina.retry(
+        on=(httpx.TransportError, httpcore.TimeoutException, OSError),
+        attempts=5,
+        wait_initial=1.0,
+        wait_max=10.0,
+    )
     def get(self, query: str, retry: int = 5) -> Any:
         c = self.client.get(query, headers=self.headers)
         try:
