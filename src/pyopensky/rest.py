@@ -459,7 +459,8 @@ class REST:
         now = cast(pd.Timestamp, pd.Timestamp("now", tz="utc").floor("1D"))
         begin_ts = to_datetime(begin) if begin is not None else now
         end_ts = (
-            to_datetime(end) if end is not None
+            to_datetime(end)
+            if end is not None
             else cast(pd.Timestamp, begin_ts + pd.Timedelta("1D"))
         )
 
@@ -518,7 +519,8 @@ class REST:
         now = cast(pd.Timestamp, pd.Timestamp("now", tz="utc").floor("1D"))
         begin_ts = to_datetime(begin) if begin is not None else now
         end_ts = (
-            to_datetime(end) if end is not None
+            to_datetime(end)
+            if end is not None
             else cast(pd.Timestamp, begin_ts + timedelta(days=1))
         )
 
