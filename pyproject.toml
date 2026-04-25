@@ -15,6 +15,7 @@ dependencies = [
   "pyarrow >= 17.0.0",
   "pyjwt >= 2.9.0",
   "python-dotenv>=1.0.1",
+  "stamina>=25.1.0",
   "tqdm >= 4.66.5",
   "trino[sqlalchemy] >= 0.329.0",
   "typing-extensions >= 4.12.2",

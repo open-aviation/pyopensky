@@ -8,8 +8,10 @@ from multiprocessing.pool import ThreadPool
 from operator import or_
 from typing import Any, Iterable, Type, TypedDict, cast
 
+import httpcore
 import httpx
 import jwt
+import stamina
 from sqlalchemy import (
     Connection,
     CursorResult,
@@ -155,6 +157,12 @@ class Trino(OpenSkyDBAPI):
         )
         return engine
 
+    @stamina.retry(
+        on=(httpx.TransportError, httpcore.TimeoutException, OSError),
+        attempts=5,
+        wait_initial=1.0,
+        wait_max=10.0,
+    )
     def connect(self) -> Connection:
         return self.engine().connect()
 
