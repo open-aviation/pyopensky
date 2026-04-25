@@ -87,3 +87,8 @@ exclude = ["src/pyopensky/decoders/pymodes.py"]
 # Note that this rule is only an issue in Linux, not Windows or MacOS
 include = ["src/pyopensky/rest.py"]
 rules = { "unresolved-attribute" = "ignore" }
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "DEBUG"
+log_cli_format = "%(levelname)s %(name)s:%(filename)s:%(lineno)d %(message)s"

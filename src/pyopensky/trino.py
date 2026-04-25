@@ -178,10 +178,20 @@ class Trino(OpenSkyDBAPI):
             query = text(query)
 
         s = query.compile()
-        query_str = f"{s}\n{s.params}"
+        sql_raw = str(s)
+        params_raw = str(s.params)
+        _log.debug("cache-key sql   repr: %r", sql_raw)
+        _log.debug("cache-key params repr: %r", params_raw)
+        query_str = (
+            f"{sql_raw}\n{params_raw}"
+            .replace("\r\n", "\n")
+            .replace("\r", "\n")
+        )
+        _log.debug("cache-key final repr: %r", query_str)
         _log.info(f"Processing query {query_str}")
 
         digest = hashlib.md5(query_str.encode("utf8")).hexdigest()
+        _log.debug("cache-key digest: %s", digest)
         suffix = ".parquet.gz" if compress else ".parquet"
         if (cache_file := (cache_path / digest).with_suffix(suffix)).exists():
             if cached:
