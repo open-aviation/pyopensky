@@ -7,7 +7,7 @@
 ## Coding style
 
 - Run `uv run ruff check` and `uv run ruff format` to check and format code
-- Run `uvx ty check src/ tests/` to check types
+- Run `uv run ty check src/ tests/` to check types
 
 ## Documentation commands
 
