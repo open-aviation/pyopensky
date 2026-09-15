@@ -5,7 +5,7 @@ description = "A Python interface for OpenSky database"
 authors = [{ name = "Xavier Olive", email = "git@xoolive.org" }, { name = "Junzi Sun", email = "j.sun-1@tudelft.nl" }]
 license = "MIT"
 readme = "readme.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
   "appdirs >= 1.4.4",
   "httpx >= 0.27.2",
@@ -58,7 +58,7 @@ lint.select = [
   "RUF",
 ]
 line-length = 80
-target-version = "py39"
+target-version = "py310"
 
 [tool.ruff.lint.isort]
 known-first-party = ["numpy", "pandas"]
@@ -67,10 +67,9 @@ known-first-party = ["numpy", "pandas"]
 exclude = ["src/pyopensky/decoders/pymodes.py"]
 
 [[tool.ty.overrides]]
-# Target the file where the pandas datetime conversion happens
-# This addresse the dt.tz_localize() typing issue
-# Note that this rule is only an issue in Linux, not Windows or MacOS
-include = ["src/pyopensky/rest.py"]
+# SQLAlchemy models expose their columns dynamically. Ty cannot verify these
+# attributes for the heterogeneous raw-message table union.
+include = ["src/pyopensky/rest.py", "src/pyopensky/trino.py"]
 rules = { "unresolved-attribute" = "ignore" }
 
 [tool.pytest.ini_options]

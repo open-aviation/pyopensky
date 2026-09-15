@@ -20,7 +20,7 @@ def download_tzdata_windows(
     year: int = 2022,
     *,
     name: str = "tzdata",
-    base_dir: None | Path = None,
+    base_dir: Path | None = None,
 ) -> None:
     if sys.platform != "win32":
         raise RuntimeError("This function is only supported on Windows")

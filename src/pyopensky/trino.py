@@ -86,9 +86,9 @@ class Trino(OpenSkyDBAPI):
     All methods return standard structures. When calls are made from the traffic
     library, they return advanced structures."""
 
-    _token: None | Token = None
+    _token: Token | None = None
 
-    def token(self, **kwargs: Any) -> None | str:
+    def token(self, **kwargs: Any) -> str | None:
         if trino_username is None or trino_password is None:
             _log.warning(
                 "No credentials provided, "
@@ -123,7 +123,7 @@ class Trino(OpenSkyDBAPI):
 
         result.raise_for_status()
         payload = result.json()
-        self._token = {  # type: ignore
+        self._token = {
             **payload,
             **jwt.decode(
                 payload["access_token"],
@@ -286,7 +286,7 @@ class Trino(OpenSkyDBAPI):
     def stmt_where_str(
         self,
         stmt: Select[Any],
-        value: None | str | list[str],
+        value: str | list[str] | None,
         *attr: InstrumentedAttribute[str],
     ) -> Select[Any]:
         if len(attr) == 0:
@@ -306,20 +306,20 @@ class Trino(OpenSkyDBAPI):
     def flightlist(
         self,
         start: timelike,
-        stop: None | timelike = None,
+        stop: timelike | None = None,
         *args: ColumnExpressionArgument[bool],
-        departure_airport: None | str | list[str] = None,
-        arrival_airport: None | str | list[str] = None,
-        airport: None | str | list[str] = None,
-        callsign: None | str | list[str] = None,
-        icao24: None | str | list[str] = None,
+        departure_airport: str | list[str] | None = None,
+        arrival_airport: str | list[str] | None = None,
+        airport: str | list[str] | None = None,
+        callsign: str | list[str] | None = None,
+        icao24: str | list[str] | None = None,
         cached: bool = True,
         compress: bool = False,
-        limit: None | int = None,
-        extra_columns: None | list[Any] = None,
+        limit: int | None = None,
+        extra_columns: list[Any] | None = None,
         Table: Type[FlightsData4] | Type[FlightsData5] = FlightsData4,
         **kwargs: Any,
-    ) -> None | pd.DataFrame:
+    ) -> pd.DataFrame | None:
         """Lists flights departing or arriving at a given airport.
 
         You may pass requests based on time ranges, callsigns, aircraft, areas,
@@ -445,26 +445,25 @@ class Trino(OpenSkyDBAPI):
     def history(
         self,
         start: timelike,
-        stop: None | timelike = None,
+        stop: timelike | None = None,
         *args: ColumnExpressionArgument[bool],
         # date_delta: timedelta = timedelta(hours=1),
-        callsign: None | str | list[str] = None,
-        icao24: None | str | list[str] = None,
-        serials: None | int | Iterable[int] = None,
-        bounds: None
-        | str
-        | HasBounds
-        | tuple[float, float, float, float] = None,
-        departure_airport: None | str = None,
-        arrival_airport: None | str = None,
-        airport: None | str = None,
-        time_buffer: None | str | pd.Timedelta = None,
+        callsign: str | list[str] | None = None,
+        icao24: str | list[str] | None = None,
+        serials: int | Iterable[int] | None = None,
+        bounds: (
+            str | HasBounds | tuple[float, float, float, float] | None
+        ) = None,
+        departure_airport: str | None = None,
+        arrival_airport: str | None = None,
+        airport: str | None = None,
+        time_buffer: str | pd.Timedelta | None = None,
         cached: bool = True,
         compress: bool = False,
-        limit: None | int = None,
+        limit: int | None = None,
         selected_columns: tuple[InstrumentedAttribute[Any] | str, ...] = (),
         **kwargs: Any,
-    ) -> None | pd.DataFrame:
+    ) -> pd.DataFrame | None:
         """Get Traffic from the OpenSky Trino database.
 
         You may pass requests based on time ranges, callsigns, aircraft, areas,
@@ -702,16 +701,16 @@ class Trino(OpenSkyDBAPI):
     def flarm(
         self,
         start: timelike,
-        stop: None | timelike = None,
+        stop: timelike | None = None,
         *args: ColumnExpressionArgument[bool],
-        sensor_name: None | str | list[str] = None,
+        sensor_name: str | list[str] | None = None,
         cached: bool = True,
         compress: bool = False,
-        limit: None | int = None,
+        limit: int | None = None,
         correct_only: bool = True,
         extra_columns: tuple[InstrumentedAttribute[Any], ...] = (),
         **kwargs: Any,
-    ) -> None | pd.DataFrame:
+    ) -> pd.DataFrame | None:
         start_ts = to_datetime(start)
         stop_ts = (
             to_datetime(stop)
@@ -759,18 +758,18 @@ class Trino(OpenSkyDBAPI):
     def rawdata(
         self,
         start: timelike,
-        stop: None | timelike = None,
+        stop: timelike | None = None,
         *args: ColumnExpressionArgument[bool],
-        icao24: None | str | list[str] = None,
-        serials: None | int | Iterable[int] = None,
-        bounds: None | HasBounds | tuple[float, float, float, float] = None,
-        callsign: None | str | list[str] = None,
-        departure_airport: None | str = None,
-        arrival_airport: None | str = None,
-        airport: None | str = None,
+        icao24: str | list[str] | None = None,
+        serials: int | Iterable[int] | None = None,
+        bounds: HasBounds | tuple[float, float, float, float] | None = None,
+        callsign: str | list[str] | None = None,
+        departure_airport: str | None = None,
+        arrival_airport: str | None = None,
+        airport: str | None = None,
         cached: bool = True,
         compress: bool = False,
-        limit: None | int = None,
+        limit: int | None = None,
         Table: Type[RawTable]
         | Type[AcasData4]
         | Type[AllcallRepliesData4]
@@ -781,7 +780,7 @@ class Trino(OpenSkyDBAPI):
         | Type[VelocityData4] = RollcallRepliesData4,
         extra_columns: tuple[InstrumentedAttribute[Any], ...] = (),
         **kwargs: Any,
-    ) -> None | pd.DataFrame:
+    ) -> pd.DataFrame | None:
         """Get raw message from the OpenSky Trino database.
 
         You may pass requests based on time ranges, callsigns, aircraft, areas,
