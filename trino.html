@@ -109,29 +109,29 @@ default) in case the connection fails.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>start</strong> (<span class="sphinx_autodoc_typehints-type">timelike</span>) – a string (default to UTC), epoch or datetime (native
 Python or pandas)</p></li>
-<li><p><strong>stop</strong> (<span class="sphinx_autodoc_typehints-type">None | timelike</span>) – a string (default to UTC), epoch or datetime (native Python
+<li><p><strong>stop</strong> (<span class="sphinx_autodoc_typehints-type">timelike | None</span>) – a string (default to UTC), epoch or datetime (native Python
 or pandas), <em>by default, one day after start</em></p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type">None | pd.DataFrame</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type">pd.DataFrame | None</span></p>
 </dd>
 </dl>
 <p>More arguments to filter resulting data:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>departure_airport</strong> (<span class="sphinx_autodoc_typehints-type">None | str | list[str]</span>) – a string for the ICAO identifier of the
+<li><p><strong>departure_airport</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – a string for the ICAO identifier of the
 airport. Selects flights departing from the airport between the two
 timestamps;</p></li>
-<li><p><strong>arrival_airport</strong> (<span class="sphinx_autodoc_typehints-type">None | str | list[str]</span>) – a string for the ICAO identifier of the airport.
+<li><p><strong>arrival_airport</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – a string for the ICAO identifier of the airport.
 Selects flights arriving at the airport between the two timestamps;</p></li>
-<li><p><strong>airport</strong> (<span class="sphinx_autodoc_typehints-type">None | str | list[str]</span>) – a string for the ICAO identifier of the airport. Selects
+<li><p><strong>airport</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – a string for the ICAO identifier of the airport. Selects
 flights departing from or arriving at the airport between the two
 timestamps;</p></li>
-<li><p><strong>callsign</strong> (<span class="sphinx_autodoc_typehints-type">None | str | list[str]</span>) – a string or a list of strings (wildcards
+<li><p><strong>callsign</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – a string or a list of strings (wildcards
 accepted, _ for any character, % for any sequence of characters);</p></li>
-<li><p><strong>icao24</strong> (<span class="sphinx_autodoc_typehints-type">None | str | list[str]</span>) – a string or a list of strings identifying the transponder
+<li><p><strong>icao24</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – a string or a list of strings identifying the transponder
 code of the aircraft;</p></li>
 </ul>
 </dd>
@@ -155,7 +155,7 @@ deletes previous cache files;</p></li>
 <li><p><strong>compress</strong> (<span class="sphinx_autodoc_typehints-type">bool</span>) – (default: False) compress cache files. Reduces disk
 space occupied at the expense of slightly increased time
 to load.</p></li>
-<li><p><strong>limit</strong> (<span class="sphinx_autodoc_typehints-type">None | int</span>) – maximum number of records requested, LIMIT keyword in SQL.</p></li>
+<li><p><strong>limit</strong> (<span class="sphinx_autodoc_typehints-type">int | None</span>) – maximum number of records requested, LIMIT keyword in SQL.</p></li>
 </ul>
 </dd>
 </dl>
@@ -175,27 +175,27 @@ default) in case the connection fails.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>start</strong> (<span class="sphinx_autodoc_typehints-type">timelike</span>) – a string (default to UTC), epoch or datetime (native
 Python or pandas)</p></li>
-<li><p><strong>stop</strong> (<span class="sphinx_autodoc_typehints-type">None | timelike</span>) – a string (default to UTC), epoch or datetime (native Python
+<li><p><strong>stop</strong> (<span class="sphinx_autodoc_typehints-type">timelike | None</span>) – a string (default to UTC), epoch or datetime (native Python
 or pandas), <em>by default, one day after start</em></p></li>
 <li><p><strong>date_delta</strong> – a timedelta representing how to split the requests,
 <em>by default: per hour</em></p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type">None | pd.DataFrame</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type">pd.DataFrame | None</span></p>
 </dd>
 </dl>
 <p>More arguments to filter resulting data:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>callsign</strong> (<span class="sphinx_autodoc_typehints-type">None | str | list[str]</span>) – a string or a list of strings (wildcards
+<li><p><strong>callsign</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – a string or a list of strings (wildcards
 accepted, _ for any character, % for any sequence of characters);</p></li>
-<li><p><strong>icao24</strong> (<span class="sphinx_autodoc_typehints-type">None | str | list[str]</span>) – a string or a list of strings identifying the transponder
+<li><p><strong>icao24</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – a string or a list of strings identifying the transponder
 code of the aircraft;</p></li>
-<li><p><strong>serials</strong> (<span class="sphinx_autodoc_typehints-type">None | int | Iterable[int]</span>) – an integer or a list of integers identifying the sensors
+<li><p><strong>serials</strong> (<span class="sphinx_autodoc_typehints-type">int | Iterable[int] | None</span>) – an integer or a list of integers identifying the sensors
 receiving the data;</p></li>
-<li><p><strong>bounds</strong> (<span class="sphinx_autodoc_typehints-type">None | str | HasBounds | tuple[float, float, float, float]</span>) – sets a geographical footprint. Either an <strong>airspace or
+<li><p><strong>bounds</strong> (<span class="sphinx_autodoc_typehints-type">str | HasBounds | tuple[float, float, float, float] | None</span>) – sets a geographical footprint. Either an <strong>airspace or
 shapely shape</strong> (requires the bounds attribute); or a <strong>tuple of
 float</strong> (west, south, east, north);</p></li>
 <li><p><strong>selected_columns</strong> (<span class="sphinx_autodoc_typehints-type">tuple[InstrumentedAttribute[Any] | str, …]</span>) – specify the columns you want to retrieve. When
@@ -212,15 +212,15 @@ information from two tables in the Trino database, resp.
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>departure_airport</strong> (<span class="sphinx_autodoc_typehints-type">None | str</span>) – a string for the ICAO identifier of the
+<li><p><strong>departure_airport</strong> (<span class="sphinx_autodoc_typehints-type">str | None</span>) – a string for the ICAO identifier of the
 airport. Selects flights departing from the airport between the two
 timestamps;</p></li>
-<li><p><strong>arrival_airport</strong> (<span class="sphinx_autodoc_typehints-type">None | str</span>) – a string for the ICAO identifier of the airport.
+<li><p><strong>arrival_airport</strong> (<span class="sphinx_autodoc_typehints-type">str | None</span>) – a string for the ICAO identifier of the airport.
 Selects flights arriving at the airport between the two timestamps;</p></li>
-<li><p><strong>airport</strong> (<span class="sphinx_autodoc_typehints-type">None | str</span>) – a string for the ICAO identifier of the airport. Selects
+<li><p><strong>airport</strong> (<span class="sphinx_autodoc_typehints-type">str | None</span>) – a string for the ICAO identifier of the airport. Selects
 flights departing from or arriving at the airport between the two
 timestamps;</p></li>
-<li><p><strong>time_buffer</strong> (<span class="sphinx_autodoc_typehints-type">None | str | pd.Timedelta</span>) – (default: None) time buffer used to extend time
+<li><p><strong>time_buffer</strong> (<span class="sphinx_autodoc_typehints-type">str | pd.Timedelta | None</span>) – (default: None) time buffer used to extend time
 bounds for flights in the OpenSky flight tables: requests will get
 flights between <code class="docutils literal notranslate"><span class="pre">start</span> <span class="pre">-</span> <span class="pre">time_buffer</span></code> and <code class="docutils literal notranslate"><span class="pre">stop</span> <span class="pre">+</span> <span class="pre">time_buffer</span></code>.
 If no airport is specified, the parameter is ignored.</p></li>
@@ -248,7 +248,7 @@ deletes previous cache files;</p></li>
 <li><p><strong>compress</strong> (<span class="sphinx_autodoc_typehints-type">bool</span>) – (default: False) compress cache files. Reduces disk
 space occupied at the expense of slightly increased time
 to load.</p></li>
-<li><p><strong>limit</strong> (<span class="sphinx_autodoc_typehints-type">None | int</span>) – maximum number of records requested, LIMIT keyword in SQL.</p></li>
+<li><p><strong>limit</strong> (<span class="sphinx_autodoc_typehints-type">int | None</span>) – maximum number of records requested, LIMIT keyword in SQL.</p></li>
 </ul>
 </dd>
 </dl>
@@ -268,27 +268,27 @@ default) in case the connection fails.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>start</strong> (<span class="sphinx_autodoc_typehints-type">timelike</span>) – a string (default to UTC), epoch or datetime (native
 Python or pandas)</p></li>
-<li><p><strong>stop</strong> (<span class="sphinx_autodoc_typehints-type">None | timelike</span>) – a string (default to UTC), epoch or datetime (native Python
+<li><p><strong>stop</strong> (<span class="sphinx_autodoc_typehints-type">timelike | None</span>) – a string (default to UTC), epoch or datetime (native Python
 or pandas), <em>by default, one day after start</em></p></li>
 <li><p><strong>date_delta</strong> – a timedelta representing how to split the requests,
 <em>by default: per hour</em></p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type">None | pd.DataFrame</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type">pd.DataFrame | None</span></p>
 </dd>
 </dl>
 <p>More arguments to filter resulting data:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>callsign</strong> (<span class="sphinx_autodoc_typehints-type">None | str | list[str]</span>) – a string or a list of strings (wildcards
+<li><p><strong>callsign</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – a string or a list of strings (wildcards
 accepted, _ for any character, % for any sequence of characters);</p></li>
-<li><p><strong>icao24</strong> (<span class="sphinx_autodoc_typehints-type">None | str | list[str]</span>) – a string or a list of strings identifying the transponder
+<li><p><strong>icao24</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – a string or a list of strings identifying the transponder
 code of the aircraft;</p></li>
-<li><p><strong>serials</strong> (<span class="sphinx_autodoc_typehints-type">None | int | Iterable[int]</span>) – an integer or a list of integers identifying the sensors
+<li><p><strong>serials</strong> (<span class="sphinx_autodoc_typehints-type">int | Iterable[int] | None</span>) – an integer or a list of integers identifying the sensors
 receiving the data;</p></li>
-<li><p><strong>bounds</strong> (<span class="sphinx_autodoc_typehints-type">None | HasBounds | tuple[float, float, float, float]</span>) – sets a geographical footprint. Either an <strong>airspace or
+<li><p><strong>bounds</strong> (<span class="sphinx_autodoc_typehints-type">HasBounds | tuple[float, float, float, float] | None</span>) – sets a geographical footprint. Either an <strong>airspace or
 shapely shape</strong> (requires the bounds attribute); or a <strong>tuple of
 float</strong> (west, south, east, north);</p></li>
 </ul>
@@ -301,12 +301,12 @@ information from two tables in the Trino database, resp.
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>departure_airport</strong> (<span class="sphinx_autodoc_typehints-type">None | str</span>) – a string for the ICAO identifier of the
+<li><p><strong>departure_airport</strong> (<span class="sphinx_autodoc_typehints-type">str | None</span>) – a string for the ICAO identifier of the
 airport. Selects flights departing from the airport between the two
 timestamps;</p></li>
-<li><p><strong>arrival_airport</strong> (<span class="sphinx_autodoc_typehints-type">None | str</span>) – a string for the ICAO identifier of the airport.
+<li><p><strong>arrival_airport</strong> (<span class="sphinx_autodoc_typehints-type">str | None</span>) – a string for the ICAO identifier of the airport.
 Selects flights arriving at the airport between the two timestamps;</p></li>
-<li><p><strong>airport</strong> (<span class="sphinx_autodoc_typehints-type">None | str</span>) – a string for the ICAO identifier of the airport. Selects
+<li><p><strong>airport</strong> (<span class="sphinx_autodoc_typehints-type">str | None</span>) – a string for the ICAO identifier of the airport. Selects
 flights departing from or arriving at the airport between the two
 timestamps;</p></li>
 </ul>
@@ -333,7 +333,7 @@ deletes previous cache files;</p></li>
 <li><p><strong>compress</strong> (<span class="sphinx_autodoc_typehints-type">bool</span>) – (default: False) compress cache files. Reduces disk
 space occupied at the expense of slightly increased time
 to load.</p></li>
-<li><p><strong>limit</strong> (<span class="sphinx_autodoc_typehints-type">None | int</span>) – maximum number of records requested, LIMIT keyword in SQL.</p></li>
+<li><p><strong>limit</strong> (<span class="sphinx_autodoc_typehints-type">int | None</span>) – maximum number of records requested, LIMIT keyword in SQL.</p></li>
 </ul>
 </dd>
 </dl>
