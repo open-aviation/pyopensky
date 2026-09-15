@@ -115,9 +115,9 @@
         <span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">baroaltitude</span><span class="p">,</span>
         <span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">callsign</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">callsign</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;AFR&quot;</span><span class="p">))</span>
-    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">hour</span> <span class="o">&gt;=</span> <span class="s2">&quot;2023-01-01&quot;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;</span> <span class="s2">&quot;2023-01-02&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">callsign</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"AFR"</span><span class="p">))</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">hour</span> <span class="o">&gt;=</span> <span class="s2">"2023-01-01"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;</span> <span class="s2">"2023-01-02"</span><span class="p">)</span>
     <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
 <span class="p">)</span>
 
@@ -135,17 +135,17 @@
 
 <span class="c1"># Minimal trajectory data</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
-    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
-    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400a0e&quot;</span><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">"2023-01-03 16:00"</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">"2023-01-03 20:00"</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">"400a0e"</span><span class="p">,</span>
     <span class="n">selected_columns</span><span class="o">=</span><span class="p">(</span>
-        <span class="s2">&quot;time&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;icao24&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;lat&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;lon&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;baroaltitude&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;velocity&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;heading&quot;</span><span class="p">,</span>
+        <span class="s2">"time"</span><span class="p">,</span>
+        <span class="s2">"icao24"</span><span class="p">,</span>
+        <span class="s2">"lat"</span><span class="p">,</span>
+        <span class="s2">"lon"</span><span class="p">,</span>
+        <span class="s2">"baroaltitude"</span><span class="p">,</span>
+        <span class="s2">"velocity"</span><span class="p">,</span>
+        <span class="s2">"heading"</span><span class="p">,</span>
     <span class="p">),</span>
 <span class="p">)</span>
 </pre></div>
@@ -169,8 +169,8 @@
 
 <span class="c1"># Download data within geographic bounds (west, south, east, north)</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-07-01&quot;</span><span class="p">,</span>
-    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-07-02&quot;</span><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">"2023-07-01"</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">"2023-07-02"</span><span class="p">,</span>
     <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="mf">1.06</span><span class="p">,</span> <span class="mf">43.38</span><span class="p">,</span> <span class="mf">1.74</span><span class="p">,</span> <span class="mf">43.85</span><span class="p">),</span>  <span class="c1"># Toulouse area</span>
     <span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">baroaltitude</span> <span class="o">&lt;</span> <span class="mi">3048</span><span class="p">,</span>  <span class="c1"># Below 10,000 ft</span>
 <span class="p">)</span>
@@ -190,15 +190,15 @@
 <span class="n">airport_lat</span><span class="p">,</span> <span class="n">airport_lon</span> <span class="o">=</span> <span class="mf">52.308601</span><span class="p">,</span> <span class="mf">4.76389</span>  <span class="c1"># Amsterdam Schiphol</span>
 
 <span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
-    <span class="s2">&quot;2023-03-01 12:00&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;2023-03-01 13:00&quot;</span><span class="p">,</span>
+    <span class="s2">"2023-03-01 12:00"</span><span class="p">,</span>
+    <span class="s2">"2023-03-01 13:00"</span><span class="p">,</span>
     <span class="n">func</span><span class="o">.</span><span class="n">ST_Distance</span><span class="p">(</span>
         <span class="n">func</span><span class="o">.</span><span class="n">to_spherical_geography</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">ST_Point</span><span class="p">(</span><span class="n">airport_lon</span><span class="p">,</span> <span class="n">airport_lat</span><span class="p">)),</span>
         <span class="n">func</span><span class="o">.</span><span class="n">to_spherical_geography</span><span class="p">(</span>
             <span class="n">func</span><span class="o">.</span><span class="n">ST_Point</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span> <span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">lat</span><span class="p">)</span>
         <span class="p">),</span>
     <span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">50</span> <span class="o">*</span> <span class="mi">1852</span><span class="p">,</span>  <span class="c1"># 50 nautical miles in meters</span>
-    <span class="n">arrival_airport</span><span class="o">=</span><span class="s2">&quot;EHAM&quot;</span><span class="p">,</span>
+    <span class="n">arrival_airport</span><span class="o">=</span><span class="s2">"EHAM"</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -221,8 +221,8 @@ rectangular bounds for airport vicinity queries.</p>
 
 <span class="c1"># Aircraft between 49 and 50 nautical miles from airport</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-01&quot;</span><span class="p">,</span>
-    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-02-01&quot;</span><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">"2023-01-01"</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">"2023-02-01"</span><span class="p">,</span>
     <span class="n">func</span><span class="o">.</span><span class="n">ST_Distance</span><span class="p">(</span>
         <span class="n">func</span><span class="o">.</span><span class="n">to_spherical_geography</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">ST_Point</span><span class="p">(</span><span class="n">airport_lon</span><span class="p">,</span> <span class="n">airport_lat</span><span class="p">)),</span>
         <span class="n">func</span><span class="o">.</span><span class="n">to_spherical_geography</span><span class="p">(</span>
@@ -235,7 +235,7 @@ rectangular bounds for airport vicinity queries.</p>
             <span class="n">func</span><span class="o">.</span><span class="n">ST_Point</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">lon</span><span class="p">,</span> <span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">lat</span><span class="p">)</span>
         <span class="p">),</span>
     <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">49</span> <span class="o">*</span> <span class="mi">1852</span><span class="p">,</span>
-    <span class="n">arrival_airport</span><span class="o">=</span><span class="s2">&quot;LSZH&quot;</span><span class="p">,</span>
+    <span class="n">arrival_airport</span><span class="o">=</span><span class="s2">"LSZH"</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -249,8 +249,8 @@ rectangular bounds for airport vicinity queries.</p>
 
 <span class="c1"># Data from specific sensors</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2021-08-24 09:00&quot;</span><span class="p">,</span>
-    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2021-08-24 09:10&quot;</span><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">"2021-08-24 09:00"</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">"2021-08-24 09:10"</span><span class="p">,</span>
     <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="mf">17.8936</span><span class="p">,</span> <span class="mf">59.6118</span><span class="p">,</span> <span class="mf">17.9894</span><span class="p">,</span> <span class="mf">59.6716</span><span class="p">),</span>
     <span class="n">serials</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1408232560</span><span class="p">,</span> <span class="o">-</span><span class="mi">1408232534</span><span class="p">),</span>  <span class="c1"># Specific receiver IDs</span>
 <span class="p">)</span>
@@ -270,10 +270,10 @@ rectangular bounds for airport vicinity queries.</p>
 
 <span class="c1"># Get flights with 30-minute buffer before/after time window</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2024-03-16 09:00&quot;</span><span class="p">,</span>
-    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2024-03-16 11:00&quot;</span><span class="p">,</span>
-    <span class="n">airport</span><span class="o">=</span><span class="s2">&quot;UGTB&quot;</span><span class="p">,</span>
-    <span class="n">time_buffer</span><span class="o">=</span><span class="s2">&quot;30m&quot;</span><span class="p">,</span>  <span class="c1"># Also accepts &quot;1h&quot;, &quot;45min&quot;, etc.</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">"2024-03-16 09:00"</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">"2024-03-16 11:00"</span><span class="p">,</span>
+    <span class="n">airport</span><span class="o">=</span><span class="s2">"UGTB"</span><span class="p">,</span>
+    <span class="n">time_buffer</span><span class="o">=</span><span class="s2">"30m"</span><span class="p">,</span>  <span class="c1"># Also accepts "1h", "45min", etc.</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -289,11 +289,11 @@ rectangular bounds for airport vicinity queries.</p>
 <span class="n">trino</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">()</span>
 
 <span class="c1"># Non-commercial aircraft (negative lookahead for commercial pattern)</span>
-<span class="n">commercial_pattern</span> <span class="o">=</span> <span class="s2">&quot;^([A-Z]</span><span class="si">{3}</span><span class="s2">)[0-9](([0-9]{0,3})|([0-9]{0,2})([A-Z])|([0-9]?)([A-Z]</span><span class="si">{2}</span><span class="s2">))</span><span class="se">\\</span><span class="s2">s*$&quot;</span>
+<span class="n">commercial_pattern</span> <span class="o">=</span> <span class="s2">"^([A-Z]</span><span class="si">{3}</span><span class="s2">)[0-9](([0-9]{0,3})|([0-9]{0,2})([A-Z])|([0-9]?)([A-Z]</span><span class="si">{2}</span><span class="s2">))</span><span class="se">\\</span><span class="s2">s*$"</span>
 
 <span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
-    <span class="s2">&quot;2023-07-13&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;2023-07-14&quot;</span><span class="p">,</span>
+    <span class="s2">"2023-07-13"</span><span class="p">,</span>
+    <span class="s2">"2023-07-14"</span><span class="p">,</span>
     <span class="n">not_</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">regexp_like</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">callsign</span><span class="p">,</span> <span class="n">commercial_pattern</span><span class="p">)),</span>
     <span class="n">limit</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
 <span class="p">)</span>
@@ -312,9 +312,9 @@ rectangular bounds for airport vicinity queries.</p>
 <span class="c1"># French registered aircraft (icao24 starting with 39)</span>
 <span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">select</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">icao24</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="s2">&quot;39%&quot;</span><span class="p">))</span>
-    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">hour</span> <span class="o">&gt;=</span> <span class="s2">&quot;2023-01-01&quot;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;</span> <span class="s2">&quot;2023-01-02&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">icao24</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="s2">"39%"</span><span class="p">))</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">hour</span> <span class="o">&gt;=</span> <span class="s2">"2023-01-01"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">hour</span> <span class="o">&lt;</span> <span class="s2">"2023-01-02"</span><span class="p">)</span>
     <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
 <span class="p">)</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
@@ -322,9 +322,9 @@ rectangular bounds for airport vicinity queries.</p>
 <span class="c1"># Multiple character wildcard patterns</span>
 <span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">select</span><span class="p">(</span><span class="n">FlightsData4</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">callsign</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="s2">&quot;AFR%&quot;</span><span class="p">))</span>  <span class="c1"># Air France flights</span>
-    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;=</span> <span class="s2">&quot;2023-01-01&quot;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="s2">&quot;2023-02-01&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">callsign</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="s2">"AFR%"</span><span class="p">))</span>  <span class="c1"># Air France flights</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;=</span> <span class="s2">"2023-01-01"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="s2">"2023-02-01"</span><span class="p">)</span>
 <span class="p">)</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
 </pre></div>
@@ -354,9 +354,9 @@ rectangular bounds for airport vicinity queries.</p>
         <span class="n">FlightsData4</span><span class="o">.</span><span class="n">estdepartureairport</span><span class="p">,</span>
         <span class="n">FlightsData4</span><span class="o">.</span><span class="n">estarrivalairport</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">callsign</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="s2">&quot;AFR%&quot;</span><span class="p">))</span>
-    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;=</span> <span class="s2">&quot;2023-01-01&quot;</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="s2">&quot;2023-02-01&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">callsign</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="s2">"AFR%"</span><span class="p">))</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">day</span> <span class="o">&gt;=</span> <span class="s2">"2023-01-01"</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">day</span> <span class="o">&lt;</span> <span class="s2">"2023-02-01"</span><span class="p">)</span>
     <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">estarrivalairport</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">)</span>
     <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
 <span class="p">)</span>
@@ -382,14 +382,14 @@ rectangular bounds for airport vicinity queries.</p>
 <span class="n">metadata</span><span class="o">.</span><span class="n">reflect</span><span class="p">(</span><span class="n">connection</span><span class="p">)</span>
 
 <span class="c1"># List all tables</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Available tables:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Available tables:"</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="n">metadata</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 <span class="c1"># List columns in a specific table</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Columns in state_vectors_data4:&quot;</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">metadata</span><span class="o">.</span><span class="n">tables</span><span class="p">[</span><span class="s2">&quot;state_vectors_data4&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">column</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">column</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Columns in state_vectors_data4:"</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">metadata</span><span class="o">.</span><span class="n">tables</span><span class="p">[</span><span class="s2">"state_vectors_data4"</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - </span><span class="si">{</span><span class="n">column</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">column</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

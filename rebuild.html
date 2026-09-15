@@ -120,9 +120,9 @@
 
 <span class="c1"># Fetch and merge position, velocity, identification data</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
-    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
-    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400A0E&quot;</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">"2023-01-03 16:00"</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">"2023-01-03 20:00"</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">"400A0E"</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -139,10 +139,10 @@
 
 <span class="c1"># Redecode position data with PyModesDecoder</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
-    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
-    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400A0E&quot;</span><span class="p">,</span>
-    <span class="n">decoder</span><span class="o">=</span><span class="s2">&quot;pymodes&quot;</span>  <span class="c1"># Use string-based decoder selection</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">"2023-01-03 16:00"</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">"2023-01-03 20:00"</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">"400A0E"</span><span class="p">,</span>
+    <span class="n">decoder</span><span class="o">=</span><span class="s2">"pymodes"</span>  <span class="c1"># Use string-based decoder selection</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -161,7 +161,7 @@
 <li><p>Pure Python implementation</p></li>
 </ul>
 <p><strong>Installation:</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;pyopensky[pymodes]&#39;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">'pyopensky[pymodes]'</span>
 </pre></div>
 </div>
 <p><strong>Usage:</strong></p>
@@ -174,18 +174,18 @@
 
 <span class="c1"># Using string-based selection</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">redecode_position</span><span class="p">(</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
-    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
-    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400A0E&quot;</span><span class="p">,</span>
-    <span class="n">decoder</span><span class="o">=</span><span class="s2">&quot;pymodes&quot;</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">"2023-01-03 16:00"</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">"2023-01-03 20:00"</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">"400A0E"</span><span class="p">,</span>
+    <span class="n">decoder</span><span class="o">=</span><span class="s2">"pymodes"</span>
 <span class="p">)</span>
 
 <span class="c1"># Or instantiate the decoder directly</span>
 <span class="n">decoder</span> <span class="o">=</span> <span class="n">PyModesDecoder</span><span class="p">()</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">redecode_position</span><span class="p">(</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
-    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
-    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400A0E&quot;</span><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">"2023-01-03 16:00"</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">"2023-01-03 20:00"</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">"400A0E"</span><span class="p">,</span>
     <span class="n">decoder</span><span class="o">=</span><span class="n">decoder</span>
 <span class="p">)</span>
 </pre></div>
@@ -201,7 +201,7 @@
 <li><p>Significantly faster for large datasets</p></li>
 </ul>
 <p><strong>Installation:</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;pyopensky[rs1090]&#39;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">'pyopensky[rs1090]'</span>
 </pre></div>
 </div>
 <p><strong>Usage:</strong></p>
@@ -213,10 +213,10 @@
 
 <span class="c1"># Using string-based selection</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">redecode_position</span><span class="p">(</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
-    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
-    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400A0E&quot;</span><span class="p">,</span>
-    <span class="n">decoder</span><span class="o">=</span><span class="s2">&quot;rs1090&quot;</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">"2023-01-03 16:00"</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">"2023-01-03 20:00"</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">"400A0E"</span><span class="p">,</span>
+    <span class="n">decoder</span><span class="o">=</span><span class="s2">"rs1090"</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -247,9 +247,9 @@
 <span class="c1"># Use your custom decoder</span>
 <span class="n">decoder</span> <span class="o">=</span> <span class="n">MyCustomDecoder</span><span class="p">()</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
-    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
-    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400A0E&quot;</span><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">"2023-01-03 16:00"</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">"2023-01-03 20:00"</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">"400A0E"</span><span class="p">,</span>
     <span class="n">decoder</span><span class="o">=</span><span class="n">decoder</span>
 <span class="p">)</span>
 </pre></div>
@@ -294,17 +294,17 @@ from different data tables and merge them into complete state vectors.</p>
 
 <span class="c1"># Without decoding</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
-    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
-    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400A0E&quot;</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">"2023-01-03 16:00"</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">"2023-01-03 20:00"</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">"400A0E"</span>
 <span class="p">)</span>
 
 <span class="c1"># With pymodes or rs1090 decoding</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
-    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
-    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400A0E&quot;</span><span class="p">,</span>
-    <span class="n">decoder</span><span class="o">=</span><span class="s2">&quot;pymodes&quot;</span>  <span class="c1"># or &quot;rs1090&quot;</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">"2023-01-03 16:00"</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">"2023-01-03 20:00"</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">"400A0E"</span><span class="p">,</span>
+    <span class="n">decoder</span><span class="o">=</span><span class="s2">"pymodes"</span>  <span class="c1"># or "rs1090"</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -338,17 +338,17 @@ joins to reconstruct complete state vectors.</p>
 <p><strong>Example usage</strong>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Without decoding (use database decoded values)</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
-    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
-    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400A0E&quot;</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">"2023-01-03 16:00"</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">"2023-01-03 20:00"</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">"400A0E"</span>
 <span class="p">)</span>
 
 <span class="c1"># With pymodes or rs1090 decoding</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
-    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
-    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400A0E&quot;</span><span class="p">,</span>
-    <span class="n">decoder</span><span class="o">=</span><span class="s2">&quot;pymodes&quot;</span>  <span class="c1"># or &quot;rs1090&quot;</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">"2023-01-03 16:00"</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">"2023-01-03 20:00"</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">"400A0E"</span><span class="p">,</span>
+    <span class="n">decoder</span><span class="o">=</span><span class="s2">"pymodes"</span>  <span class="c1"># or "rs1090"</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -401,9 +401,9 @@ that decodes raw messages. If None, returns raw data.</p></li>
 
 <span class="c1"># Redecode positions</span>
 <span class="n">pos</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">redecode_position</span><span class="p">(</span>
-    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2023-01-03 16:00&quot;</span><span class="p">,</span>
-    <span class="n">stop</span><span class="o">=</span><span class="s2">&quot;2023-01-03 20:00&quot;</span><span class="p">,</span>
-    <span class="n">icao24</span><span class="o">=</span><span class="s2">&quot;400A0E&quot;</span><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">"2023-01-03 16:00"</span><span class="p">,</span>
+    <span class="n">stop</span><span class="o">=</span><span class="s2">"2023-01-03 20:00"</span><span class="p">,</span>
+    <span class="n">icao24</span><span class="o">=</span><span class="s2">"400A0E"</span><span class="p">,</span>
     <span class="n">decoder</span><span class="o">=</span><span class="n">decoder</span>
 <span class="p">)</span>
 </pre></div>
