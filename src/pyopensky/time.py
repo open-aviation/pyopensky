@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from itertools import pairwise
 from numbers import Real
 from typing import Any, Iterator, Tuple, Union, cast
 
@@ -42,5 +43,5 @@ def split_times(
         freq=by,
     )
 
-    for bh, ah in zip(seq[:-1], seq[1:]):
+    for bh, ah in pairwise(seq):
         yield (before, after, bh, ah)

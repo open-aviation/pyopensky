@@ -21,56 +21,55 @@ class OpenSkyDBAPI(Protocol):
     def flightlist(
         self,
         start: timelike,
-        stop: None | timelike = None,
+        stop: timelike | None = None,
         *args: Any,  # more reasonable to be explicit about arguments
-        departure_airport: None | str | list[str] = None,
-        arrival_airport: None | str | list[str] = None,
-        airport: None | str | list[str] = None,
-        callsign: None | str | list[str] = None,
-        icao24: None | str | list[str] = None,
+        departure_airport: str | list[str] | None = None,
+        arrival_airport: str | list[str] | None = None,
+        airport: str | list[str] | None = None,
+        callsign: str | list[str] | None = None,
+        icao24: str | list[str] | None = None,
         cached: bool = True,
         compress: bool = False,
-        limit: None | int = None,
+        limit: int | None = None,
         **kwargs: Any,
-    ) -> None | pd.DataFrame: ...
+    ) -> pd.DataFrame | None: ...
 
     def history(
         self,
         start: timelike,
-        stop: None | timelike = None,
+        stop: timelike | None = None,
         *args: Any,
         # date_delta: timedelta = timedelta(hours=1),
-        callsign: None | str | list[str] = None,
-        icao24: None | str | list[str] = None,
-        serials: None | int | Iterable[int] = None,
-        bounds: None
-        | str
-        | HasBounds
-        | tuple[float, float, float, float] = None,
-        departure_airport: None | str = None,
-        arrival_airport: None | str = None,
-        airport: None | str = None,
-        time_buffer: None | str | pd.Timedelta = None,
+        callsign: str | list[str] | None = None,
+        icao24: str | list[str] | None = None,
+        serials: int | Iterable[int] | None = None,
+        bounds: (
+            str | HasBounds | tuple[float, float, float, float] | None
+        ) = None,
+        departure_airport: str | None = None,
+        arrival_airport: str | None = None,
+        airport: str | None = None,
+        time_buffer: str | pd.Timedelta | None = None,
         cached: bool = True,
         compress: bool = False,
-        limit: None | int = None,
+        limit: int | None = None,
         **kwargs: Any,
-    ) -> None | pd.DataFrame: ...
+    ) -> pd.DataFrame | None: ...
 
     def rawdata(
         self,
         start: timelike,
-        stop: None | timelike = None,
+        stop: timelike | None = None,
         *args: Any,  # more reasonable to be explicit about arguments
-        icao24: None | str | list[str] = None,
-        serials: None | int | Iterable[int] = None,
-        bounds: None | HasBounds | tuple[float, float, float, float] = None,
-        callsign: None | str | list[str] = None,
-        departure_airport: None | str = None,
-        arrival_airport: None | str = None,
-        airport: None | str = None,
+        icao24: str | list[str] | None = None,
+        serials: int | Iterable[int] | None = None,
+        bounds: HasBounds | tuple[float, float, float, float] | None = None,
+        callsign: str | list[str] | None = None,
+        departure_airport: str | None = None,
+        arrival_airport: str | None = None,
+        airport: str | None = None,
         cached: bool = True,
         compress: bool = False,
-        limit: None | int = None,
+        limit: int | None = None,
         **kwargs: Any,
-    ) -> None | pd.DataFrame: ...
+    ) -> pd.DataFrame | None: ...

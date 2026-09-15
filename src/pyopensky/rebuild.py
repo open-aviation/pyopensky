@@ -83,13 +83,13 @@ class Rebuild:
         start: timelike,
         stop: timelike,
         *,
-        icao24: None | str | list[str] = None,
-        bounds: None | HasBounds | tuple[float, float, float, float] = None,
+        icao24: str | list[str] | None = None,
+        bounds: HasBounds | tuple[float, float, float, float] | None = None,
         cached: bool = True,
         compress: bool = False,
-        decoder: None | Decoder = None,
+        decoder: Decoder | None = None,
         **kwargs: Any,
-    ) -> None | pd.DataFrame:
+    ) -> pd.DataFrame | None:
         """Download and optionally redecode position data from raw messages.
 
         Downloads position data with raw ADS-B messages, pairs odd/even CPR
@@ -198,12 +198,12 @@ class Rebuild:
         start: timelike,
         stop: timelike,
         *,
-        icao24: None | str | list[str] = None,
+        icao24: str | list[str] | None = None,
         cached: bool = True,
         compress: bool = False,
-        decoder: None | Decoder = None,
+        decoder: Decoder | None = None,
         **kwargs: Any,
-    ) -> None | pd.DataFrame:
+    ) -> pd.DataFrame | None:
         """Download and optionally redecode velocity data from raw messages.
 
         :param decoder: decoder implementing decode_velocity(df) method
@@ -257,12 +257,12 @@ class Rebuild:
         start: timelike,
         stop: timelike,
         *,
-        icao24: None | str | list[str] = None,
+        icao24: str | list[str] | None = None,
         cached: bool = True,
         compress: bool = False,
-        decoder: None | Decoder = None,
+        decoder: Decoder | None = None,
         **kwargs: Any,
-    ) -> None | pd.DataFrame:
+    ) -> pd.DataFrame | None:
         """Download and optionally redecode identification (callsign) data.
 
         :param decoder: decoder implementing decode_identification(df) method
@@ -311,12 +311,12 @@ class Rebuild:
         start: timelike,
         stop: timelike,
         *,
-        icao24: None | str | list[str] = None,
+        icao24: str | list[str] | None = None,
         cached: bool = True,
         compress: bool = False,
-        decoder: None | Decoder = None,
+        decoder: Decoder | None = None,
         **kwargs: Any,
-    ) -> None | pd.DataFrame:
+    ) -> pd.DataFrame | None:
         """Download and optionally redecode rollcall (squawk) data.
 
         :param decoder: decoder implementing decode_rollcall(df) method
@@ -354,14 +354,14 @@ class Rebuild:
         start: timelike,
         stop: timelike,
         *,
-        icao24: None | str | list[str] = None,
-        bounds: None | HasBounds | tuple[float, float, float, float] = None,
+        icao24: str | list[str] | None = None,
+        bounds: HasBounds | tuple[float, float, float, float] | None = None,
         cached: bool = True,
         compress: bool = False,
-        decoder: None | Decoder | Literal["pymodes", "rs1090"] = None,
+        decoder: Decoder | Literal["pymodes", "rs1090"] | None = None,
         include_rollcall: bool = False,
         **kwargs: Any,
-    ) -> None | pd.DataFrame:
+    ) -> pd.DataFrame | None:
         """Rebuild state vectors by downloading and merging all data tables.
 
         This method downloads data from position, velocity, identification,

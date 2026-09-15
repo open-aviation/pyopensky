@@ -173,10 +173,10 @@ __all__ = list(NAME_RESOLUTION.keys())
 def get_config(
     opensky_category: str,
     opensky_name: str,
-    traffic_category: None | str = None,
-    traffic_name: None | str = None,
-    environment_variable: None | str = None,
-) -> None | str:
+    traffic_category: str | None = None,
+    traffic_name: str | None = None,
+    environment_variable: str | None = None,
+) -> str | None:
     if opensky_value := opensky_config.get(
         opensky_category, opensky_name, fallback=None
     ):
@@ -204,7 +204,7 @@ if not cache_path.exists():
 purge_cache(cache_path)
 
 
-def __getattr__(name: str) -> None | str:
+def __getattr__(name: str) -> str | None:
     # Pick in order:
     # 1. pyopensky -> settings.conf
     # 2. traffic -> traffic.conf

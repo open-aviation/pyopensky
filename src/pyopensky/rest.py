@@ -67,12 +67,12 @@ class REST:
         self.client_id = client_id
         self.client_secret = client_secret
         # self.auth = cast(tuple[str, str], (username, password))
-        self._token: None | TokenDict = None
+        self._token: TokenDict | None = None
 
         self.client = httpx.Client()
 
     @property
-    def token(self) -> None | TokenDict:
+    def token(self) -> TokenDict | None:
         """Returns the OpenSky token for the current user."""
 
         if self._token is not None:
@@ -188,10 +188,9 @@ class REST:
     def states(
         self,
         own: bool = False,
-        bounds: None
-        | str
-        | HasBounds
-        | tuple[float, float, float, float] = None,
+        bounds: (
+            str | HasBounds | tuple[float, float, float, float] | None
+        ) = None,
         retry: int = 5,
     ) -> pd.DataFrame:
         """Returns the current state vectors from OpenSky REST API.
@@ -270,7 +269,7 @@ class REST:
             callsign=lambda df: df.callsign.str.strip(),
         )
 
-    def tracks(self, icao24: str, ts: None | timelike = None) -> pd.DataFrame:
+    def tracks(self, icao24: str, ts: timelike | None = None) -> pd.DataFrame:
         """Returns a Flight corresponding to a given aircraft.
 
         Official documentation
@@ -345,8 +344,8 @@ class REST:
     def aircraft(
         self,
         icao24: str,
-        begin: None | timelike = None,
-        end: None | timelike = None,
+        begin: timelike | None = None,
+        end: timelike | None = None,
     ) -> pd.DataFrame:
         """Returns a flight table associated to an aircraft.
 
@@ -398,7 +397,7 @@ class REST:
             .sort_values("lastSeen")
         )
 
-    def sensors(self, day: None | timelike = None) -> set[str]:
+    def sensors(self, day: timelike | None = None) -> set[str]:
         """The set of sensors serials you own (require authentication)."""
         today = pd.Timestamp("now", tz="utc").floor("1d")
         if day is not None:
@@ -412,7 +411,7 @@ class REST:
         except JSONDecodeError:
             return set()
 
-    def range(self, serial: str, day: None | timelike = None) -> Any:
+    def range(self, serial: str, day: timelike | None = None) -> Any:
         """Wraps a polygon representing a sensor's range.
 
         By default, returns the current range. Otherwise, you may enter a
@@ -427,7 +426,7 @@ class REST:
             f"days={day_ts.timestamp():.0f}&serials={serial}"
         )
 
-    def global_coverage(self, day: None | timelike = None) -> Any:
+    def global_coverage(self, day: timelike | None = None) -> Any:
         now = cast(pd.Timestamp, pd.Timestamp("now", tz="utc").floor("1D"))
         day_ts = to_datetime(day) if day is not None else now
 
@@ -439,8 +438,8 @@ class REST:
     def arrival(
         self,
         airport: str,
-        begin: None | timelike = None,
-        end: None | timelike = None,
+        begin: timelike | None = None,
+        end: timelike | None = None,
     ) -> pd.DataFrame:
         """Returns a flight table associated to an airport.
 
@@ -498,8 +497,8 @@ class REST:
     def departure(
         self,
         airport: str,
-        begin: None | timelike = None,
-        end: None | timelike = None,
+        begin: timelike | None = None,
+        end: timelike | None = None,
     ) -> pd.DataFrame:
         """Returns a flight table associated to an airport.
 
