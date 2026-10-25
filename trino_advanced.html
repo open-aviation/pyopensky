@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Advanced Trino queries &mdash; pyopensky 2.17 documentation</title>
+  <title>Advanced Trino queries &mdash; pyopensky 2.18 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/main_stylesheet.css?v=0065971f" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=42117bb7"></script>
+      <script src="_static/documentation_options.js?v=aa0bd875"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -52,6 +52,10 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Advanced Trino queries</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#using-schema-objects-with-sqlalchemy">Using schema objects with SQLAlchemy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#selecting-specific-columns">Selecting specific columns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuring-trino-sessions">Configuring Trino sessions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#batching-directed-routes">Batching directed routes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#filtering-flight-metadata-in-history-queries">Filtering flight metadata in history queries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#raw-messages-for-directed-routes">Raw messages for directed routes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#spatial-queries-with-bounds">Spatial queries with bounds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#spatial-functions-with-sqlalchemy">Spatial functions with SQLAlchemy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#ring-shaped-area-queries">Ring-shaped area queries</a></li>
@@ -160,6 +164,138 @@
 </ul>
 </div>
 </section>
+<section id="configuring-trino-sessions">
+<h2>Configuring Trino sessions<a class="headerlink" href="#configuring-trino-sessions" title="Link to this heading"></a></h2>
+<p>Pass <code class="docutils literal notranslate"><span class="pre">session_properties</span></code> to <code class="docutils literal notranslate"><span class="pre">Trino</span></code> to configure each connection opened by
+that client. Names and values are strings. For example, a broadcast join can
+reduce CPU and worker network traffic for selective flight queries:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.trino</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trino</span>
+
+<span class="n">trino</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">(</span>
+    <span class="n">session_properties</span><span class="o">=</span><span class="p">{</span><span class="s2">"join_distribution_type"</span><span class="p">:</span> <span class="s2">"BROADCAST"</span><span class="p">}</span>
+<span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
+    <span class="s2">"2025-06-01 12:00"</span><span class="p">,</span>
+    <span class="s2">"2025-06-01 13:00"</span><span class="p">,</span>
+    <span class="n">routes</span><span class="o">=</span><span class="p">[(</span><span class="s2">"EGLL"</span><span class="p">,</span> <span class="s2">"KJFK"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"LFPG"</span><span class="p">,</span> <span class="s2">"KJFK"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"EHAM"</span><span class="p">,</span> <span class="s2">"KJFK"</span><span class="p">)],</span>
+    <span class="n">selected_columns</span><span class="o">=</span><span class="p">(</span><span class="s2">"time"</span><span class="p">,</span> <span class="s2">"icao24"</span><span class="p">,</span> <span class="s2">"callsign"</span><span class="p">,</span> <span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Trino()</span></code> uses the server’s default session settings. Broadcast joins are
+optional: the filtered build table must fit in each worker’s memory. For large
+flight selections, let the server choose the join strategy or choose another
+session configuration. See <a class="reference external" href="https://trino.io/docs/current/optimizer/cost-based-optimizations.html#join-distribution-selection">Trino join distribution selection</a>.</p>
+<p>Session properties apply to <code class="docutils literal notranslate"><span class="pre">query()</span></code>, <code class="docutils literal notranslate"><span class="pre">history()</span></code>, <code class="docutils literal notranslate"><span class="pre">flightlist()</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">rawdata()</span></code> on that client. The constructor copies the supplied mapping.
+Result-cache keys include configured properties, so different configurations do
+not reuse each other’s results. To measure query performance, pass
+<code class="docutils literal notranslate"><span class="pre">cached=False</span></code> to every measured call.</p>
+</section>
+<section id="batching-directed-routes">
+<h2>Batching directed routes<a class="headerlink" href="#batching-directed-routes" title="Link to this heading"></a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">routes</span></code> to retrieve several directed airport pairs in one query for the
+same time window. This avoids submitting one state-vector query per route.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.trino</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trino</span>
+
+<span class="n">trino</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">()</span>
+<span class="n">routes</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">"KJFK"</span><span class="p">,</span> <span class="s2">"EGLL"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"KMIA"</span><span class="p">,</span> <span class="s2">"EIDW"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"LFPG"</span><span class="p">,</span> <span class="s2">"KJFK"</span><span class="p">),</span>
+<span class="p">]</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
+    <span class="s2">"2025-01-01"</span><span class="p">,</span>
+    <span class="s2">"2025-01-02"</span><span class="p">,</span>
+    <span class="n">routes</span><span class="o">=</span><span class="n">routes</span><span class="p">,</span>
+    <span class="n">selected_columns</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"time"</span><span class="p">,</span> <span class="s2">"icao24"</span><span class="p">,</span> <span class="s2">"callsign"</span><span class="p">,</span> <span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">,</span> <span class="s2">"baroaltitude"</span><span class="p">,</span>
+        <span class="s2">"FlightsData4.firstseen"</span><span class="p">,</span> <span class="s2">"FlightsData4.lastseen"</span><span class="p">,</span>
+        <span class="s2">"FlightsData4.estdepartureairport"</span><span class="p">,</span>
+        <span class="s2">"FlightsData4.estarrivalairport"</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Each pair contains the estimated departure and arrival ICAO identifiers, in that
+order. Only the listed pairs match. For example, <code class="docutils literal notranslate"><span class="pre">[(&quot;KJFK&quot;,</span> <span class="pre">&quot;EGLL&quot;),</span>
+<span class="pre">(&quot;KMIA&quot;,</span> <span class="pre">&quot;EIDW&quot;)]</span></code> does not include KJFK to EIDW or the reverse directions.
+Separate <code class="docutils literal notranslate"><span class="pre">departure_airport</span></code> and <code class="docutils literal notranslate"><span class="pre">arrival_airport</span></code> lists select every
+combination between those lists.</p>
+<p>Route identifiers match exactly; SQL wildcards are not expanded. An empty route
+list selects no flights. Repeating a pair does not duplicate its results. Other
+filters, such as <code class="docutils literal notranslate"><span class="pre">icao24</span></code>, <code class="docutils literal notranslate"><span class="pre">callsign</span></code>, bounds and airport filters, further
+restrict the selected routes.</p>
+<p>For long periods, loop over time windows and include all required routes in each
+call. Select the columns needed for the analysis. Actual scan savings depend on
+the Trino query plan and table layout.</p>
+<p>If only flight metadata is needed, use the same route list with
+<code class="docutils literal notranslate"><span class="pre">trino.flightlist(start,</span> <span class="pre">stop,</span> <span class="pre">routes=routes)</span></code>. With routes alone,
+<code class="docutils literal notranslate"><span class="pre">flightlist()</span></code> filters by <code class="docutils literal notranslate"><span class="pre">lastseen</span></code>. Setting <code class="docutils literal notranslate"><span class="pre">departure_airport</span></code> also
+selects its existing departure-time behavior.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">history()</span></code> returns state vectors within <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">stop</span></code>. These
+timestamps do not select flights by their departure or arrival time. A flight
+that crosses midnight can be partial in a daily result. <code class="docutils literal notranslate"><span class="pre">time_buffer</span></code>
+extends the bounds around each flight’s <code class="docutils literal notranslate"><span class="pre">firstseen</span></code> and <code class="docutils literal notranslate"><span class="pre">lastseen</span></code> but
+does not extend the requested state-vector window. Each call submits one
+query; pyopensky does not split that window automatically.</p>
+</div>
+</section>
+<section id="filtering-flight-metadata-in-history-queries">
+<h2>Filtering flight metadata in history queries<a class="headerlink" href="#filtering-flight-metadata-in-history-queries" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">history()</span></code> accepts <code class="docutils literal notranslate"><span class="pre">FlightsData4</span></code> conditions alongside state-vector
+conditions. Flight columns refer to the flight table joined to the state vectors.
+A flight condition also enables this join when no airport or route is specified.
+Selecting flight columns also enables this join. Flight schema attributes can
+be used directly in <code class="docutils literal notranslate"><span class="pre">selected_columns</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlightsData4</span><span class="p">,</span> <span class="n">StateVectorsData4</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.trino</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trino</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">()</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
+    <span class="s2">"2025-01-01"</span><span class="p">,</span>
+    <span class="s2">"2025-01-02"</span><span class="p">,</span>
+    <span class="n">FlightsData4</span><span class="o">.</span><span class="n">estarrivalairporthorizdistance</span> <span class="o">&lt;</span> <span class="mi">5000</span><span class="p">,</span>
+    <span class="n">routes</span><span class="o">=</span><span class="p">[(</span><span class="s2">"KJFK"</span><span class="p">,</span> <span class="s2">"EGLL"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"LFPG"</span><span class="p">,</span> <span class="s2">"KJFK"</span><span class="p">)],</span>
+    <span class="n">selected_columns</span><span class="o">=</span><span class="p">(</span>
+        <span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+        <span class="n">StateVectorsData4</span><span class="o">.</span><span class="n">icao24</span><span class="p">,</span>
+        <span class="n">FlightsData4</span><span class="o">.</span><span class="n">estdepartureairport</span><span class="p">,</span>
+        <span class="n">FlightsData4</span><span class="o">.</span><span class="n">estarrivalairport</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="raw-messages-for-directed-routes">
+<h2>Raw messages for directed routes<a class="headerlink" href="#raw-messages-for-directed-routes" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">rawdata()</span></code> also accepts exact <code class="docutils literal notranslate"><span class="pre">routes</span></code>. It joins raw messages to matching
+flights by aircraft address and the flight’s <code class="docutils literal notranslate"><span class="pre">firstseen</span></code>/<code class="docutils literal notranslate"><span class="pre">lastseen</span></code> interval,
+then clips messages to the requested time window. FlightsData4 conditions and
+extra columns use this joined flight table.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlightsData4</span><span class="p">,</span> <span class="n">PositionData4</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.trino</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trino</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">()</span><span class="o">.</span><span class="n">rawdata</span><span class="p">(</span>
+    <span class="s2">"2025-01-01"</span><span class="p">,</span>
+    <span class="s2">"2025-01-02"</span><span class="p">,</span>
+    <span class="n">FlightsData4</span><span class="o">.</span><span class="n">estarrivalairporthorizdistance</span> <span class="o">&lt;</span> <span class="mi">5000</span><span class="p">,</span>
+    <span class="n">routes</span><span class="o">=</span><span class="p">[(</span><span class="s2">"KJFK"</span><span class="p">,</span> <span class="s2">"EGLL"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"LFPG"</span><span class="p">,</span> <span class="s2">"KJFK"</span><span class="p">)],</span>
+    <span class="n">Table</span><span class="o">=</span><span class="n">PositionData4</span><span class="p">,</span>
+    <span class="n">extra_columns</span><span class="o">=</span><span class="p">(</span><span class="n">FlightsData4</span><span class="o">.</span><span class="n">estdepartureairport</span><span class="p">,),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>An empty route list selects no messages. Repeated pairs do not duplicate results.
+Airport filters and <code class="docutils literal notranslate"><span class="pre">icao24</span></code> further restrict the selected routes. Flight
+conditions or flight extra columns enable a flight join even without an airport
+or route argument.</p>
+<p><code class="docutils literal notranslate"><span class="pre">rawdata()</span></code> supports one selection mode per call: flight metadata (airports,
+routes, flight conditions or flight extra columns), geographic bounds, or
+callsign. These modes cannot be combined. Conditions on the raw table can
+further restrict any mode. Its existing raw-column output is preserved.</p>
+</section>
 <section id="spatial-queries-with-bounds">
 <h2>Spatial queries with bounds<a class="headerlink" href="#spatial-queries-with-bounds" title="Link to this heading"></a></h2>
 <p>Filter data by geographic bounding box:</p>
@@ -263,12 +399,13 @@ rectangular bounds for airport vicinity queries.</p>
 </section>
 <section id="extending-temporal-range-for-airport-queries">
 <h2>Extending temporal range for airport queries<a class="headerlink" href="#extending-temporal-range-for-airport-queries" title="Link to this heading"></a></h2>
-<p>Use <code class="docutils literal notranslate"><span class="pre">time_buffer</span></code> to include aircraft that departed/arrived slightly outside the time window:</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">time_buffer</span></code> to include state vectors just before a flight’s <code class="docutils literal notranslate"><span class="pre">firstseen</span></code>
+or after its <code class="docutils literal notranslate"><span class="pre">lastseen</span></code>, within the requested time window:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyopensky.trino</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trino</span>
 
 <span class="n">trino</span> <span class="o">=</span> <span class="n">Trino</span><span class="p">()</span>
 
-<span class="c1"># Get flights with 30-minute buffer before/after time window</span>
+<span class="c1"># Allow samples up to 30 minutes before/after each flight's time bounds</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">trino</span><span class="o">.</span><span class="n">history</span><span class="p">(</span>
     <span class="n">start</span><span class="o">=</span><span class="s2">"2024-03-16 09:00"</span><span class="p">,</span>
     <span class="n">stop</span><span class="o">=</span><span class="s2">"2024-03-16 11:00"</span><span class="p">,</span>
@@ -277,7 +414,8 @@ rectangular bounds for airport vicinity queries.</p>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>This is useful when you want complete flight trajectories that may start or end outside your time range.</p>
+<p>The result remains clipped to 09:00 through 11:00. To retrieve samples outside
+that window, extend <code class="docutils literal notranslate"><span class="pre">start</span></code> or <code class="docutils literal notranslate"><span class="pre">stop</span></code> explicitly.</p>
 </section>
 <section id="filtering-with-boolean-expressions">
 <h2>Filtering with boolean expressions<a class="headerlink" href="#filtering-with-boolean-expressions" title="Link to this heading"></a></h2>

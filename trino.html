@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Trino database &mdash; pyopensky 2.17 documentation</title>
+  <title>The Trino database &mdash; pyopensky 2.18 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/main_stylesheet.css?v=0065971f" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=42117bb7"></script>
+      <script src="_static/documentation_options.js?v=aa0bd875"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
@@ -89,21 +89,29 @@
 <h1>The Trino database<a class="headerlink" href="#the-trino-database" title="Link to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyopensky.trino.Trino">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyopensky.trino.</span></span><span class="sig-name descname"><span class="pre">Trino</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.trino.Trino" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyopensky.trino.</span></span><span class="sig-name descname"><span class="pre">Trino</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.trino.Trino" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OpenSkyDBAPI</span></code></p>
 <p>Wrapper to OpenSky Trino database</p>
 <p>Credentials are fetched from the configuration file.</p>
 <p>All methods return standard structures. When calls are made from the traffic
 library, they return advanced structures.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>session_properties</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Mapping" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span>) – optional Trino session property names and values,
+applied to every connection opened by this client. For example,
+<code class="docutils literal notranslate"><span class="pre">{&quot;join_distribution_type&quot;:</span> <span class="pre">&quot;BROADCAST&quot;}</span></code>. By default, use the
+server’s session settings.</p>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="pyopensky.trino.Trino.flightlist">
-<span class="sig-name descname"><span class="pre">flightlist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">departure_airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrival_airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callsign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">icao24</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;class</span> <span class="pre">'pyopensky.schema.FlightsData4'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.trino.Trino.flightlist" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">flightlist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">departure_airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrival_airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">routes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callsign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">icao24</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;class</span> <span class="pre">'pyopensky.schema.FlightsData4'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.trino.Trino.flightlist" title="Link to this definition"></a></dt>
 <dd><p>Lists flights departing or arriving at a given airport.</p>
 <p>You may pass requests based on time ranges, callsigns, aircraft, areas,
 serial numbers for receivers, or airports of departure or arrival.</p>
 <p>The method builds appropriate SQL requests, caches results and formats
-data into a proper pandas DataFrame. Requests are split by hour (by
-default) in case the connection fails.</p>
+data into a proper pandas DataFrame. Each call submits one query for
+the requested time window.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -129,6 +137,9 @@ Selects flights arriving at the airport between the two timestamps;</p></li>
 <li><p><strong>airport</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – a string for the ICAO identifier of the airport. Selects
 flights departing from or arriving at the airport between the two
 timestamps;</p></li>
+<li><p><strong>routes</strong> (<span class="sphinx_autodoc_typehints-type">list[tuple[str, str]] | None</span>) – exact directed (departure, arrival) ICAO airport pairs.
+Selects any of these pairs, combined with other filters using AND.
+An empty list selects no flights. Wildcards are not expanded;</p></li>
 <li><p><strong>callsign</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – a string or a list of strings (wildcards
 accepted, _ for any character, % for any sequence of characters);</p></li>
 <li><p><strong>icao24</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – a string or a list of strings identifying the transponder
@@ -139,8 +150,8 @@ code of the aircraft;</p></li>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <ul class="simple">
-<li><p>If both departure_airport and arrival_airport are set, requested
-timestamps match the arrival time;</p></li>
+<li><p>If departure_airport is set, timestamps constrain firstseen.
+Otherwise, including routes alone, they constrain lastseen;</p></li>
 <li><p>If airport is set, <code class="docutils literal notranslate"><span class="pre">departure_airport</span></code> and <code class="docutils literal notranslate"><span class="pre">arrival_airport</span></code>
 cannot be specified (a RuntimeException is raised).</p></li>
 </ul>
@@ -163,13 +174,13 @@ to load.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyopensky.trino.Trino.history">
-<span class="sig-name descname"><span class="pre">history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callsign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">icao24</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">serials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">departure_airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrival_airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_buffer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.trino.Trino.history" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callsign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">icao24</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">serials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">departure_airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrival_airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">routes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_buffer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.trino.Trino.history" title="Link to this definition"></a></dt>
 <dd><p>Get Traffic from the OpenSky Trino database.</p>
 <p>You may pass requests based on time ranges, callsigns, aircraft, areas,
 serial numbers for receivers, or airports of departure or arrival.</p>
 <p>The method builds appropriate SQL requests, caches results and formats
-data into a proper pandas DataFrame. Requests are split by hour (by
-default) in case the connection fails.</p>
+data into a proper pandas DataFrame. Each call submits one query for
+the requested time window.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -177,8 +188,6 @@ default) in case the connection fails.</p>
 Python or pandas)</p></li>
 <li><p><strong>stop</strong> (<span class="sphinx_autodoc_typehints-type">timelike | None</span>) – a string (default to UTC), epoch or datetime (native Python
 or pandas), <em>by default, one day after start</em></p></li>
-<li><p><strong>date_delta</strong> – a timedelta representing how to split the requests,
-<em>by default: per hour</em></p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -200,8 +209,8 @@ shapely shape</strong> (requires the bounds attribute); or a <strong>tuple of
 float</strong> (west, south, east, north);</p></li>
 <li><p><strong>selected_columns</strong> (<span class="sphinx_autodoc_typehints-type">tuple[InstrumentedAttribute[Any] | str, …]</span>) – specify the columns you want to retrieve. When
 empty, use all columns of the StateVectorsData4 table. You may
-escape column names as str. <strong>Always</strong> escape names from the
-FlightsData4 table.</p></li>
+specify column names as strings or schema attributes, including
+columns from the FlightsData4 table when a flight join is used.</p></li>
 </ul>
 </dd>
 </dl>
@@ -212,18 +221,19 @@ information from two tables in the Trino database, resp.
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>departure_airport</strong> (<span class="sphinx_autodoc_typehints-type">str | None</span>) – a string for the ICAO identifier of the
-airport. Selects flights departing from the airport between the two
-timestamps;</p></li>
-<li><p><strong>arrival_airport</strong> (<span class="sphinx_autodoc_typehints-type">str | None</span>) – a string for the ICAO identifier of the airport.
-Selects flights arriving at the airport between the two timestamps;</p></li>
-<li><p><strong>airport</strong> (<span class="sphinx_autodoc_typehints-type">str | None</span>) – a string for the ICAO identifier of the airport. Selects
-flights departing from or arriving at the airport between the two
-timestamps;</p></li>
+<li><p><strong>departure_airport</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – an ICAO airport identifier or a list of
+identifiers. Filters the estimated departure airport;</p></li>
+<li><p><strong>arrival_airport</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – an ICAO airport identifier or a list of
+identifiers. Filters the estimated arrival airport;</p></li>
+<li><p><strong>airport</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – an ICAO airport identifier or a list of identifiers.
+Filters either estimated departure or arrival airport;</p></li>
+<li><p><strong>routes</strong> (<span class="sphinx_autodoc_typehints-type">list[tuple[str, str]] | None</span>) – exact directed (departure, arrival) ICAO airport pairs.
+Selects any of these pairs, combined with other filters using AND.
+An empty list selects no flights. Wildcards are not expanded.
+Unlike separate airport lists, only the listed pairs are selected;</p></li>
 <li><p><strong>time_buffer</strong> (<span class="sphinx_autodoc_typehints-type">str | pd.Timedelta | None</span>) – (default: None) time buffer used to extend time
-bounds for flights in the OpenSky flight tables: requests will get
-flights between <code class="docutils literal notranslate"><span class="pre">start</span> <span class="pre">-</span> <span class="pre">time_buffer</span></code> and <code class="docutils literal notranslate"><span class="pre">stop</span> <span class="pre">+</span> <span class="pre">time_buffer</span></code>.
-If no airport is specified, the parameter is ignored.</p></li>
+bounds around each flight’s firstseen and lastseen. State vectors
+are still clipped to start and stop. Ignored without a flight join;</p></li>
 </ul>
 </dd>
 </dl>
@@ -232,8 +242,8 @@ If no airport is specified, the parameter is ignored.</p></li>
 <ul class="simple">
 <li><p>See <code class="xref py py-meth docutils literal notranslate"><span class="pre">pyopensky.trino.flightlist()</span></code> if you do not need any
 trajectory information.</p></li>
-<li><p>If both departure_airport and arrival_airport are set, requested
-timestamps match the arrival time;</p></li>
+<li><p>start and stop constrain state-vector timestamps, not flight
+departure or arrival times. Overnight flights can be partial;</p></li>
 <li><p>If airport is set, departure_airport and arrival_airport cannot be
 specified (a RuntimeException is raised).</p></li>
 </ul>
@@ -256,13 +266,13 @@ to load.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyopensky.trino.Trino.rawdata">
-<span class="sig-name descname"><span class="pre">rawdata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">icao24</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">serials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callsign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">departure_airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrival_airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;class</span> <span class="pre">'pyopensky.schema.RollcallRepliesData4'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.trino.Trino.rawdata" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">rawdata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">icao24</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">serials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callsign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">departure_airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrival_airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">airport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">routes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cached</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Table</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;class</span> <span class="pre">'pyopensky.schema.RollcallRepliesData4'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyopensky.trino.Trino.rawdata" title="Link to this definition"></a></dt>
 <dd><p>Get raw message from the OpenSky Trino database.</p>
 <p>You may pass requests based on time ranges, callsigns, aircraft, areas,
 serial numbers for receivers, or airports of departure or arrival.</p>
 <p>The method builds appropriate SQL requests, caches results and formats
-data into a proper pandas DataFrame. Requests are split by hour (by
-default) in case the connection fails.</p>
+data into a proper pandas DataFrame. Each call submits one query for
+the requested time window.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -270,8 +280,6 @@ default) in case the connection fails.</p>
 Python or pandas)</p></li>
 <li><p><strong>stop</strong> (<span class="sphinx_autodoc_typehints-type">timelike | None</span>) – a string (default to UTC), epoch or datetime (native Python
 or pandas), <em>by default, one day after start</em></p></li>
-<li><p><strong>date_delta</strong> – a timedelta representing how to split the requests,
-<em>by default: per hour</em></p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -301,26 +309,30 @@ information from two tables in the Trino database, resp.
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>departure_airport</strong> (<span class="sphinx_autodoc_typehints-type">str | None</span>) – a string for the ICAO identifier of the
-airport. Selects flights departing from the airport between the two
-timestamps;</p></li>
-<li><p><strong>arrival_airport</strong> (<span class="sphinx_autodoc_typehints-type">str | None</span>) – a string for the ICAO identifier of the airport.
-Selects flights arriving at the airport between the two timestamps;</p></li>
-<li><p><strong>airport</strong> (<span class="sphinx_autodoc_typehints-type">str | None</span>) – a string for the ICAO identifier of the airport. Selects
-flights departing from or arriving at the airport between the two
-timestamps;</p></li>
+<li><p><strong>departure_airport</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – an ICAO airport identifier or a list of
+identifiers. Filters the estimated departure airport;</p></li>
+<li><p><strong>arrival_airport</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – an ICAO airport identifier or a list of
+identifiers. Filters the estimated arrival airport;</p></li>
+<li><p><strong>airport</strong> (<span class="sphinx_autodoc_typehints-type">str | list[str] | None</span>) – an ICAO airport identifier or a list of identifiers.
+Filters either estimated departure or arrival airport;</p></li>
+<li><p><strong>routes</strong> (<span class="sphinx_autodoc_typehints-type">list[tuple[str, str]] | None</span>) – exact directed (departure, arrival) ICAO airport pairs.
+Selects any of these pairs, combined with other airport and icao24
+filters using AND. An empty list selects no flights. Wildcards
+are not expanded;</p></li>
+<li><p><strong>extra_columns</strong> (<span class="sphinx_autodoc_typehints-type">tuple[InstrumentedAttribute[Any], …]</span>) – additional raw table columns, or FlightsData4
+columns from the joined flight table;</p></li>
 </ul>
 </dd>
 </dl>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <ul class="simple">
-<li><p>If both departure_airport and arrival_airport are set, requested
-timestamps match the arrival time;</p></li>
+<li><p>start and stop constrain raw-message timestamps, not flight
+departure or arrival times;</p></li>
 <li><p>If airport is set, departure_airport and arrival_airport cannot be
 specified (a RuntimeException is raised).</p></li>
-<li><p>It is not possible at the moment to filter both on airports and on
-geographical bounds (help welcome!).</p></li>
+<li><p>Select only one of flight metadata (airports, routes or flight
+conditions/columns), geographical bounds, or callsign.</p></li>
 </ul>
 </div>
 <p><strong>Useful options for debug</strong></p>
