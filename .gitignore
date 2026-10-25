@@ -33,3 +33,4 @@ var/
 *.manifest
 *.spec
 
+.secrets

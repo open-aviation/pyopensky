@@ -6,7 +6,7 @@ import logging
 import time
 from multiprocessing.pool import ThreadPool
 from operator import or_
-from typing import Any, Iterable, Type, TypedDict, cast
+from typing import Any, Iterable, Mapping, Type, TypedDict, cast
 
 import httpcore
 import httpx
@@ -18,15 +18,24 @@ from sqlalchemy import (
     Engine,
     Select,
     TextClause,
+    and_,
     create_engine,
     func,
     select,
+    tuple_,
 )
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.attributes import InstrumentedAttribute
-from sqlalchemy.sql import ColumnExpressionArgument
+from sqlalchemy.sql import (
+    ClauseElement,
+    ColumnElement,
+    ColumnExpressionArgument,
+)
 from sqlalchemy.sql.expression import text
+from sqlalchemy.sql.selectable import SelectBase, Subquery
+from sqlalchemy.sql.util import ClauseAdapter
+from sqlalchemy.sql.visitors import iterate, replacement_traverse
 from tqdm import tqdm
 from trino.auth import JWTAuthentication, OAuth2Authentication
 from trino.exceptions import TrinoQueryError
@@ -78,15 +87,47 @@ class Token(TypedDict):
     exp: int
 
 
+def _adapt_flight_conditions(
+    conditions: ColumnElement[bool], flight_query: Subquery
+) -> ColumnElement[bool]:
+    # An independent SELECT keeps its own flight table and time window.
+    subqueries = [
+        element
+        for element in iterate(conditions)
+        if isinstance(element, SelectBase)
+    ]
+    adapter = ClauseAdapter(flight_query)
+
+    def replace(element: ClauseElement, **kwargs: Any) -> ClauseElement | None:
+        return adapter.replace(element)
+
+    return replacement_traverse(
+        conditions,
+        {"stop_on": subqueries},
+        replace,
+    )
+
+
 class Trino(OpenSkyDBAPI):
     """Wrapper to OpenSky Trino database
 
     Credentials are fetched from the configuration file.
 
     All methods return standard structures. When calls are made from the traffic
-    library, they return advanced structures."""
+    library, they return advanced structures.
+
+    :param session_properties: optional Trino session property names and values,
+        applied to every connection opened by this client. For example,
+        ``{"join_distribution_type": "BROADCAST"}``. By default, use the
+        server's session settings.
+    """
 
     _token: Token | None = None
+
+    def __init__(
+        self, *, session_properties: Mapping[str, str] | None = None
+    ) -> None:
+        self.session_properties = dict(session_properties or {})
 
     def token(self, **kwargs: Any) -> str | None:
         if trino_username is None or trino_password is None:
@@ -153,6 +194,7 @@ class Trino(OpenSkyDBAPI):
                 else None,
                 # https://github.com/trinodb/trino-python-client/discussions/456
                 legacy_prepared_statements=True,
+                session_properties=self.session_properties.copy(),
             ),
         )
         return engine
@@ -184,6 +226,9 @@ class Trino(OpenSkyDBAPI):
         _log.debug("cache-key params repr: %r", params_raw)
         query_str = f"{sql_raw}\n{params_raw}"
         query_str = query_str.replace("\r\n", "\n").replace("\r", "\n")
+        if self.session_properties:
+            properties = sorted(self.session_properties.items())
+            query_str += f"\nsession_properties={properties}"
         _log.debug("cache-key final repr: %r", query_str)
         _log.info(f"Processing query {query_str}")
 
@@ -311,6 +356,7 @@ class Trino(OpenSkyDBAPI):
         departure_airport: str | list[str] | None = None,
         arrival_airport: str | list[str] | None = None,
         airport: str | list[str] | None = None,
+        routes: list[tuple[str, str]] | None = None,
         callsign: str | list[str] | None = None,
         icao24: str | list[str] | None = None,
         cached: bool = True,
@@ -326,8 +372,8 @@ class Trino(OpenSkyDBAPI):
         serial numbers for receivers, or airports of departure or arrival.
 
         The method builds appropriate SQL requests, caches results and formats
-        data into a proper pandas DataFrame. Requests are split by hour (by
-        default) in case the connection fails.
+        data into a proper pandas DataFrame. Each call submits one query for
+        the requested time window.
 
         :param start: a string (default to UTC), epoch or datetime (native
             Python or pandas)
@@ -344,6 +390,9 @@ class Trino(OpenSkyDBAPI):
         :param airport: a string for the ICAO identifier of the airport. Selects
             flights departing from or arriving at the airport between the two
             timestamps;
+        :param routes: exact directed (departure, arrival) ICAO airport pairs.
+            Selects any of these pairs, combined with other filters using AND.
+            An empty list selects no flights. Wildcards are not expanded;
         :param callsign: a string or a list of strings (wildcards
             accepted, _ for any character, % for any sequence of characters);
         :param icao24: a string or a list of strings identifying the transponder
@@ -351,8 +400,8 @@ class Trino(OpenSkyDBAPI):
 
         .. warning::
 
-            - If both departure_airport and arrival_airport are set, requested
-              timestamps match the arrival time;
+            - If departure_airport is set, timestamps constrain firstseen.
+              Otherwise, including routes alone, they constrain lastseen;
             - If airport is set, ``departure_airport`` and ``arrival_airport``
               cannot be specified (a RuntimeException is raised).
 
@@ -408,6 +457,12 @@ class Trino(OpenSkyDBAPI):
             Table.estdepartureairport,
             Table.estarrivalairport,
         )
+        if routes is not None:
+            stmt = stmt.where(
+                tuple_(Table.estdepartureairport, Table.estarrivalairport).in_(
+                    routes
+                )
+            )
 
         if departure_airport is not None:
             stmt = stmt.where(
@@ -447,16 +502,16 @@ class Trino(OpenSkyDBAPI):
         start: timelike,
         stop: timelike | None = None,
         *args: ColumnExpressionArgument[bool],
-        # date_delta: timedelta = timedelta(hours=1),
         callsign: str | list[str] | None = None,
         icao24: str | list[str] | None = None,
         serials: int | Iterable[int] | None = None,
         bounds: (
             str | HasBounds | tuple[float, float, float, float] | None
         ) = None,
-        departure_airport: str | None = None,
-        arrival_airport: str | None = None,
-        airport: str | None = None,
+        departure_airport: str | list[str] | None = None,
+        arrival_airport: str | list[str] | None = None,
+        airport: str | list[str] | None = None,
+        routes: list[tuple[str, str]] | None = None,
         time_buffer: str | pd.Timedelta | None = None,
         cached: bool = True,
         compress: bool = False,
@@ -470,15 +525,13 @@ class Trino(OpenSkyDBAPI):
         serial numbers for receivers, or airports of departure or arrival.
 
         The method builds appropriate SQL requests, caches results and formats
-        data into a proper pandas DataFrame. Requests are split by hour (by
-        default) in case the connection fails.
+        data into a proper pandas DataFrame. Each call submits one query for
+        the requested time window.
 
         :param start: a string (default to UTC), epoch or datetime (native
             Python or pandas)
         :param stop: a string (default to UTC), epoch or datetime (native Python
             or pandas), *by default, one day after start*
-        :param date_delta: a timedelta representing how to split the requests,
-            *by default: per hour*
 
         More arguments to filter resulting data:
 
@@ -493,8 +546,8 @@ class Trino(OpenSkyDBAPI):
             float** (west, south, east, north);
         :param selected_columns: specify the columns you want to retrieve. When
             empty, use all columns of the StateVectorsData4 table. You may
-            escape column names as str. **Always** escape names from the
-            FlightsData4 table.
+            specify column names as strings or schema attributes, including
+            columns from the FlightsData4 table when a flight join is used.
 
         **Airports**
 
@@ -502,25 +555,26 @@ class Trino(OpenSkyDBAPI):
         information from two tables in the Trino database, resp.
         ``state_vectors_data4`` and ``flights_data4``.
 
-        :param departure_airport: a string for the ICAO identifier of the
-            airport. Selects flights departing from the airport between the two
-            timestamps;
-        :param arrival_airport: a string for the ICAO identifier of the airport.
-            Selects flights arriving at the airport between the two timestamps;
-        :param airport: a string for the ICAO identifier of the airport. Selects
-            flights departing from or arriving at the airport between the two
-            timestamps;
+        :param departure_airport: an ICAO airport identifier or a list of
+            identifiers. Filters the estimated departure airport;
+        :param arrival_airport: an ICAO airport identifier or a list of
+            identifiers. Filters the estimated arrival airport;
+        :param airport: an ICAO airport identifier or a list of identifiers.
+            Filters either estimated departure or arrival airport;
+        :param routes: exact directed (departure, arrival) ICAO airport pairs.
+            Selects any of these pairs, combined with other filters using AND.
+            An empty list selects no flights. Wildcards are not expanded.
+            Unlike separate airport lists, only the listed pairs are selected;
         :param time_buffer: (default: None) time buffer used to extend time
-            bounds for flights in the OpenSky flight tables: requests will get
-            flights between ``start - time_buffer`` and ``stop + time_buffer``.
-            If no airport is specified, the parameter is ignored.
+            bounds around each flight's firstseen and lastseen. State vectors
+            are still clipped to start and stop. Ignored without a flight join;
 
         .. warning::
 
             - See :meth:`pyopensky.trino.flightlist` if you do not need any
               trajectory information.
-            - If both departure_airport and arrival_airport are set, requested
-              timestamps match the arrival time;
+            - start and stop constrain state-vector timestamps, not flight
+              departure or arrival times. Overnight flights can be partial;
             - If airport is set, departure_airport and arrival_airport cannot be
               specified (a RuntimeException is raised).
 
@@ -545,24 +599,39 @@ class Trino(OpenSkyDBAPI):
 
         airports_params = [airport, departure_airport, arrival_airport]
         count_airports_params = sum(x is not None for x in airports_params)
+        conditions = and_(*args) if args else None
+        flight_conditions = conditions is not None and (
+            FlightsData4.__table__
+            in select(1).where(conditions).get_final_froms()
+        )
+        flight_columns = any(
+            (
+                column.startswith("FlightsData4.")
+                or (
+                    column in FlightsData4.__table__.columns
+                    and column not in StateVectorsData4.__table__.columns
+                )
+            )
+            if isinstance(column, str)
+            else column.class_ is FlightsData4
+            for column in selected_columns
+        )
+        flight_query = None
+        fd4 = None
 
-        if count_airports_params == 0:
+        if (
+            count_airports_params == 0
+            and routes is None
+            and not flight_conditions
+            and not flight_columns
+        ):
             stmt = select(StateVectorsData4)
         else:
-            flight_table = (
-                select(FlightsData4)
-                .with_only_columns(
-                    FlightsData4.icao24,
-                    FlightsData4.callsign,
-                    FlightsData4.firstseen,
-                    FlightsData4.lastseen,
-                    FlightsData4.estdepartureairport,
-                    FlightsData4.estarrivalairport,
-                )
-                .where(
-                    FlightsData4.day >= start_ts.floor("1D"),
-                    FlightsData4.day <= stop_ts.ceil("1D"),
-                )
+            # Keep every flight column available for alias adaptation. The
+            # database can prune columns unused by the outer query.
+            flight_table = select(FlightsData4).where(
+                FlightsData4.day >= start_ts.floor("1D"),
+                FlightsData4.day <= stop_ts.ceil("1D"),
             )
 
             flight_table = self.stmt_where_str(
@@ -595,6 +664,13 @@ class Trino(OpenSkyDBAPI):
                 FlightsData4.estdepartureairport,
                 FlightsData4.estarrivalairport,
             )
+            if routes is not None:
+                flight_table = flight_table.where(
+                    tuple_(
+                        FlightsData4.estdepartureairport,
+                        FlightsData4.estarrivalairport,
+                    ).in_(routes)
+                )
 
             flight_query = flight_table.subquery()
             fd4 = aliased(FlightsData4, alias=flight_query, adapt_on_names=True)
@@ -657,8 +733,10 @@ class Trino(OpenSkyDBAPI):
                     )
                 )
 
-        for condition in args:
-            stmt = stmt.where(condition)
+        if conditions is not None:
+            if flight_query is not None:
+                conditions = _adapt_flight_conditions(conditions, flight_query)
+            stmt = stmt.where(conditions)
 
         stmt = stmt.where(
             StateVectorsData4.time >= start_ts,
@@ -677,15 +755,22 @@ class Trino(OpenSkyDBAPI):
                 return getattr(MATCH[table], column)
             if candidate := getattr(StateVectorsData4, col, None):
                 return candidate
-            if candidate := getattr(fd4, col, None):
+            if fd4 is not None and (candidate := getattr(fd4, col, None)):
                 return candidate
             raise ValueError(f"Unknown column: {col}")
 
         if len(selected_columns) > 0:
-            columns = (
+            columns = [
                 transform_column(col) if isinstance(col, str) else col
                 for col in selected_columns
-            )
+            ]
+            if flight_query is not None:
+                columns = [
+                    ClauseAdapter(flight_query).traverse(
+                        col.__clause_element__()
+                    )
+                    for col in columns
+                ]
             stmt = stmt.with_only_columns(*columns)
 
         if limit is not None:
@@ -764,9 +849,10 @@ class Trino(OpenSkyDBAPI):
         serials: int | Iterable[int] | None = None,
         bounds: HasBounds | tuple[float, float, float, float] | None = None,
         callsign: str | list[str] | None = None,
-        departure_airport: str | None = None,
-        arrival_airport: str | None = None,
-        airport: str | None = None,
+        departure_airport: str | list[str] | None = None,
+        arrival_airport: str | list[str] | None = None,
+        airport: str | list[str] | None = None,
+        routes: list[tuple[str, str]] | None = None,
         cached: bool = True,
         compress: bool = False,
         limit: int | None = None,
@@ -787,16 +873,14 @@ class Trino(OpenSkyDBAPI):
         serial numbers for receivers, or airports of departure or arrival.
 
         The method builds appropriate SQL requests, caches results and formats
-        data into a proper pandas DataFrame. Requests are split by hour (by
-        default) in case the connection fails.
+        data into a proper pandas DataFrame. Each call submits one query for
+        the requested time window.
 
 
         :param start: a string (default to UTC), epoch or datetime (native
             Python or pandas)
         :param stop: a string (default to UTC), epoch or datetime (native Python
             or pandas), *by default, one day after start*
-        :param date_delta: a timedelta representing how to split the requests,
-            *by default: per hour*
 
         More arguments to filter resulting data:
 
@@ -816,23 +900,27 @@ class Trino(OpenSkyDBAPI):
         information from two tables in the Trino database, resp.
         ``rollcall_replies_data4`` and ``flights_data4``.
 
-        :param departure_airport: a string for the ICAO identifier of the
-            airport. Selects flights departing from the airport between the two
-            timestamps;
-        :param arrival_airport: a string for the ICAO identifier of the airport.
-            Selects flights arriving at the airport between the two timestamps;
-        :param airport: a string for the ICAO identifier of the airport. Selects
-            flights departing from or arriving at the airport between the two
-            timestamps;
+        :param departure_airport: an ICAO airport identifier or a list of
+            identifiers. Filters the estimated departure airport;
+        :param arrival_airport: an ICAO airport identifier or a list of
+            identifiers. Filters the estimated arrival airport;
+        :param airport: an ICAO airport identifier or a list of identifiers.
+            Filters either estimated departure or arrival airport;
+        :param routes: exact directed (departure, arrival) ICAO airport pairs.
+            Selects any of these pairs, combined with other airport and icao24
+            filters using AND. An empty list selects no flights. Wildcards
+            are not expanded;
+        :param extra_columns: additional raw table columns, or FlightsData4
+            columns from the joined flight table;
 
         .. warning::
 
-            - If both departure_airport and arrival_airport are set, requested
-              timestamps match the arrival time;
+            - start and stop constrain raw-message timestamps, not flight
+              departure or arrival times;
             - If airport is set, departure_airport and arrival_airport cannot be
               specified (a RuntimeException is raised).
-            - It is not possible at the moment to filter both on airports and on
-              geographical bounds (help welcome!).
+            - Select only one of flight metadata (airports, routes or flight
+              conditions/columns), geographical bounds, or callsign.
 
         **Useful options for debug**
 
@@ -855,8 +943,19 @@ class Trino(OpenSkyDBAPI):
 
         airports_params = [airport, departure_airport, arrival_airport]
         count_airports_params = sum(x is not None for x in airports_params)
+        conditions = and_(*args) if args else None
+        flight_conditions = conditions is not None and (
+            FlightsData4.__table__
+            in select(1).where(conditions).get_final_froms()
+        )
+        has_flights = (
+            count_airports_params > 0
+            or routes is not None
+            or flight_conditions
+            or any(column.class_ is FlightsData4 for column in extra_columns)
+        )
         only_one_valid = [
-            count_airports_params > 0,
+            has_flights,
             bounds is not None,
             callsign is not None,
             # serials is not None,
@@ -864,7 +963,8 @@ class Trino(OpenSkyDBAPI):
 
         if sum(only_one_valid) > 1:
             raise RuntimeError(
-                "Filter on only one among: airports, bounds, callsign"
+                "Filter on only one among: airports/routes/flight metadata, "
+                "bounds, callsign"
             )
 
         stmt = None
@@ -879,21 +979,10 @@ class Trino(OpenSkyDBAPI):
                 )
                 .where(Table.rawmsg.is_not(None))
             )
-        elif count_airports_params > 0:
-            flight_table = (
-                select(FlightsData4)
-                .with_only_columns(
-                    FlightsData4.icao24,
-                    FlightsData4.callsign,
-                    FlightsData4.firstseen,
-                    FlightsData4.lastseen,
-                    FlightsData4.estdepartureairport,
-                    FlightsData4.estarrivalairport,
-                )
-                .where(
-                    FlightsData4.day >= start_ts.floor("1D"),
-                    FlightsData4.day <= stop_ts.ceil("1D"),
-                )
+        elif has_flights:
+            flight_table = select(FlightsData4).where(
+                FlightsData4.day >= start_ts.floor("1D"),
+                FlightsData4.day <= stop_ts.ceil("1D"),
             )
 
             flight_table = self.stmt_where_str(
@@ -926,6 +1015,13 @@ class Trino(OpenSkyDBAPI):
                 FlightsData4.estdepartureairport,
                 FlightsData4.estarrivalairport,
             )
+            if routes is not None:
+                flight_table = flight_table.where(
+                    tuple_(
+                        FlightsData4.estdepartureairport,
+                        FlightsData4.estarrivalairport,
+                    ).in_(routes)
+                )
             flight_query = flight_table.subquery()
             fd4 = aliased(FlightsData4, alias=flight_query, adapt_on_names=True)
             stmt = (
@@ -992,8 +1088,19 @@ class Trino(OpenSkyDBAPI):
                 )
             )
 
-        for condition in args:
-            stmt = stmt.where(condition)
+        if has_flights:
+            adapter = ClauseAdapter(flight_query)
+            stmt = stmt.add_columns(
+                *(
+                    adapter.traverse(column.__clause_element__())
+                    for column in extra_columns
+                    if column.class_ is FlightsData4
+                )
+            )
+            if conditions is not None:
+                conditions = _adapt_flight_conditions(conditions, flight_query)
+        if conditions is not None:
+            stmt = stmt.where(conditions)
 
         stmt = self.stmt_where_str(stmt, icao24, Table.icao24)
 

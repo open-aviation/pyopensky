@@ -109,5 +109,32 @@ trino.history(start, stop, *, callsign, icao24, bounds)
 trino.rebuild(start, stop, *, icao24, bounds)
 ```
 
+For several routes in the same time window, use one query with exact directed
+airport pairs:
+
+```python
+df = trino.history(
+    "2025-01-01",
+    "2025-01-02",
+    routes=[("KJFK", "EGLL"), ("KMIA", "EIDW"), ("LFPG", "KJFK")],
+    selected_columns=("time", "icao24", "callsign", "lat", "lon"),
+)
+```
+
+The same `routes` filter is available in `flightlist()` for metadata queries and
+`rawdata()` for raw messages.
+`history()` clips trajectories to the requested time window, including flights
+that cross midnight.
+
+Optional Trino session settings apply to all queries on a client. For selective
+flight joins whose filtered flight table fits in each worker's memory:
+
+```python
+trino = Trino(session_properties={"join_distribution_type": "BROADCAST"})
+```
+
+`Trino()` uses the server's default settings. Use `cached=False` on each call when
+benchmarking query performance.
+
 > [!IMPORTANT]
 > Refer to the [documentation](https://mode-s.org/pyopensky) for advanced usage and parameter details.
