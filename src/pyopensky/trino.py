@@ -358,6 +358,16 @@ class Trino(OpenSkyDBAPI):
             if isinstance(res, DBAPIError):
                 raise RuntimeError(str(res.orig))
 
+            # The query's page on the Trino web interface, with all its details
+            if (cursor := res.cursor) is not None and (
+                query_id := getattr(cursor, "query_id", None)
+            ):
+                tqdm.write(
+                    f"Trino query {query_id}: "
+                    f"https://{self.host}/ui/query.html?{query_id}",
+                    file=sys.stderr,
+                )
+
             try:
                 chunks = list(self.process_result(res))
             except BaseException:
@@ -392,6 +402,29 @@ class Trino(OpenSkyDBAPI):
             return
         tqdm.write(f"Trino query {query_id}: cancelled", file=sys.stderr)
 
+    @staticmethod
+    def server_status(stats: Mapping[str, Any]) -> str:
+        """A short summary of the statistics Trino sends with each response.
+
+        From the query's page on the Trino web interface: progress, splits,
+        rows and bytes scanned.
+        No estimate of the time left: while results stream, splits only
+        complete as the client downloads their rows, so the progress lags
+        behind and such an estimate is misleading.
+        """
+        size = tqdm.format_sizeof
+        parts = []
+        progress = stats.get("progressPercentage")
+        if progress is not None:
+            parts.append(f"server {progress:.1f}%")
+        if total := stats.get("totalSplits"):
+            done = stats.get("completedSplits", 0)
+            parts.append(f"splits {done:,}/{total:,}")
+        if rows := stats.get("processedRows"):
+            scanned = size(stats.get("processedBytes", 0), "B", 1024)
+            parts.append(f"scanned {size(rows)} rows, {scanned}")
+        return " | ".join(parts)
+
     def process_result(
         self,
         res: CursorResult[Any],
@@ -401,38 +434,64 @@ class Trino(OpenSkyDBAPI):
         # here: query() must be able to cancel a blocked fetch on interruption.
         with contextlib.closing(ThreadPool(processes=1)) as pool:
             async_result = pool.apply_async(res.fetchmany, (batch_size,))
-            percentage = 0
+            percentage = 0.0
+            # Outside a terminal, one update a minute is enough.
+            interval = 0.1 if sys.stderr.isatty() else 60.0
 
-            with tqdm(unit="%", unit_scale=True) as processing_bar:
-                while not async_result.ready():
-                    if res.cursor is not None:
-                        processing_bar.set_description(
-                            res.cursor.stats["state"]
-                        )
-                        new_percentage = res.cursor.stats["progressPercentage"]
-                        increment = new_percentage - percentage
-                        percentage = new_percentage
-                        processing_bar.update(increment)
-
-                        time.sleep(0.1)
-
-                if res.cursor is not None:
-                    new_percentage = res.cursor.stats["progressPercentage"]
-                    increment = new_percentage - percentage
-                    percentage = new_percentage
-                    processing_bar.set_description(res.cursor.stats["state"])
+            def stats() -> Mapping[str, Any]:
+                return getattr(res.cursor, "stats", None) or {}
 
             with tqdm(
-                unit="lines", unit_scale=True, desc="DOWNLOAD"
+                total=100,
+                unit="%",
+                mininterval=interval,
+                bar_format=(
+                    "{desc}: {percentage:3.0f}%|{bar}| [{elapsed}{postfix}]"
+                ),
+            ) as processing_bar:
+                while not async_result.ready():
+                    if res.cursor is not None:
+                        current = stats()
+                        processing_bar.set_description(
+                            current.get("state", ""), refresh=False
+                        )
+                        new_percentage = (
+                            current.get("progressPercentage") or 0.0
+                        )
+                        processing_bar.update(new_percentage - percentage)
+                        percentage = new_percentage
+                        processing_bar.set_postfix_str(
+                            self.server_status(current), refresh=False
+                        )
+                    time.sleep(0.1)
+
+                if res.cursor is not None:
+                    current = stats()
+                    new_percentage = current.get("progressPercentage") or 0.0
+                    processing_bar.update(new_percentage - percentage)
+                    processing_bar.set_description(current.get("state", ""))
+                    processing_bar.set_postfix_str(self.server_status(current))
+
+            # The download goes on while the server still scans: the server's
+            # progress, next to the rows received, tells how far the query is
+            with tqdm(
+                unit="lines",
+                unit_scale=True,
+                desc="DOWNLOAD",
+                mininterval=interval,
             ) as download_bar:
                 sequence_rows = async_result.get()
                 download_bar.update(len(sequence_rows))
+                download_bar.set_postfix_str(self.server_status(stats()))
                 yield pd.DataFrame.from_records(
                     sequence_rows, columns=res.keys()
                 )
 
                 while len(sequence_rows) == batch_size:
                     sequence_rows = res.fetchmany(batch_size)
+                    download_bar.set_postfix_str(
+                        self.server_status(stats()), refresh=False
+                    )
                     download_bar.update(len(sequence_rows))
                     yield pd.DataFrame.from_records(
                         sequence_rows, columns=res.keys()
