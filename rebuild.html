@@ -152,14 +152,12 @@
 <h2>Available decoders<a class="headerlink" href="#available-decoders" title="Link to this heading"></a></h2>
 <section id="pymodes-decoder">
 <h3>PyModes decoder<a class="headerlink" href="#pymodes-decoder" title="Link to this heading"></a></h3>
-<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">PyModesDecoder</span></code> uses the <a class="reference external" href="https://github.com/junzis/pyModeS">pyModeS</a> library for decoding.</p>
-<p><strong>Features:</strong></p>
-<ul class="simple">
-<li><p>CPR position decoding with odd/even frame pairing</p></li>
-<li><p>Reference position validation to filter outliers</p></li>
-<li><p>BDS register decoding (BDS 4,0, BDS 5,0, BDS 6,0)</p></li>
-<li><p>Pure Python implementation</p></li>
-</ul>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">PyModesDecoder</span></code> uses the pyModeS v3
+<code class="docutils literal notranslate"><span class="pre">PipeDecoder</span></code> to decode raw position messages in capture-time order.
+It tracks each aircraft separately, pairs CPR frames, and checks candidate
+positions against the aircraft’s recent motion. Rebuild returns rows with
+resolved coordinates and uses the database values for velocity and callsign.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">pymodes</span></code> extra requires Python 3.11 or newer.</p>
 <p><strong>Installation:</strong></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s1">'pyopensky[pymodes]'</span>
 </pre></div>
@@ -173,7 +171,7 @@
 <span class="n">rebuild</span> <span class="o">=</span> <span class="n">Rebuild</span><span class="p">(</span><span class="n">trino</span><span class="p">)</span>
 
 <span class="c1"># Using string-based selection</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">redecode_position</span><span class="p">(</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span>
     <span class="n">start</span><span class="o">=</span><span class="s2">"2023-01-03 16:00"</span><span class="p">,</span>
     <span class="n">stop</span><span class="o">=</span><span class="s2">"2023-01-03 20:00"</span><span class="p">,</span>
     <span class="n">icao24</span><span class="o">=</span><span class="s2">"400A0E"</span><span class="p">,</span>
@@ -197,7 +195,6 @@
 <p><strong>Features:</strong></p>
 <ul class="simple">
 <li><p>High-performance Rust implementation</p></li>
-<li><p>Same decoding logic as PyModesDecoder</p></li>
 <li><p>Significantly faster for large datasets</p></li>
 </ul>
 <p><strong>Installation:</strong></p>
@@ -212,7 +209,7 @@
 <span class="n">rebuild</span> <span class="o">=</span> <span class="n">Rebuild</span><span class="p">(</span><span class="n">trino</span><span class="p">)</span>
 
 <span class="c1"># Using string-based selection</span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">redecode_position</span><span class="p">(</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">rebuild</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span>
     <span class="n">start</span><span class="o">=</span><span class="s2">"2023-01-03 16:00"</span><span class="p">,</span>
     <span class="n">stop</span><span class="o">=</span><span class="s2">"2023-01-03 20:00"</span><span class="p">,</span>
     <span class="n">icao24</span><span class="o">=</span><span class="s2">"400A0E"</span><span class="p">,</span>
@@ -262,7 +259,6 @@
 <ul class="simple">
 <li><p>Use <code class="docutils literal notranslate"><span class="pre">PyModesDecoder</span></code> for small to medium datasets (&lt; 1M messages) or when you need to inspect the decoding logic</p></li>
 <li><p>Use <code class="docutils literal notranslate"><span class="pre">Rs1090Decoder</span></code> for large datasets (&gt; 1M messages) where performance is critical</p></li>
-<li><p>Both decoders produce equivalent results, Rs1090Decoder is simply faster</p></li>
 </ul>
 <p><strong>Database vs custom decoding:</strong></p>
 <ul class="simple">
