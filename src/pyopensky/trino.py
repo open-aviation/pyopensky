@@ -34,6 +34,7 @@ from sqlalchemy import (
     and_,
     create_engine,
     func,
+    literal_column,
     select,
     tuple_,
 )
@@ -1010,6 +1011,76 @@ class Trino(OpenSkyDBAPI):
             return None
 
         return res
+
+    def df18_messages(
+        self,
+        start: timelike,
+        stop: timelike | None = None,
+        *args: ColumnExpressionArgument[bool],
+        address: str | list[str] | None = None,
+        control_field: int | Iterable[int] | None = None,
+        message_kind: str | list[str] | None = None,
+        cached: bool = True,
+        compress: bool = False,
+        limit: int | None = None,
+    ) -> pd.DataFrame | None:
+        """Download flat decoded DF18 message observations.
+
+        Use the default client for production or
+        ``Trino(host="trino.dev.opensky-network.org")`` for development.
+        The model remains in :mod:`pyopensky.schema_dev` while the schema is
+        experimental. All table columns are returned, including columns not
+        yet represented by the model.
+
+        DF18 includes non-transponder ADS-B, TIS-B and ADS-R. Preserve the
+        control field and address type when interpreting observations: an
+        address is not necessarily an ICAO24 aircraft identifier.
+
+        ``start`` is inclusive and ``stop`` is exclusive, defaulting to one
+        day after start. Both message time and hourly partitions are bounded.
+        ``address`` and ``message_kind`` accept strings or lists of strings
+        (SQL wildcards accepted); ``control_field`` accepts an integer or an
+        iterable of integers. Additional SQLAlchemy conditions restrict the
+        result further. Returns None when no observations match.
+        """
+        from .schema_dev import Df18Data4
+
+        start_ts = to_datetime(start)
+        stop_ts = (
+            to_datetime(stop)
+            if stop is not None
+            else start_ts + pd.Timedelta("1D")
+        )
+
+        # SELECT * intentionally returns columns not yet represented by the
+        # tentative model in schema_dev.py.
+        stmt = (
+            select(literal_column("*"))
+            .select_from(Df18Data4)
+            .where(
+                Df18Data4.mintime >= start_ts,
+                Df18Data4.mintime < stop_ts,
+                Df18Data4.hour >= start_ts.floor("1h"),
+                Df18Data4.hour < stop_ts.ceil("1h"),
+            )
+        )
+        stmt = self.stmt_where_str(stmt, address, Df18Data4.address)
+        stmt = self.stmt_where_str(stmt, message_kind, Df18Data4.msgkind)
+
+        if control_field is not None:
+            control_fields = (
+                [control_field]
+                if isinstance(control_field, int)
+                else list(control_field)
+            )
+            stmt = stmt.where(Df18Data4.cf.in_(control_fields))
+        for condition in args:
+            stmt = stmt.where(condition)
+        if limit is not None:
+            stmt = stmt.limit(limit)
+
+        result = self.query(stmt, cached=cached, compress=compress)
+        return None if result.shape[0] == 0 else result
 
     def rawdata(
         self,

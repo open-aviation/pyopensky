@@ -220,6 +220,42 @@ callsign. These modes cannot be combined. Conditions on the raw table can
 further restrict any mode. Its existing raw-column output is preserved.
 
 
+DF18 message observations
+--------------------------
+
+Use ``df18_messages()`` to retrieve flat decoded DF18 observations. DF18
+includes non-transponder ADS-B, TIS-B and ADS-R; it is not exclusively a
+rebroadcast format. Preserve ``cf`` and ``addresstype`` when interpreting
+``address``, which is not necessarily an ICAO24 aircraft identifier.
+
+.. code-block:: python
+
+    from pyopensky.trino import Trino
+
+    df = Trino().df18_messages(
+        "2026-04-29 15:00Z",
+        "2026-04-29 15:05Z",
+        control_field=[0, 2, 6],
+        message_kind="%position%",
+        limit=10_000,
+    )
+
+The default client queries production. To use the development service instead,
+instantiate ``Trino(host="trino.dev.opensky-network.org")``; its authentication
+and data access are separate from production.
+
+The method returns all columns from ``df18_data4``, including fields not yet
+represented by the experimental ``Df18Data4`` model in
+``pyopensky.schema_dev``. Additional conditions can use that model's columns.
+``address`` and ``message_kind`` accept a string or list of strings, with SQL
+wildcards. ``control_field`` accepts an integer or iterable of integers.
+
+Queries constrain both message time and hourly partitions. ``start`` is
+inclusive and ``stop`` is exclusive; omitting ``stop`` selects one day after
+``start``. An empty result returns ``None``. The existing cache, compression
+and row-limit options are supported.
+
+
 Spatial queries with bounds
 ---------------------------
 
