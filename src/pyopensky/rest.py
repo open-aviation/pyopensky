@@ -520,7 +520,7 @@ class REST:
         end_ts = (
             to_datetime(end)
             if end is not None
-            else cast(pd.Timestamp, begin_ts + timedelta(days=1))
+            else begin_ts + timedelta(days=1)
         )
 
         json = self.get(

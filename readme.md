@@ -15,6 +15,8 @@ Full documentation on <https://mode-s.org/pyopensky/>
 
 ## Installation
 
+Python 3.12 or newer is required.
+
 ```sh
 pip install pyopensky
 ```

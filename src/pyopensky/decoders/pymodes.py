@@ -56,7 +56,7 @@ class PyModesDecoder(Decoder):
             from pyModeS import PipeDecoder
         except ImportError as e:
             raise ImportError(
-                "PyModesDecoder requires Python 3.11+ and pyModeS v3. "
+                "PyModesDecoder requires pyModeS v3. "
                 "Install it with: pip install 'pyopensky[pymodes]'"
             ) from e
         self._pipe_decoder = PipeDecoder

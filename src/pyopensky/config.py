@@ -84,11 +84,14 @@ def purge_cache(cache_path: Path) -> None:
             cache_purge = purge
 
     if not cache_no_expire:  # coverage: ignore
-        expiration = pd.Timestamp("now") - pd.Timedelta(cache_purge)
+        expiration = (
+            pd.Timestamp.now().timestamp()
+            - pd.Timedelta(cache_purge).total_seconds()
+        )
 
         for cache_file in cache_path.glob("*"):
             ctime = cache_file.stat().st_ctime
-            if ctime < expiration.timestamp():
+            if ctime < expiration:
                 _log.warning(f"Removing {cache_file} created on {ctime}")
                 cache_file.unlink()
 

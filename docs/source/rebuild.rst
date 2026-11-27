@@ -69,7 +69,7 @@ It tracks each aircraft separately, pairs CPR frames, and checks candidate
 positions against the aircraft's recent motion. Rebuild returns rows with
 resolved coordinates and uses the database values for velocity and callsign.
 
-The ``pymodes`` extra requires Python 3.11 or newer.
+PyOpenSky requires Python 3.12 or newer, including the ``pymodes`` extra.
 
 **Installation:**
 

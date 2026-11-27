@@ -1,12 +1,25 @@
 from __future__ import annotations
 
+import contextlib
 import functools
 import hashlib
 import logging
+import signal
+import sys
+import threading
 import time
 from multiprocessing.pool import ThreadPool
 from operator import or_
-from typing import Any, Iterable, Mapping, Type, TypedDict, cast
+from typing import (
+    Any,
+    Iterable,
+    Iterator,
+    Literal,
+    Mapping,
+    Type,
+    TypedDict,
+    cast,
+)
 
 import httpcore
 import httpx
@@ -21,6 +34,7 @@ from sqlalchemy import (
     and_,
     create_engine,
     func,
+    literal_column,
     select,
     tuple_,
 )
@@ -38,7 +52,7 @@ from sqlalchemy.sql.util import ClauseAdapter
 from sqlalchemy.sql.visitors import iterate, replacement_traverse
 from tqdm import tqdm
 from trino.auth import JWTAuthentication, OAuth2Authentication
-from trino.exceptions import TrinoQueryError
+from trino.exceptions import HttpError, TrinoQueryError
 from trino.sqlalchemy import URL
 
 import pandas as pd
@@ -108,10 +122,45 @@ def _adapt_flight_conditions(
     )
 
 
-class Trino(OpenSkyDBAPI):
-    """Wrapper to OpenSky Trino database
+@contextlib.contextmanager
+def _terminate_as_exit() -> Iterator[None]:
+    """While a query runs, turn SIGTERM into SystemExit.
 
-    Credentials are fetched from the configuration file.
+    By default, SIGTERM (``kill``) ends Python at once, without unwinding: the
+    query would then keep running on the Trino server. As an exception, it
+    lets the query be cancelled first. Only from the main thread, and only if
+    no other handler is set; the default handler is restored afterwards.
+    """
+    if (
+        threading.current_thread() is not threading.main_thread()
+        or signal.getsignal(signal.SIGTERM) is not signal.SIG_DFL
+    ):
+        yield
+        return
+
+    def handler(signum: int, frame: Any) -> None:
+        # further SIGTERMs (e.g. forwarded by `uv run`, or `pkill -f` hitting
+        # both processes) must not interrupt the cancellation
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        raise SystemExit(128 + signum)
+
+    signal.signal(signal.SIGTERM, handler)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGTERM, signal.SIG_DFL)
+
+
+class Trino(OpenSkyDBAPI):
+    """Wrapper to OpenSky Trino database.
+
+    Credentials are fetched from the configuration file. The default host is
+    the production service; pass ``host="trino.dev.opensky-network.org"`` to
+    access the development service. Other catalogs and schemas can also be
+    selected. Authentication defaults to JWT with an OAuth fallback on the
+    production host, and OAuth on other hosts. Use ``auth`` to override this.
+
+    Result caches are isolated by host, catalog and schema.
 
     All methods return standard structures. When calls are made from the traffic
     library, they return advanced structures.
@@ -125,8 +174,18 @@ class Trino(OpenSkyDBAPI):
     _token: Token | None = None
 
     def __init__(
-        self, *, session_properties: Mapping[str, str] | None = None
+        self,
+        host: str = "trino.opensky-network.org",
+        catalog: str = "minio",
+        schema: str = "osky",
+        auth: Literal["auto", "jwt", "oauth"] = "auto",
+        *,
+        session_properties: Mapping[str, str] | None = None,
     ) -> None:
+        self.host = host
+        self.catalog = catalog
+        self.schema = schema
+        self.auth = auth
         self.session_properties = dict(session_properties or {})
 
     def token(self, **kwargs: Any) -> str | None:
@@ -138,9 +197,9 @@ class Trino(OpenSkyDBAPI):
             self._token = None
             return None
 
-        # take a little margin (one minute)
-        now = pd.Timestamp("now", tz="utc") - pd.Timedelta("1 min")
-        if self._token is not None and self._token["exp"] > now.timestamp():
+        # reuse the token only if still valid for at least another minute
+        soon = pd.Timestamp("now", tz="utc") + pd.Timedelta("1 min")
+        if self._token is not None and self._token["exp"] > soon.timestamp():
             _log.info(f"Token still valid until {self._token['exp']}")
             return self._token["access_token"]
 
@@ -158,6 +217,7 @@ class Trino(OpenSkyDBAPI):
         )
 
         if result.status_code in [400, 401]:
+            self._token = None
             msg = "Authentication failing on trino"
             _log.warning(msg)
             return None
@@ -174,14 +234,17 @@ class Trino(OpenSkyDBAPI):
         return payload["access_token"]
 
     def engine(self) -> Engine:
-        token = self.token()
+        use_jwt = self.auth == "jwt" or (
+            self.auth == "auto" and self.host == "trino.opensky-network.org"
+        )
+        token = self.token() if use_jwt else None
         engine = create_engine(
             URL(
-                "trino.opensky-network.org",
+                self.host,
                 port=443,
                 user=trino_username,
-                catalog="minio",
-                schema="osky",
+                catalog=self.catalog,
+                schema=self.schema,
                 source="pyopensky",
             ),
             connect_args=dict(
@@ -190,8 +253,8 @@ class Trino(OpenSkyDBAPI):
                 else OAuth2Authentication(),
                 http_scheme="https",
                 user=self._token["preferred_username"]
-                if self._token is not None
-                else None,
+                if token is not None and self._token is not None
+                else trino_username,
                 # https://github.com/trinodb/trino-python-client/discussions/456
                 legacy_prepared_statements=True,
                 session_properties=self.session_properties.copy(),
@@ -226,6 +289,11 @@ class Trino(OpenSkyDBAPI):
         _log.debug("cache-key params repr: %r", params_raw)
         query_str = f"{sql_raw}\n{params_raw}"
         query_str = query_str.replace("\r\n", "\n").replace("\r", "\n")
+        # Old keys cannot identify which endpoint produced the cached rows.
+        # Namespace every endpoint, including production, to avoid reusing
+        # results fetched from another host, catalog or schema.
+        endpoint = (self.host, self.catalog, self.schema)
+        query_str += f"\nendpoint={endpoint!r}"
         if self.session_properties:
             properties = sorted(self.session_properties.items())
             query_str += f"\nsession_properties={properties}"
@@ -250,20 +318,39 @@ class Trino(OpenSkyDBAPI):
             else:
                 cache_file.unlink(missing_ok=True)
 
-        with self.connect().execution_options(**exec_kw) as connect:
-            # There are steps here, that will not appear in the progress bar
-            # but that you can check on https://trino.opensky-network.org/ui/
+        def execute(connect: Connection) -> CursorResult[Any] | DBAPIError:
             try:
-                res = connect.execute(query)
+                return connect.execute(query)
             except DBAPIError as exc:
                 if isinstance(exc.orig, TrinoQueryError):
                     if exc.orig.error_name == "QUERY_QUEUE_FULL":
                         _log.error(limit_resources_msg)
-                        res = exc
-                    else:
-                        raise exc
-                else:
+                        return exc
+                raise exc
+
+        with contextlib.ExitStack() as stack:
+            stack.enter_context(_terminate_as_exit())
+            connect = stack.enter_context(
+                self.connect().execution_options(**exec_kw)
+            )
+            # There are steps here, that will not appear in the progress bar
+            # but that you can check on https://trino.opensky-network.org/ui/
+            try:
+                res = execute(connect)
+            except (DBAPIError, HttpError) as exc:
+                # HttpError is not a DB-API error: SQLAlchemy lets it through
+                # unwrapped, other errors come wrapped in a DBAPIError
+                cause = exc.orig if isinstance(exc, DBAPIError) else exc
+                if not (isinstance(cause, HttpError) and "401" in str(cause)):
                     raise exc
+                # The token was rejected (expired, revoked, clocks apart):
+                # request a new one and try once more
+                _log.warning("Trino rejected the token, requesting a new one")
+                self._token = None
+                connect = stack.enter_context(
+                    self.connect().execution_options(**exec_kw)
+                )
+                res = execute(connect)
 
             # The point of this error is to limit the traceback to a minimum
             # If we raise the exception inside the try/except, we get a really
@@ -272,7 +359,23 @@ class Trino(OpenSkyDBAPI):
             if isinstance(res, DBAPIError):
                 raise RuntimeError(str(res.orig))
 
-            chunks = list(self.process_result(res))
+            # The query's page on the Trino web interface, with all its details
+            if (cursor := res.cursor) is not None and (
+                query_id := getattr(cursor, "query_id", None)
+            ):
+                tqdm.write(
+                    f"Trino query {query_id}: "
+                    f"https://{self.host}/ui/query.html?{query_id}",
+                    file=sys.stderr,
+                )
+
+            try:
+                chunks = list(self.process_result(res))
+            except BaseException:
+                # Interrupted (Ctrl-C, kill, an error): cancel the query on the
+                # server too, or it runs on there until the end
+                self.cancel(res)
+                raise
             df = pd.concat(chunks) if chunks else pd.DataFrame()
 
         df = df.convert_dtypes(dtype_backend="pyarrow")
@@ -286,45 +389,114 @@ class Trino(OpenSkyDBAPI):
 
         return df
 
+    @staticmethod
+    def cancel(res: CursorResult[Any]) -> None:
+        """Cancel the query behind a result on the Trino server."""
+        cursor = res.cursor
+        if cursor is None:
+            return
+        query_id = getattr(cursor, "query_id", None)
+        try:
+            cursor.cancel()
+        except Exception as exc:  # cancelling is best effort
+            _log.warning(f"Could not cancel Trino query {query_id}: {exc}")
+            return
+        tqdm.write(f"Trino query {query_id}: cancelled", file=sys.stderr)
+
+    @staticmethod
+    def server_status(stats: Mapping[str, Any]) -> str:
+        """A short summary of the statistics Trino sends with each response.
+
+        From the query's page on the Trino web interface: progress, splits,
+        rows and bytes scanned.
+        No estimate of the time left: while results stream, splits only
+        complete as the client downloads their rows, so the progress lags
+        behind and such an estimate is misleading.
+        """
+        size = tqdm.format_sizeof
+        parts = []
+        progress = stats.get("progressPercentage")
+        if progress is not None:
+            parts.append(f"server {progress:.1f}%")
+        if total := stats.get("totalSplits"):
+            done = stats.get("completedSplits", 0)
+            parts.append(f"splits {done:,}/{total:,}")
+        if rows := stats.get("processedRows"):
+            scanned = size(stats.get("processedBytes", 0), "B", 1024)
+            parts.append(f"scanned {size(rows)} rows, {scanned}")
+        return " | ".join(parts)
+
     def process_result(
         self,
         res: CursorResult[Any],
         batch_size: int = 50_000,
     ) -> Iterable[pd.DataFrame]:
-        pool = ThreadPool(processes=1)
-        async_result = pool.apply_async(res.fetchmany, (batch_size,))
-        percentage = 0
+        # close() stops the worker once its fetch returns, without waiting
+        # here: query() must be able to cancel a blocked fetch on interruption.
+        with contextlib.closing(ThreadPool(processes=1)) as pool:
+            async_result = pool.apply_async(res.fetchmany, (batch_size,))
+            percentage = 0.0
+            # Outside a terminal, one update a minute is enough.
+            interval = 0.1 if sys.stderr.isatty() else 60.0
 
-        with tqdm(unit="%", unit_scale=True) as processing_bar:
-            while not async_result.ready():
-                if res.cursor is not None:
-                    processing_bar.set_description(res.cursor.stats["state"])
-                    new_percentage = res.cursor.stats["progressPercentage"]
-                    increment = new_percentage - percentage
-                    percentage = new_percentage
-                    processing_bar.update(increment)
+            def stats() -> Mapping[str, Any]:
+                return getattr(res.cursor, "stats", None) or {}
 
+            with tqdm(
+                total=100,
+                unit="%",
+                mininterval=interval,
+                bar_format=(
+                    "{desc}: {percentage:3.0f}%|{bar}| [{elapsed}{postfix}]"
+                ),
+            ) as processing_bar:
+                while not async_result.ready():
+                    if res.cursor is not None:
+                        current = stats()
+                        processing_bar.set_description(
+                            current.get("state", ""), refresh=False
+                        )
+                        new_percentage = (
+                            current.get("progressPercentage") or 0.0
+                        )
+                        processing_bar.update(new_percentage - percentage)
+                        percentage = new_percentage
+                        processing_bar.set_postfix_str(
+                            self.server_status(current), refresh=False
+                        )
                     time.sleep(0.1)
 
-            if res.cursor is not None:
-                new_percentage = res.cursor.stats["progressPercentage"]
-                increment = new_percentage - percentage
-                percentage = new_percentage
-                processing_bar.set_description(res.cursor.stats["state"])
+                if res.cursor is not None:
+                    current = stats()
+                    new_percentage = current.get("progressPercentage") or 0.0
+                    processing_bar.update(new_percentage - percentage)
+                    processing_bar.set_description(current.get("state", ""))
+                    processing_bar.set_postfix_str(self.server_status(current))
 
-        with tqdm(
-            unit="lines", unit_scale=True, desc="DOWNLOAD"
-        ) as download_bar:
-            sequence_rows = async_result.get()
-            download_bar.update(len(sequence_rows))
-            yield pd.DataFrame.from_records(sequence_rows, columns=res.keys())
-
-            while len(sequence_rows) == batch_size:
-                sequence_rows = res.fetchmany(batch_size)
+            # The download goes on while the server still scans: the server's
+            # progress, next to the rows received, tells how far the query is
+            with tqdm(
+                unit="lines",
+                unit_scale=True,
+                desc="DOWNLOAD",
+                mininterval=interval,
+            ) as download_bar:
+                sequence_rows = async_result.get()
                 download_bar.update(len(sequence_rows))
+                download_bar.set_postfix_str(self.server_status(stats()))
                 yield pd.DataFrame.from_records(
                     sequence_rows, columns=res.keys()
                 )
+
+                while len(sequence_rows) == batch_size:
+                    sequence_rows = res.fetchmany(batch_size)
+                    download_bar.set_postfix_str(
+                        self.server_status(stats()), refresh=False
+                    )
+                    download_bar.update(len(sequence_rows))
+                    yield pd.DataFrame.from_records(
+                        sequence_rows, columns=res.keys()
+                    )
 
     ## Specific queries
 
@@ -839,6 +1011,76 @@ class Trino(OpenSkyDBAPI):
             return None
 
         return res
+
+    def df18_messages(
+        self,
+        start: timelike,
+        stop: timelike | None = None,
+        *args: ColumnExpressionArgument[bool],
+        address: str | list[str] | None = None,
+        control_field: int | Iterable[int] | None = None,
+        message_kind: str | list[str] | None = None,
+        cached: bool = True,
+        compress: bool = False,
+        limit: int | None = None,
+    ) -> pd.DataFrame | None:
+        """Download flat decoded DF18 message observations.
+
+        Use the default client for production or
+        ``Trino(host="trino.dev.opensky-network.org")`` for development.
+        The model remains in :mod:`pyopensky.schema_dev` while the schema is
+        experimental. All table columns are returned, including columns not
+        yet represented by the model.
+
+        DF18 includes non-transponder ADS-B, TIS-B and ADS-R. Preserve the
+        control field and address type when interpreting observations: an
+        address is not necessarily an ICAO24 aircraft identifier.
+
+        ``start`` is inclusive and ``stop`` is exclusive, defaulting to one
+        day after start. Both message time and hourly partitions are bounded.
+        ``address`` and ``message_kind`` accept strings or lists of strings
+        (SQL wildcards accepted); ``control_field`` accepts an integer or an
+        iterable of integers. Additional SQLAlchemy conditions restrict the
+        result further. Returns None when no observations match.
+        """
+        from .schema_dev import Df18Data4
+
+        start_ts = to_datetime(start)
+        stop_ts = (
+            to_datetime(stop)
+            if stop is not None
+            else start_ts + pd.Timedelta("1D")
+        )
+
+        # SELECT * intentionally returns columns not yet represented by the
+        # tentative model in schema_dev.py.
+        stmt = (
+            select(literal_column("*"))
+            .select_from(Df18Data4)
+            .where(
+                Df18Data4.mintime >= start_ts,
+                Df18Data4.mintime < stop_ts,
+                Df18Data4.hour >= start_ts.floor("1h"),
+                Df18Data4.hour < stop_ts.ceil("1h"),
+            )
+        )
+        stmt = self.stmt_where_str(stmt, address, Df18Data4.address)
+        stmt = self.stmt_where_str(stmt, message_kind, Df18Data4.msgkind)
+
+        if control_field is not None:
+            control_fields = (
+                [control_field]
+                if isinstance(control_field, int)
+                else list(control_field)
+            )
+            stmt = stmt.where(Df18Data4.cf.in_(control_fields))
+        for condition in args:
+            stmt = stmt.where(condition)
+        if limit is not None:
+            stmt = stmt.limit(limit)
+
+        result = self.query(stmt, cached=cached, compress=compress)
+        return None if result.shape[0] == 0 else result
 
     def rawdata(
         self,

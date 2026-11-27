@@ -3,14 +3,32 @@ from __future__ import annotations
 import operator
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, ClassVar, Dict, List, Protocol, cast
+from typing import (
+    Annotated,
+    Any,
+    ClassVar,
+    Dict,
+    List,
+    Protocol,
+    TypedDict,
+    cast,
+)
 
-from sqlalchemy import ARRAY, Float, Integer, String, TypeDecorator
+from sqlalchemy import (
+    ARRAY,
+    BigInteger,
+    Double,
+    Float,
+    Integer,
+    SmallInteger,
+    String,
+    TypeDecorator,
+)
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.sql import operators as sql_operators
 from sqlalchemy.sql.operators import OperatorType
-from typing_extensions import Annotated
+from trino.sqlalchemy.datatype import ROW
 
 import pandas as pd
 
@@ -43,6 +61,13 @@ class UTCTimestampInteger(TypeDecorator[pd.Timestamp]):
         if isinstance(value, (int, float)):
             return pd.to_datetime(value, unit="s", utc=True)
         return super().process_result_value(value, dialect)
+
+
+class UTCTimestampBigInteger(UTCTimestampInteger):
+    """Epoch seconds stored in a Trino bigint rather than an integer."""
+
+    impl = BigInteger
+    cache_ok = True
 
 
 class UTCTimestampFloat(TypeDecorator[pd.Timestamp]):
@@ -184,6 +209,47 @@ class SensorsType(TypeDecorator[List[Dict[str, Any]]]):
         return super().process_result_value(value, dialect)
 
 
+class ReadsbPosition(TypedDict):
+    """Last known position; seen_pos is an age in seconds, not an epoch."""
+
+    lat: float | None
+    lon: float | None
+    nic: int | None
+    rc: int | None
+    seen_pos: float | None
+
+
+class ReadsbPositionType(TypeDecorator[ReadsbPosition]):
+    """Preserve the named fields of readsb's nested last_position row."""
+
+    impl = ROW
+    cache_ok = True
+
+    def __init__(self) -> None:
+        super().__init__(
+            [
+                ("lat", Double),
+                ("lon", Double),
+                ("nic", Integer),
+                ("rc", Integer),
+                ("seen_pos", Double),
+            ]
+        )
+
+    def process_result_value(
+        self, value: Any | None, dialect: Dialect
+    ) -> ReadsbPosition | None:
+        if value is None:
+            return None
+        return ReadsbPosition(
+            lat=value[0],
+            lon=value[1],
+            nic=value[2],
+            rc=value[3],
+            seen_pos=value[4],
+        )
+
+
 ## Descriptions of tables are below
 ## For each table, indicate its type in Python and on the SQL side
 ## For some types, the conversion is automatic (see `type_annotation_map`)
@@ -244,6 +310,140 @@ class StateVectorsData4(Base):
     lastcontact: Mapped[float]
     serials: Mapped[List[int]] = mapped_column(ARRAY(Integer))  # TODO
     # The start of the hour this data belongs to.
+    hour: Mapped[pd.Timestamp] = mapped_column(primary_key=True)
+
+
+class ReadsbAdscState(Base):
+    """Readsb ADS-C observations, preserving native names and units.
+
+    Altitudes are in feet, speeds in knots and vertical rates in feet/minute.
+    Fields omitted by the source remain nullable. No trajectory or unit
+    normalization is performed.
+    """
+
+    __tablename__ = "readsb_adsc_state"
+
+    time: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat(precision=53))
+    hex: Mapped[Address]
+    type: Mapped[str | None]
+    flight: Mapped[str | None]
+    alt_baro_ft: Mapped[int | None]
+    on_ground: Mapped[bool | None]
+    alt_geom: Mapped[int | None]
+    gs: Mapped[float | None] = mapped_column(Double)
+    ias: Mapped[int | None]
+    tas: Mapped[int | None]
+    mach: Mapped[float | None] = mapped_column(Double)
+    track: Mapped[float | None] = mapped_column(Double)
+    track_rate: Mapped[float | None] = mapped_column(Double)
+    roll: Mapped[float | None] = mapped_column(Double)
+    mag_heading: Mapped[float | None] = mapped_column(Double)
+    true_heading: Mapped[float | None] = mapped_column(Double)
+    baro_rate: Mapped[int | None]
+    geom_rate: Mapped[int | None]
+    squawk: Mapped[str | None]
+    emergency: Mapped[str | None]
+    category: Mapped[str | None]
+    alert: Mapped[int | None]
+    spi: Mapped[int | None]
+    nav_qnh: Mapped[float | None] = mapped_column(Double)
+    nav_altitude_mcp: Mapped[int | None]
+    nav_altitude_fms: Mapped[int | None]
+    nav_heading: Mapped[float | None] = mapped_column(Double)
+    nav_modes: Mapped[list[str] | None] = mapped_column(ARRAY(String))
+    lat: Mapped[float | None] = mapped_column(Double)
+    lon: Mapped[float | None] = mapped_column(Double)
+    nic: Mapped[int | None]
+    rc: Mapped[int | None]
+    # Age of the position relative to time, in seconds.
+    seen_pos: Mapped[float | None] = mapped_column(Double)
+    version: Mapped[int | None]
+    nic_baro: Mapped[int | None]
+    nac_p: Mapped[int | None]
+    nac_v: Mapped[int | None]
+    sil: Mapped[int | None]
+    sil_type: Mapped[str | None]
+    gva: Mapped[int | None]
+    sda: Mapped[int | None]
+    rr_lat: Mapped[float | None] = mapped_column(Double)
+    rr_lon: Mapped[float | None] = mapped_column(Double)
+    mlat: Mapped[list[str] | None] = mapped_column(ARRAY(String))
+    tisb: Mapped[list[str] | None] = mapped_column(ARRAY(String))
+    messages: Mapped[int | None] = mapped_column(BigInteger)
+    # Age of the last message relative to time, in seconds.
+    seen: Mapped[float | None] = mapped_column(Double)
+    rssi: Mapped[float | None] = mapped_column(Double)
+    wd: Mapped[int | None]
+    ws: Mapped[int | None]
+    oat: Mapped[int | None]
+    tat: Mapped[int | None]
+    # Epoch seconds, unlike seen and seen_pos.
+    gps_ok_before: Mapped[float | None] = mapped_column(Double)
+    last_position: Mapped[ReadsbPosition | None] = mapped_column(
+        ReadsbPositionType
+    )
+    registration: Mapped[str | None]
+    ac_type: Mapped[str | None]
+    ac_desc: Mapped[str | None]
+    db_flags: Mapped[int | None] = mapped_column(BigInteger)
+
+    # Partition key: an ORM identity hint, not a unique observation key.
+    hour: Mapped[pd.Timestamp] = mapped_column(
+        UTCTimestampBigInteger, primary_key=True
+    )
+
+
+class ReadsbAdscStateVectors(Base):
+    """Simplified ADS-C view, not SI-valued StateVectorsData4 observations.
+
+    velocity is in knots, vertrate in feet/minute and baroaltitude in feet.
+    Callsigns are passed through as stored, without ADS-B padding rules.
+    """
+
+    __tablename__ = "readsb_adsc_sv"
+
+    time: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat(precision=53))
+    icao24: Mapped[Address]
+    callsign: Mapped[str | None]
+    lat: Mapped[float | None] = mapped_column(Double)
+    lon: Mapped[float | None] = mapped_column(Double)
+    velocity: Mapped[float | None] = mapped_column(Double)
+    heading: Mapped[float | None] = mapped_column(Double)
+    vertrate: Mapped[float | None] = mapped_column(Double)
+    baroaltitude: Mapped[float | None] = mapped_column(Double)
+
+    # Partition key: an ORM identity hint, not a unique observation key.
+    hour: Mapped[pd.Timestamp] = mapped_column(
+        UTCTimestampBigInteger, primary_key=True
+    )
+
+
+class ReadsbMlatState(Base):
+    """Sparse readsb MLAT positions; messages is a source message counter."""
+
+    __tablename__ = "readsb_mlat_state"
+
+    time: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat(precision=53))
+    hex: Mapped[Address]
+    lat: Mapped[float | None] = mapped_column(Double)
+    lon: Mapped[float | None] = mapped_column(Double)
+    messages: Mapped[int | None] = mapped_column(BigInteger)
+
+    # Partition key: an ORM identity hint, not a unique observation key.
+    hour: Mapped[pd.Timestamp] = mapped_column(primary_key=True)
+
+
+class ReadsbMlatStateVectors(Base):
+    """MLAT position view: no altitude, callsign or velocity is available."""
+
+    __tablename__ = "readsb_mlat_sv"
+
+    time: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat(precision=53))
+    icao24: Mapped[Address]
+    lat: Mapped[float | None] = mapped_column(Double)
+    lon: Mapped[float | None] = mapped_column(Double)
+
+    # Partition key: an ORM identity hint, not a unique observation key.
     hour: Mapped[pd.Timestamp] = mapped_column(primary_key=True)
 
 
@@ -321,24 +521,31 @@ class RawTable(Protocol):
 
 
 class AcasData4(Base):
+    """Decoded ACAS replies exposed by the data4 compatibility view."""
+
     __tablename__ = "acas_data4"
 
     sensors: Mapped[Sensors]
     rawmsg: Mapped[str]
     mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
-    msgcount: Mapped[int]
+    msgcount: Mapped[int] = mapped_column(BigInteger)
     icao24: Mapped[Address]
-    message: Mapped[str]
-    isid: Mapped[bool]
-    flightstatus: Mapped[int]
-    downlinkrequest: Mapped[int]
-    utilitymsg: Mapped[int]
-    interrogatorid: Mapped[int]
-    identifierdesignator: Mapped[int]
-    valuecode: Mapped[int]
+    islongformat: Mapped[bool]
+    isairborne: Mapped[bool]
+    hascrosslinkcapability: Mapped[bool]
+    sensitivitylevel: Mapped[int] = mapped_column(SmallInteger)
+    replyinformation: Mapped[int] = mapped_column(SmallInteger)
     altitude: Mapped[float]
-    identity: Mapped[str]
+    hasvalidrac: Mapped[bool]
+    activeresolutionadvisories: Mapped[int] = mapped_column(SmallInteger)
+    resolutionadvisorycomplement: Mapped[int] = mapped_column(SmallInteger)
+    nopassbelow: Mapped[bool]
+    nopassabove: Mapped[bool]
+    noturnleft: Mapped[bool]
+    noturnright: Mapped[bool]
+    hasterminated: Mapped[bool]
+    hasmultiplethreats: Mapped[bool]
 
     # Whatever, we pick this one as primary key BUT
     #   - this is not true
@@ -347,24 +554,18 @@ class AcasData4(Base):
 
 
 class AllcallRepliesData4(Base):
+    """Decoded Mode S all-call replies (DF11)."""
+
     __tablename__ = "allcall_replies_data4"
 
     sensors: Mapped[Sensors]
     rawmsg: Mapped[str]
     mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
-    msgcount: Mapped[int]
+    msgcount: Mapped[int] = mapped_column(BigInteger)
     icao24: Mapped[Address]
-    message: Mapped[str]
-    isid: Mapped[bool]
-    flightstatus: Mapped[int]
-    downlinkrequest: Mapped[int]
-    utilitymsg: Mapped[int]
-    interrogatorid: Mapped[int]
-    identifierdesignator: Mapped[int]
-    valuecode: Mapped[int]
-    altitude: Mapped[float]
-    identity: Mapped[str]
+    capabilities: Mapped[int] = mapped_column(SmallInteger)
+    interrogatorid: Mapped[int] = mapped_column(SmallInteger)
 
     # Whatever, we pick this one as primary key BUT
     #   - this is not true
