@@ -4,10 +4,22 @@ import contextlib
 import functools
 import hashlib
 import logging
+import signal
+import sys
+import threading
 import time
 from multiprocessing.pool import ThreadPool
 from operator import or_
-from typing import Any, Iterable, Literal, Mapping, Type, TypedDict, cast
+from typing import (
+    Any,
+    Iterable,
+    Iterator,
+    Literal,
+    Mapping,
+    Type,
+    TypedDict,
+    cast,
+)
 
 import httpcore
 import httpx
@@ -107,6 +119,35 @@ def _adapt_flight_conditions(
         {"stop_on": subqueries},
         replace,
     )
+
+
+@contextlib.contextmanager
+def _terminate_as_exit() -> Iterator[None]:
+    """While a query runs, turn SIGTERM into SystemExit.
+
+    By default, SIGTERM (``kill``) ends Python at once, without unwinding: the
+    query would then keep running on the Trino server. As an exception, it
+    lets the query be cancelled first. Only from the main thread, and only if
+    no other handler is set; the default handler is restored afterwards.
+    """
+    if (
+        threading.current_thread() is not threading.main_thread()
+        or signal.getsignal(signal.SIGTERM) is not signal.SIG_DFL
+    ):
+        yield
+        return
+
+    def handler(signum: int, frame: Any) -> None:
+        # further SIGTERMs (e.g. forwarded by `uv run`, or `pkill -f` hitting
+        # both processes) must not interrupt the cancellation
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        raise SystemExit(128 + signum)
+
+    signal.signal(signal.SIGTERM, handler)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGTERM, signal.SIG_DFL)
 
 
 class Trino(OpenSkyDBAPI):
@@ -287,6 +328,7 @@ class Trino(OpenSkyDBAPI):
                 raise exc
 
         with contextlib.ExitStack() as stack:
+            stack.enter_context(_terminate_as_exit())
             connect = stack.enter_context(
                 self.connect().execution_options(**exec_kw)
             )
@@ -316,7 +358,13 @@ class Trino(OpenSkyDBAPI):
             if isinstance(res, DBAPIError):
                 raise RuntimeError(str(res.orig))
 
-            chunks = list(self.process_result(res))
+            try:
+                chunks = list(self.process_result(res))
+            except BaseException:
+                # Interrupted (Ctrl-C, kill, an error): cancel the query on the
+                # server too, or it runs on there until the end
+                self.cancel(res)
+                raise
             df = pd.concat(chunks) if chunks else pd.DataFrame()
 
         df = df.convert_dtypes(dtype_backend="pyarrow")
@@ -330,45 +378,65 @@ class Trino(OpenSkyDBAPI):
 
         return df
 
+    @staticmethod
+    def cancel(res: CursorResult[Any]) -> None:
+        """Cancel the query behind a result on the Trino server."""
+        cursor = res.cursor
+        if cursor is None:
+            return
+        query_id = getattr(cursor, "query_id", None)
+        try:
+            cursor.cancel()
+        except Exception as exc:  # cancelling is best effort
+            _log.warning(f"Could not cancel Trino query {query_id}: {exc}")
+            return
+        tqdm.write(f"Trino query {query_id}: cancelled", file=sys.stderr)
+
     def process_result(
         self,
         res: CursorResult[Any],
         batch_size: int = 50_000,
     ) -> Iterable[pd.DataFrame]:
-        pool = ThreadPool(processes=1)
-        async_result = pool.apply_async(res.fetchmany, (batch_size,))
-        percentage = 0
+        # close() stops the worker once its fetch returns, without waiting
+        # here: query() must be able to cancel a blocked fetch on interruption.
+        with contextlib.closing(ThreadPool(processes=1)) as pool:
+            async_result = pool.apply_async(res.fetchmany, (batch_size,))
+            percentage = 0
 
-        with tqdm(unit="%", unit_scale=True) as processing_bar:
-            while not async_result.ready():
+            with tqdm(unit="%", unit_scale=True) as processing_bar:
+                while not async_result.ready():
+                    if res.cursor is not None:
+                        processing_bar.set_description(
+                            res.cursor.stats["state"]
+                        )
+                        new_percentage = res.cursor.stats["progressPercentage"]
+                        increment = new_percentage - percentage
+                        percentage = new_percentage
+                        processing_bar.update(increment)
+
+                        time.sleep(0.1)
+
                 if res.cursor is not None:
-                    processing_bar.set_description(res.cursor.stats["state"])
                     new_percentage = res.cursor.stats["progressPercentage"]
                     increment = new_percentage - percentage
                     percentage = new_percentage
-                    processing_bar.update(increment)
+                    processing_bar.set_description(res.cursor.stats["state"])
 
-                    time.sleep(0.1)
-
-            if res.cursor is not None:
-                new_percentage = res.cursor.stats["progressPercentage"]
-                increment = new_percentage - percentage
-                percentage = new_percentage
-                processing_bar.set_description(res.cursor.stats["state"])
-
-        with tqdm(
-            unit="lines", unit_scale=True, desc="DOWNLOAD"
-        ) as download_bar:
-            sequence_rows = async_result.get()
-            download_bar.update(len(sequence_rows))
-            yield pd.DataFrame.from_records(sequence_rows, columns=res.keys())
-
-            while len(sequence_rows) == batch_size:
-                sequence_rows = res.fetchmany(batch_size)
+            with tqdm(
+                unit="lines", unit_scale=True, desc="DOWNLOAD"
+            ) as download_bar:
+                sequence_rows = async_result.get()
                 download_bar.update(len(sequence_rows))
                 yield pd.DataFrame.from_records(
                     sequence_rows, columns=res.keys()
                 )
+
+                while len(sequence_rows) == batch_size:
+                    sequence_rows = res.fetchmany(batch_size)
+                    download_bar.update(len(sequence_rows))
+                    yield pd.DataFrame.from_records(
+                        sequence_rows, columns=res.keys()
+                    )
 
     ## Specific queries
 
