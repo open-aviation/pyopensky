@@ -256,6 +256,65 @@ inclusive and ``stop`` is exclusive; omitting ``stop`` selects one day after
 and row-limit options are supported.
 
 
+ADS-C and MLAT observations
+--------------------------
+
+The following models in ``pyopensky.schema`` expose readsb observations:
+
+- ``ReadsbAdscState``: the full ``readsb_adsc_state`` table;
+- ``ReadsbAdscStateVectors``: its simplified ``readsb_adsc_sv`` view;
+- ``ReadsbMlatState``: the sparse ``readsb_mlat_state`` table;
+- ``ReadsbMlatStateVectors``: its ``readsb_mlat_sv`` position view.
+
+Use these models with ``Trino.query()`` and SQLAlchemy. They do not change the
+source selected by ``history()`` or extend the raw-message ``rawdata()`` API.
+Constrain both observation time and hourly partitions:
+
+.. code-block:: python
+
+    from sqlalchemy import select
+    from pyopensky.schema import ReadsbAdscStateVectors
+    from pyopensky.trino import Trino
+
+    adsc = ReadsbAdscStateVectors
+    start = "2026-11-01 12:00Z"
+    stop = "2026-11-01 13:00Z"
+    statement = select(adsc).where(
+        adsc.time >= start,
+        adsc.time < stop,
+        adsc.hour >= start,
+        adsc.hour < stop,
+    ).limit(10_000)
+    df = Trino().query(statement)
+
+``time`` filters accept datetime-like inputs and results retain fractional epoch
+seconds. ``hour`` uses the usual UTC timestamp conversion. ADS-C partitions are
+stored as bigint; MLAT partitions are integer.
+
+.. warning::
+
+   The ADS-C view renames columns but does not convert readsb's units:
+   ``velocity`` is in knots, ``vertrate`` in feet/minute and ``baroaltitude`` in
+   feet. These are not the SI units of ``StateVectorsData4``. Do not pass
+   these values through traffic's usual SI-to-aviation unit conversion.
+
+MLAT contains only time, address and coordinates (plus a source message counter
+in the full table). It does not provide altitude, callsign or velocity.
+
+Source payload fields remain nullable. Callsigns retain their stored whitespace
+and comparisons do not add ADS-B padding. The full ADS-C table preserves
+``nav_modes``, ``mlat`` and ``tisb`` arrays, source identifiers and flags.
+``last_position`` is returned as a dictionary with ``lat``, ``lon``, ``nic``,
+``rc`` and ``seen_pos`` keys; a missing row remains ``None``. ``seen`` and
+``seen_pos`` are ages in seconds, whereas ``gps_ok_before`` is an epoch time.
+The ``hex`` identifier may include readsb's ``~`` prefix for non-ICAO addresses;
+renaming it to ``icao24`` in a view does not validate it as an ICAO address.
+
+See the `readsb JSON format documentation
+<https://github.com/wiedehopf/readsb/blob/dev/README-json.md>`_ for source-field
+semantics and units.
+
+
 Spatial queries with bounds
 ---------------------------
 
@@ -518,7 +577,10 @@ Common tables in the OpenSky Trino database:
 - ``velocity_data4``: Raw velocity messages
 - ``identification_data4``: Raw identification/callsign messages
 - ``rollcall_replies_data4``: Mode S rollcall replies (squawk, BDS registers)
-- ``adsc``: ADS-C messages (for oceanic/remote areas)
+- ``readsb_adsc_state`` / ``readsb_adsc_sv``: ADS-C observations in readsb units
+- ``readsb_mlat_state`` / ``readsb_mlat_sv``: Sparse MLAT positions
+
+Table visibility depends on the endpoint and account permissions.
 
 See also
 --------
