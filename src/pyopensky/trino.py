@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import contextlib
 import functools
 import hashlib
 import logging
 import time
 from multiprocessing.pool import ThreadPool
 from operator import or_
-from typing import Any, Iterable, Mapping, Type, TypedDict, cast
+from typing import Any, Iterable, Literal, Mapping, Type, TypedDict, cast
 
 import httpcore
 import httpx
@@ -38,7 +39,7 @@ from sqlalchemy.sql.util import ClauseAdapter
 from sqlalchemy.sql.visitors import iterate, replacement_traverse
 from tqdm import tqdm
 from trino.auth import JWTAuthentication, OAuth2Authentication
-from trino.exceptions import TrinoQueryError
+from trino.exceptions import HttpError, TrinoQueryError
 from trino.sqlalchemy import URL
 
 import pandas as pd
@@ -109,9 +110,15 @@ def _adapt_flight_conditions(
 
 
 class Trino(OpenSkyDBAPI):
-    """Wrapper to OpenSky Trino database
+    """Wrapper to OpenSky Trino database.
 
-    Credentials are fetched from the configuration file.
+    Credentials are fetched from the configuration file. The default host is
+    the production service; pass ``host="trino.dev.opensky-network.org"`` to
+    access the development service. Other catalogs and schemas can also be
+    selected. Authentication defaults to JWT with an OAuth fallback on the
+    production host, and OAuth on other hosts. Use ``auth`` to override this.
+
+    Result caches are isolated by host, catalog and schema.
 
     All methods return standard structures. When calls are made from the traffic
     library, they return advanced structures.
@@ -125,8 +132,18 @@ class Trino(OpenSkyDBAPI):
     _token: Token | None = None
 
     def __init__(
-        self, *, session_properties: Mapping[str, str] | None = None
+        self,
+        host: str = "trino.opensky-network.org",
+        catalog: str = "minio",
+        schema: str = "osky",
+        auth: Literal["auto", "jwt", "oauth"] = "auto",
+        *,
+        session_properties: Mapping[str, str] | None = None,
     ) -> None:
+        self.host = host
+        self.catalog = catalog
+        self.schema = schema
+        self.auth = auth
         self.session_properties = dict(session_properties or {})
 
     def token(self, **kwargs: Any) -> str | None:
@@ -138,9 +155,9 @@ class Trino(OpenSkyDBAPI):
             self._token = None
             return None
 
-        # take a little margin (one minute)
-        now = pd.Timestamp("now", tz="utc") - pd.Timedelta("1 min")
-        if self._token is not None and self._token["exp"] > now.timestamp():
+        # reuse the token only if still valid for at least another minute
+        soon = pd.Timestamp("now", tz="utc") + pd.Timedelta("1 min")
+        if self._token is not None and self._token["exp"] > soon.timestamp():
             _log.info(f"Token still valid until {self._token['exp']}")
             return self._token["access_token"]
 
@@ -158,6 +175,7 @@ class Trino(OpenSkyDBAPI):
         )
 
         if result.status_code in [400, 401]:
+            self._token = None
             msg = "Authentication failing on trino"
             _log.warning(msg)
             return None
@@ -174,14 +192,17 @@ class Trino(OpenSkyDBAPI):
         return payload["access_token"]
 
     def engine(self) -> Engine:
-        token = self.token()
+        use_jwt = self.auth == "jwt" or (
+            self.auth == "auto" and self.host == "trino.opensky-network.org"
+        )
+        token = self.token() if use_jwt else None
         engine = create_engine(
             URL(
-                "trino.opensky-network.org",
+                self.host,
                 port=443,
                 user=trino_username,
-                catalog="minio",
-                schema="osky",
+                catalog=self.catalog,
+                schema=self.schema,
                 source="pyopensky",
             ),
             connect_args=dict(
@@ -190,8 +211,8 @@ class Trino(OpenSkyDBAPI):
                 else OAuth2Authentication(),
                 http_scheme="https",
                 user=self._token["preferred_username"]
-                if self._token is not None
-                else None,
+                if token is not None and self._token is not None
+                else trino_username,
                 # https://github.com/trinodb/trino-python-client/discussions/456
                 legacy_prepared_statements=True,
                 session_properties=self.session_properties.copy(),
@@ -226,6 +247,11 @@ class Trino(OpenSkyDBAPI):
         _log.debug("cache-key params repr: %r", params_raw)
         query_str = f"{sql_raw}\n{params_raw}"
         query_str = query_str.replace("\r\n", "\n").replace("\r", "\n")
+        # Old keys cannot identify which endpoint produced the cached rows.
+        # Namespace every endpoint, including production, to avoid reusing
+        # results fetched from another host, catalog or schema.
+        endpoint = (self.host, self.catalog, self.schema)
+        query_str += f"\nendpoint={endpoint!r}"
         if self.session_properties:
             properties = sorted(self.session_properties.items())
             query_str += f"\nsession_properties={properties}"
@@ -250,20 +276,38 @@ class Trino(OpenSkyDBAPI):
             else:
                 cache_file.unlink(missing_ok=True)
 
-        with self.connect().execution_options(**exec_kw) as connect:
-            # There are steps here, that will not appear in the progress bar
-            # but that you can check on https://trino.opensky-network.org/ui/
+        def execute(connect: Connection) -> CursorResult[Any] | DBAPIError:
             try:
-                res = connect.execute(query)
+                return connect.execute(query)
             except DBAPIError as exc:
                 if isinstance(exc.orig, TrinoQueryError):
                     if exc.orig.error_name == "QUERY_QUEUE_FULL":
                         _log.error(limit_resources_msg)
-                        res = exc
-                    else:
-                        raise exc
-                else:
+                        return exc
+                raise exc
+
+        with contextlib.ExitStack() as stack:
+            connect = stack.enter_context(
+                self.connect().execution_options(**exec_kw)
+            )
+            # There are steps here, that will not appear in the progress bar
+            # but that you can check on https://trino.opensky-network.org/ui/
+            try:
+                res = execute(connect)
+            except (DBAPIError, HttpError) as exc:
+                # HttpError is not a DB-API error: SQLAlchemy lets it through
+                # unwrapped, other errors come wrapped in a DBAPIError
+                cause = exc.orig if isinstance(exc, DBAPIError) else exc
+                if not (isinstance(cause, HttpError) and "401" in str(cause)):
                     raise exc
+                # The token was rejected (expired, revoked, clocks apart):
+                # request a new one and try once more
+                _log.warning("Trino rejected the token, requesting a new one")
+                self._token = None
+                connect = stack.enter_context(
+                    self.connect().execution_options(**exec_kw)
+                )
+                res = execute(connect)
 
             # The point of this error is to limit the traceback to a minimum
             # If we raise the exception inside the try/except, we get a really
