@@ -5,7 +5,15 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Annotated, Any, ClassVar, Dict, List, Protocol, cast
 
-from sqlalchemy import ARRAY, Float, Integer, String, TypeDecorator
+from sqlalchemy import (
+    ARRAY,
+    BigInteger,
+    Float,
+    Integer,
+    SmallInteger,
+    String,
+    TypeDecorator,
+)
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.sql import operators as sql_operators
@@ -320,24 +328,31 @@ class RawTable(Protocol):
 
 
 class AcasData4(Base):
+    """Decoded ACAS replies exposed by the data4 compatibility view."""
+
     __tablename__ = "acas_data4"
 
     sensors: Mapped[Sensors]
     rawmsg: Mapped[str]
     mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
-    msgcount: Mapped[int]
+    msgcount: Mapped[int] = mapped_column(BigInteger)
     icao24: Mapped[Address]
-    message: Mapped[str]
-    isid: Mapped[bool]
-    flightstatus: Mapped[int]
-    downlinkrequest: Mapped[int]
-    utilitymsg: Mapped[int]
-    interrogatorid: Mapped[int]
-    identifierdesignator: Mapped[int]
-    valuecode: Mapped[int]
+    islongformat: Mapped[bool]
+    isairborne: Mapped[bool]
+    hascrosslinkcapability: Mapped[bool]
+    sensitivitylevel: Mapped[int] = mapped_column(SmallInteger)
+    replyinformation: Mapped[int] = mapped_column(SmallInteger)
     altitude: Mapped[float]
-    identity: Mapped[str]
+    hasvalidrac: Mapped[bool]
+    activeresolutionadvisories: Mapped[int] = mapped_column(SmallInteger)
+    resolutionadvisorycomplement: Mapped[int] = mapped_column(SmallInteger)
+    nopassbelow: Mapped[bool]
+    nopassabove: Mapped[bool]
+    noturnleft: Mapped[bool]
+    noturnright: Mapped[bool]
+    hasterminated: Mapped[bool]
+    hasmultiplethreats: Mapped[bool]
 
     # Whatever, we pick this one as primary key BUT
     #   - this is not true
@@ -346,24 +361,18 @@ class AcasData4(Base):
 
 
 class AllcallRepliesData4(Base):
+    """Decoded Mode S all-call replies (DF11)."""
+
     __tablename__ = "allcall_replies_data4"
 
     sensors: Mapped[Sensors]
     rawmsg: Mapped[str]
     mintime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
     maxtime: Mapped[pd.Timestamp] = mapped_column(UTCTimestampFloat)
-    msgcount: Mapped[int]
+    msgcount: Mapped[int] = mapped_column(BigInteger)
     icao24: Mapped[Address]
-    message: Mapped[str]
-    isid: Mapped[bool]
-    flightstatus: Mapped[int]
-    downlinkrequest: Mapped[int]
-    utilitymsg: Mapped[int]
-    interrogatorid: Mapped[int]
-    identifierdesignator: Mapped[int]
-    valuecode: Mapped[int]
-    altitude: Mapped[float]
-    identity: Mapped[str]
+    capabilities: Mapped[int] = mapped_column(SmallInteger)
+    interrogatorid: Mapped[int] = mapped_column(SmallInteger)
 
     # Whatever, we pick this one as primary key BUT
     #   - this is not true
