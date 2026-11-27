@@ -28,9 +28,9 @@ class TestRebuildClass:
     def test_rebuild_basic_query(self, rebuild: Rebuild) -> None:
         """Test basic rebuild without decoder."""
         df = rebuild.rebuild(
-            start="2023-01-03 16:00:00",
-            stop="2023-01-03 20:00:00",
-            icao24="400a0e",
+            start="2025-04-13 08:56:00",
+            stop="2025-04-13 09:06:00",
+            icao24="484164",
         )
 
         # Should return a DataFrame
@@ -48,12 +48,11 @@ class TestRebuildClass:
     def test_rebuild_with_string_decoder_rs1090(self, rebuild: Rebuild) -> None:
         """Test rebuild with 'rs1090' string decoder."""
         df = rebuild.rebuild(
-            start="2023-01-03 16:00:00",
-            stop="2023-01-03 17:00:00",
-            icao24="400a0e",
+            start="2025-04-13 08:56:00",
+            stop="2025-04-13 09:06:00",
+            icao24="484164",
             decoder="rs1090",
         )
 
-        # If data is returned, it should be a DataFrame
-        if df is not None:
-            assert isinstance(df, pd.DataFrame)
+        assert df is not None
+        assert set(df.icao24) == {"484164"}

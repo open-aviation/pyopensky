@@ -38,7 +38,11 @@ def test_query() -> None:
     assert res.callsign.max() == "AFR291"
     assert res.estdepartureairport.max() == "RJBB"
     assert res.firstseen.diff().min() > pd.Timedelta("1 day 12 hours")
-    assert res.track.str.len().max() > 600
+    # The archive can resample tracks. Check that it returns timed positions.
+    track = res.track.iloc[res.track.str.len().argmax()]
+    assert len(track) > 1
+    assert {"time", "latitude", "longitude"} <= track[0].keys()
+    assert track[0]["time"] != track[-1]["time"]
 
 
 def test_flightlist() -> None:
@@ -74,156 +78,129 @@ def test_flightlist() -> None:
     )
 
     df = trino.flightlist(
-        "2019-11-01",
+        "2025-04-07",
         departure_airport="LFBO",
         arrival_airport="LFBO",
         callsign="AIB%",
     )
     assert df is not None
-    assert df.shape[0] == 2
+    assert "AIB07TN" in df.callsign.values
     assert all(df.callsign.str.startswith("AIB"))
 
-    df = trino.flightlist("2019-11-01", icao24="44017c")
+    df = trino.flightlist("2025-04-07", icao24="38ed1b")
     assert df is not None
-    assert all(df.callsign.str.startswith("EJU"))
+    assert set(df.icao24) == {"38ed1b"}
+    assert "AIB07TN" in df.callsign.values
 
 
 def test_history() -> None:
     df = trino.history(
-        "2019-11-01 09:00",
-        "2019-11-01 12:00",
+        "2025-04-07 07:40",
+        "2025-04-07 07:43",
         departure_airport="LFBO",
         arrival_airport="LFBO",
-        callsign="AIB04%",
+        callsign="AIB07%",
         compress=True,
     )
     assert df is not None
-    assert df.icao24.max() == "388dfb"
-    assert df.callsign.max() == "AIB04FI"
+    assert set(df.icao24) == {"38ed1b"}
+    assert set(df.callsign) == {"AIB07TN"}
 
     df = trino.history(
-        "2019-11-11 10:00",
-        "2019-11-11 10:10",
+        "2025-04-07 07:40",
+        "2025-04-07 07:43",
         bounds=(0.11, 42.3, 2.82, 44.6),
         serials=1433801924,
         compress=False,
     )
 
     assert df is not None
-    assert len(df.groupby(["icao24", "callsign"])) == 34
+    assert "AIB07TN" in df.callsign.values
+    assert df.lon.between(0.11, 2.82).all()
+    assert df.lat.between(42.3, 44.6).all()
+    assert all(1433801924 in receivers for receivers in df.serials)
 
 
 def test_complex_queries() -> None:
+    start = "2025-04-13 08:46"
+    stop = "2025-04-13 08:49"
+    stockholm = (17.8936, 59.6118, 17.9894, 59.6716)
+    receivers = (-1408232560, -1408232534)
     error_msg = "airport may not be set if arrival_airport is"
-    with pytest.raises(RuntimeError, match=error_msg):
-        _ = trino.history(
-            start="2021-08-24 00:00",
-            stop="2021-08-24 01:00",
-            airport="ESSA",
-            arrival_airport="EGLL",
-        )
-    # test that `limit` generate correct query
-    df = trino.history(
-        start="2021-08-24 00:00",
-        stop="2021-08-24 01:00",
-        airport="ESSA",
-        limit=3,
-    )
+    for limit in (None, 3):
+        with pytest.raises(RuntimeError, match=error_msg):
+            trino.history(
+                start, stop, airport="ESSA", arrival_airport="EGLL", limit=limit
+            )
+
+    df = trino.history(start, stop, airport="ESSA", limit=3)
     assert df is not None
-    assert df.shape[0] == 3
+    assert len(df) == 3
+
+    df = trino.history(start, stop, airport="ESSA")
+    assert df is not None
+    stockholm_flights = set(df.icao24)
+    assert "48ac81" in stockholm_flights  # LOT454 departing Stockholm
+
+    df = trino.history(start, stop, arrival_airport="ESSA")
+    assert df is not None
+    assert set(df.icao24) < stockholm_flights
 
     df = trino.history(
-        start="2021-08-24 09:00",
-        stop="2021-08-24 09:10",
-        airport="ESSA",
-    )
-    assert df is not None
-    assert len(df.groupby(["icao24", "callsign"])) == 23
-
-    df = trino.history(
-        start="2021-08-24 09:00",
-        stop="2021-08-24 09:10",
-        arrival_airport="ESSA",
-    )
-    assert df is not None
-    assert len(df.groupby(["icao24", "callsign"])) == 13
-
-    df = trino.history(
-        start="2021-08-24 11:32",
-        stop="2021-08-24 11:42",
+        "2025-04-13 06:03",
+        "2025-04-13 06:06",
         departure_airport="ESSA",
         arrival_airport="EGLL",
+        selected_columns=(
+            "icao24",
+            "callsign",
+            "estdepartureairport",
+            "estarrivalairport",
+        ),
     )
     assert df is not None
-    assert len(df.groupby(["icao24", "callsign"])) == 1
-    s = df.groupby(["icao24", "callsign"]).agg(dict(time="min")).reset_index()
-    assert s.callsign.iloc[0] == "BAW777C"
-    assert s.icao24.iloc[0] == "400936"
-
-    with pytest.raises(RuntimeError, match=error_msg):
-        _ = trino.history(
-            start="2021-08-24 00:00",
-            stop="2021-08-24 01:00",
-            airport="ESSA",
-            arrival_airport="EGLL",
-            limit=3,
-        )
+    assert set(df.estdepartureairport) == {"ESSA"}
+    assert set(df.estarrivalairport) == {"EGLL"}
+    assert set(df.loc[df.callsign == "BAW771C", "icao24"]) == {"40097e"}
 
     df = trino.history(
-        start="2021-08-24 00:00",
-        stop="2021-08-24 00:10",
-        arrival_airport="ESSA",
-        serials=-1408232560,
+        start, stop, arrival_airport="ESSA", serials=receivers[0]
     )
     assert df is not None
-    assert len(df.groupby(["icao24", "callsign"])) == 1
-    s = df.groupby(["icao24", "callsign"]).agg(dict(time="min")).reset_index()
-    assert s.callsign.iloc[0] == "SAS6906"
-    assert s.icao24.iloc[0] == "4ca863"
+    assert all(receivers[0] in heard_by for heard_by in df.serials)
 
-    df = trino.history(
-        start="2021-08-24 00:00",
-        stop="2021-08-24 00:10",
-        serials=(-1408232560, -1408232534),
-    )
+    df = trino.history(start, stop, serials=receivers)
     assert df is not None
-    assert len(df.groupby(["icao24", "callsign"])) == 12
+    assert all(set(receivers).intersection(heard_by) for heard_by in df.serials)
 
     df = trino.history(
-        start="2021-08-24 09:00",
-        stop="2021-08-24 09:10",
+        start,
+        stop,
         departure_airport="ESSA",
-        serials=(-1408232560, -1408232534),
+        serials=receivers,
         callsign="LOT%",
     )
     assert df is not None
-    assert len(df.groupby(["icao24", "callsign"])) == 1
-    s = df.groupby(["icao24", "callsign"]).agg(dict(time="min")).reset_index()
-    assert s.callsign.iloc[0] == "LOT454"
-    assert s.icao24.iloc[0] == "489789"
+    assert set(df.callsign) == {"LOT454"}
+    assert set(df.icao24) == {"48ac81"}
 
-    df = trino.history(
-        start="2021-08-24 09:00",
-        stop="2021-08-24 09:10",
-        bounds=(17.8936, 59.6118, 17.9894, 59.6716),
-        serials=(-1408232560, -1408232534),
-    )
+    df = trino.history(start, stop, bounds=stockholm, serials=receivers)
     assert df is not None
-    assert len(df.groupby(["icao24", "callsign"])) == 11
-    s = df.groupby(["icao24", "callsign"]).agg(dict(time="min")).reset_index()
-    assert s.query('callsign == "SAS1136"').icao24.iloc[0] == "51110b"
+    assert "LOT454" in df.callsign.values
+    assert df.lon.between(stockholm[0], stockholm[2]).all()
+    assert df.lat.between(stockholm[1], stockholm[3]).all()
 
     df = trino.history(
-        start="2021-08-24 09:30",
-        stop="2021-08-24 09:40",
+        start,
+        stop,
         departure_airport="ESSA",
-        bounds=(17.8936, 59.6118, 17.9894, 59.6716),
-        serials=(-1408232560, -1408232534),
+        bounds=stockholm,
+        serials=receivers,
     )
     assert df is not None
-    assert len(df.groupby(["icao24", "callsign"])) == 1
-    assert df.callsign.iloc[0] == "THY5HT"
-    assert df.icao24.iloc[0] == "4bb1c5"
+    assert "LOT454" in df.callsign.values
+    assert df.lon.between(stockholm[0], stockholm[2]).all()
+    assert df.lat.between(stockholm[1], stockholm[3]).all()
 
 
 def test_time_buffer() -> None:
