@@ -6,31 +6,11 @@ This module provides a decoder implementation using the rs1090 library
 
 from __future__ import annotations
 
-import sys
-from typing import TYPE_CHECKING
+from itertools import batched
 
 import pandas as pd
 
 from .base import Decoder
-
-if TYPE_CHECKING:
-    import pandas as pd
-
-
-if sys.version_info < (3, 12):
-    from typing import Iterator, Tuple, TypeVar
-
-    T = TypeVar("T", covariant=True)
-
-    def batched(
-        iterable: Iterator[Tuple[T, ...]], n: int = 1
-    ) -> Iterator[Tuple[T, ...]]:
-        length = len(iterable)  # type: ignore
-        for ndx in range(0, length, n):
-            yield iterable[ndx : min(ndx + n, length)]  # type: ignore
-
-else:
-    from itertools import batched
 
 
 class Rs1090Decoder(Decoder):

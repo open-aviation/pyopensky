@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable, TypeVar
-
-from typing_extensions import Protocol
+from typing import Any, Callable, Iterable, Protocol, TypeVar
 
 import pandas as pd
 

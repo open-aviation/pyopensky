@@ -3,14 +3,13 @@ from __future__ import annotations
 import operator
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, ClassVar, Dict, List, Protocol, cast
+from typing import Annotated, Any, ClassVar, Dict, List, Protocol, cast
 
 from sqlalchemy import ARRAY, Float, Integer, String, TypeDecorator
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.sql import operators as sql_operators
 from sqlalchemy.sql.operators import OperatorType
-from typing_extensions import Annotated
 
 import pandas as pd
 
