@@ -13,6 +13,10 @@ if TYPE_CHECKING:
     import pandas as pd
 
 
+# Match the pipe's state lifetime and finalize short encounters before expiry.
+_ENCOUNTER_GAP_SECONDS = 300.0
+
+
 class PyModesDecoder(Decoder):
     """Decoder for ADS-B messages using pyModeS library.
 
@@ -49,160 +53,62 @@ class PyModesDecoder(Decoder):
     def __init__(self) -> None:
         """Initialize PyModesDecoder and import pyModeS library."""
         try:
-            import pyModeS as pms
-
-            self.pms = pms
+            from pyModeS import PipeDecoder
         except ImportError as e:
             raise ImportError(
-                "pyModeS is required for PyModesDecoder. "
+                "PyModesDecoder requires Python 3.11+ and pyModeS v3. "
                 "Install it with: pip install 'pyopensky[pymodes]'"
             ) from e
+        self._pipe_decoder = PipeDecoder
 
     def decode_position(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Decode position data by pairing odd/even CPR frames.
+        """Return positions accepted by the v3 pipe in capture-time order."""
+        from pyModeS import DecodeError, Message
 
-        This method:
-        1. Pairs odd and even CPR frames using merge_asof
-        2. Decodes positions using pyModeS
-        3. Validates decoded positions using reference positions
-        4. Filters outliers
-
-        :param df: DataFrame with raw position data
-        :return: DataFrame with decoded positions
-        """
-        import numpy as np
-        import pandas as pd
-
-        # Pair odd and even frames
-        pos_odd = df.query("odd")[
-            ["timestamp", "icao24", "mintime", "rawmsg", "altitude"]
-        ]
-        pos_even = df.query("not odd")[
-            ["timestamp", "icao24", "mintime", "rawmsg", "altitude"]
-        ]
-
-        # Create pairs in both directions
-        pos_pairs = (
-            pd.concat(
-                [
-                    pd.merge_asof(
-                        pos_odd,
-                        pos_even,
-                        on="timestamp",
-                        by="icao24",
-                        tolerance=pd.Timedelta(seconds=10),
-                        suffixes=("_odd", "_even"),
-                    ),
-                    pd.merge_asof(
-                        pos_even,
-                        pos_odd,
-                        on="timestamp",
-                        by="icao24",
-                        tolerance=pd.Timedelta(seconds=10),
-                        suffixes=("_even", "_odd"),
-                    ),
-                ]
+        frames = df.dropna(
+            subset=["rawmsg", "timestamp", "icao24"]
+        ).sort_values(["icao24", "timestamp"], kind="stable")
+        pipe = self._pipe_decoder(eviction_ttl=_ENCOUNTER_GAP_SECONDS)
+        previous_icao = None
+        previous_time = 0.0
+        indices = []
+        results = []
+        for index, (rawmsg, timestamp, icao24) in enumerate(
+            frames[["rawmsg", "timestamp", "icao24"]].itertuples(
+                index=False, name=None
             )
-            .sort_values("timestamp")
-            .dropna()
-        )
-
-        if pos_pairs.shape[0] == 0:
-            return df
-
-        # Decode positions
-        lats = []
-        lons = []
-        alts = []
-
-        for _, row in pos_pairs.iterrows():
+        ):
             try:
-                # Determine odd/even messages
-                if "rawmsg_odd" in pos_pairs.columns:
-                    msg_odd = row.rawmsg_odd
-                    msg_even = row.rawmsg_even
-                    t_odd = row.mintime_odd
-                    t_even = row.mintime_even
-                else:
-                    msg_even = row.rawmsg_odd
-                    msg_odd = row.rawmsg_even
-                    t_even = row.mintime_odd
-                    t_odd = row.mintime_even
+                message = Message(rawmsg)
+            except DecodeError:
+                continue
+            # A corrupt frame can spoil the CPR pair for a valid neighbour.
+            if not message.crc_valid or message.icao.lower() != icao24.lower():
+                continue
+            capture_time = timestamp.timestamp()
+            if previous_icao is not None and (
+                message.icao != previous_icao
+                or capture_time - previous_time > _ENCOUNTER_GAP_SECONDS
+            ):
+                pipe.flush()
+                pipe.reset()
+            indices.append(index)
+            results.append(pipe.decode(rawmsg, timestamp=capture_time))
+            previous_icao = message.icao
+            previous_time = capture_time
 
-                # Decode position
-                latlon = self.pms.adsb.position(
-                    msg_odd, msg_even, t_odd, t_even
-                )
-
-                if latlon is not None:
-                    lats.append(latlon[0])
-                    lons.append(latlon[1])
-                else:
-                    lats.append(None)
-                    lons.append(None)
-
-                # Decode altitude
-                alt = self.pms.adsb.altitude(msg_odd)
-                alts.append(alt)
-
-            except Exception:
-                lats.append(None)
-                lons.append(None)
-                alts.append(None)
-
-        pos_pairs = pos_pairs.assign(lat=lats, lon=lons, altitude=alts)
-
-        # Validate using reference positions
-        pos_pairs = pos_pairs.assign(
-            lat_ref_1=lambda x: x.lat.shift(5),
-            lon_ref_1=lambda x: x.lon.shift(5),
-            lat_ref_2=lambda x: x.lat.shift(10),
-            lon_ref_2=lambda x: x.lon.shift(10),
-        ).dropna(subset=["lat", "lon"])
-
-        # Decode with reference positions for validation
-        latlon_1 = []
-        latlon_2 = []
-
-        for _, row in pos_pairs.iterrows():
-            try:
-                if "rawmsg_odd" in pos_pairs.columns:
-                    msg = row.rawmsg_odd
-                else:
-                    msg = row.rawmsg_even
-
-                ll1 = self.pms.adsb.position_with_ref(
-                    msg, lat_ref=row.lat_ref_1, lon_ref=row.lon_ref_1
-                )
-                ll2 = self.pms.adsb.position_with_ref(
-                    msg, lat_ref=row.lat_ref_2, lon_ref=row.lon_ref_2
-                )
-                latlon_1.append(ll1)
-                latlon_2.append(ll2)
-            except Exception:
-                latlon_1.append((None, None))
-                latlon_2.append((None, None))
-
-        latlon_1_arr = np.array(latlon_1)
-        latlon_2_arr = np.array(latlon_2)
-
-        # Filter outliers based on consistency
-        pos_pairs = (
-            pos_pairs.assign(
-                lat_1=latlon_1_arr[:, 0],
-                lon_1=latlon_1_arr[:, 1],
-                lat_2=latlon_2_arr[:, 0],
-                lon_2=latlon_2_arr[:, 1],
+        # Pairing and the final bootstrap pass update earlier results in place.
+        pipe.flush()
+        return (
+            frames.iloc[indices]
+            .assign(
+                lat=[result.get("latitude") for result in results],
+                lon=[result.get("longitude") for result in results],
+                altitude=[result.get("altitude") for result in results],
             )
-            .dropna()
-            .eval("dlat_1=abs(lat-lat_1)")
-            .eval("dlon_1=abs(lon-lon_1)")
-            .eval("dlat_2=abs(lat-lat_2)")
-            .eval("dlon_2=abs(lon-lon_2)")
-            .query("dlat_1<0.1 and dlon_1<0.1 and dlat_2<0.1 and dlon_2<0.1")
+            .dropna(subset=["lat", "lon"])
+            .sort_values("timestamp", kind="stable")
         )
-
-        return pos_pairs
 
     def decode_velocity(self, df: pd.DataFrame) -> pd.DataFrame:
         """Decode velocity data from raw messages.

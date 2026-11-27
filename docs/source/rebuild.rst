@@ -63,14 +63,13 @@ Available decoders
 PyModes decoder
 ~~~~~~~~~~~~~~~
 
-The :class:`~pyopensky.decoders.PyModesDecoder` uses the `pyModeS <https://github.com/junzis/pyModeS>`_ library for decoding.
+The :class:`~pyopensky.decoders.PyModesDecoder` uses the pyModeS v3
+``PipeDecoder`` to decode raw position messages in capture-time order.
+It tracks each aircraft separately, pairs CPR frames, and checks candidate
+positions against the aircraft's recent motion. Rebuild returns rows with
+resolved coordinates and uses the database values for velocity and callsign.
 
-**Features:**
-
-- CPR position decoding with odd/even frame pairing
-- Reference position validation to filter outliers
-- BDS register decoding (BDS 4,0, BDS 5,0, BDS 6,0)
-- Pure Python implementation
+The ``pymodes`` extra requires Python 3.11 or newer.
 
 **Installation:**
 
@@ -90,7 +89,7 @@ The :class:`~pyopensky.decoders.PyModesDecoder` uses the `pyModeS <https://githu
     rebuild = Rebuild(trino)
 
     # Using string-based selection
-    df = rebuild.redecode_position(
+    df = rebuild.rebuild(
         start="2023-01-03 16:00",
         stop="2023-01-03 20:00",
         icao24="400A0E",
@@ -114,7 +113,6 @@ The :class:`~pyopensky.decoders.Rs1090Decoder` uses the Rust-based `rs1090 <http
 **Features:**
 
 - High-performance Rust implementation
-- Same decoding logic as PyModesDecoder
 - Significantly faster for large datasets
 
 **Installation:**
@@ -134,7 +132,7 @@ The :class:`~pyopensky.decoders.Rs1090Decoder` uses the Rust-based `rs1090 <http
     rebuild = Rebuild(trino)
 
     # Using string-based selection
-    df = rebuild.redecode_position(
+    df = rebuild.rebuild(
         start="2023-01-03 16:00",
         stop="2023-01-03 20:00",
         icao24="400A0E",
@@ -184,7 +182,6 @@ Performance considerations
 
 - Use ``PyModesDecoder`` for small to medium datasets (< 1M messages) or when you need to inspect the decoding logic
 - Use ``Rs1090Decoder`` for large datasets (> 1M messages) where performance is critical
-- Both decoders produce equivalent results, Rs1090Decoder is simply faster
 
 **Database vs custom decoding:**
 

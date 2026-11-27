@@ -113,7 +113,7 @@ jobs:
           enableCrossOsArchive: true
           key: opensky-${{ hashFiles('uv.lock') }}
 
-      - run: uv sync --dev --python ${{ matrix.python-version }} --extra rs1090 --extra cartes
+      - run: uv sync --dev --python ${{ matrix.python-version }} --extra rs1090 --extra cartes --extra pymodes
 
       - name: Run tests
         env:

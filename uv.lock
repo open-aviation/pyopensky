@@ -2960,61 +2960,11 @@ wheels = [
 
 [[package]]
 name = "pymodes"
-version = "2.22.0"
+version = "3.7.0"
 source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version < '3.11'",
-]
-dependencies = [
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" } },
-    { name = "pyzmq" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/96/65/79fc6eaf3cf271be4cb2331cc5757eb94863eec22f1991125d710f778d01/pymodes-2.22.0.tar.gz", hash = "sha256:286f016ca5c2df4208fe0d62b3ea1d01c73635b0c48dedd7479e05105a6c560d", size = 326949, upload-time = "2026-04-09T09:55:32.703Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/61/03/d3168619ecbfba21fd3f4d432bbe87af83f8f2b869f85da1f9975fb8624d/pymodes-3.7.0.tar.gz", hash = "sha256:49b5f0c7413a0ce7e9a843518a7d2b55b28b999367f1656c2b429d3678e9bffa", size = 178171, upload-time = "2026-11-11T17:18:14.754Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fb/a4/35ece5ccbc64e4d105446808d18ec46d159fdf89fb3a94b4518502f813ee/pymodes-2.22.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:0bcf736c250e7c6c339e4675f5f66bf6e6ca99bfd1642399ba405ee0caef35c1", size = 648415, upload-time = "2026-04-09T09:55:00.821Z" },
-    { url = "https://files.pythonhosted.org/packages/b5/01/5849be4a99bb08bf30493046bff0aad7ceb477ae8cc8ed1ef97686fe9c8e/pymodes-2.22.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:84c2ebcd4aeb26191089554f371308b60eb7807ae0a3ecd115f344596a71bee0", size = 1235153, upload-time = "2026-04-09T09:55:02.585Z" },
-    { url = "https://files.pythonhosted.org/packages/1d/f9/464e2d4f3db9cef24b03d57bbbaf8a2db911d4e2389b9ac0a7bfaf8cde96/pymodes-2.22.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ea3974efc0f8a885d4457732577f31fc1491c1d5ee4bdb7b573e39d65740b1a0", size = 1235968, upload-time = "2026-04-09T09:55:03.641Z" },
-    { url = "https://files.pythonhosted.org/packages/8f/74/cc9d40ac12e4a58f0b896ce259c5c06be15b913f7685f7b0be2f46963169/pymodes-2.22.0-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:24c6fa911899f1dd6e7d1dbf068537e19b33f5a9c54ae353c7d6d2e048ca4910", size = 1233231, upload-time = "2026-04-09T09:55:04.971Z" },
-    { url = "https://files.pythonhosted.org/packages/4c/b8/6102e364f96369770662df34c152f7d9440aeb3f6594f1becdc751788658/pymodes-2.22.0-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:1e3d38084786db382941d294493d925558cc9dc42c8afb9a4b1b4e9ccea70b5d", size = 1261911, upload-time = "2026-04-09T09:55:06.058Z" },
-    { url = "https://files.pythonhosted.org/packages/35/4a/e8712f69c6a571c0648b79d2df30288b0d49cfb2110888ca44e2f02ace5e/pymodes-2.22.0-cp310-cp310-win_amd64.whl", hash = "sha256:6b30082f1b7e0e216c0e33742310fb6cccfe3a95feec88c75b7f3f3a840dcce2", size = 506193, upload-time = "2026-04-09T09:55:07.253Z" },
-    { url = "https://files.pythonhosted.org/packages/10/db/7ced9678020b85032e05928de974d4d8775f55a70a68e4b67cd02fddb26c/pymodes-2.22.0-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:9f1931e4c0f60802ecafe19612c13437e03f78b639edcc726b3f4a77511196d5", size = 647656, upload-time = "2026-04-09T09:55:08.646Z" },
-    { url = "https://files.pythonhosted.org/packages/ce/8f/7617c93330699963a95bedb9f66aae233f73b1b4ff9608cf6573590a5962/pymodes-2.22.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3569ed3a65d1247cba2c76bfdc08a571eaa136e467a9397732b71fb2a2c3e405", size = 1290366, upload-time = "2026-04-09T09:55:10.009Z" },
-    { url = "https://files.pythonhosted.org/packages/a4/79/fb88ac167ce7a106c905eeafa7621bc0becbe4ad140054d0a394641dddb8/pymodes-2.22.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f2a77277f6d7605167a720faf48a8c9f5aa713ddf6ceaa60582b94548fcbc7fa", size = 1293389, upload-time = "2026-04-09T09:55:11.539Z" },
-    { url = "https://files.pythonhosted.org/packages/7c/8a/10c3a9bda5a3c218f64e45694ebdae31149b40475ff7fde6c35e0c0bd04b/pymodes-2.22.0-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:e1252159ad190274b9106c67fcbcbb5a46690cc273f4c0071c47cc3e27a9ad42", size = 1290164, upload-time = "2026-04-09T09:55:13.062Z" },
-    { url = "https://files.pythonhosted.org/packages/0e/82/71087b099bb4c4cb1ceecfb295290ca6a12a817af83a283f5c4f01eb9056/pymodes-2.22.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:867ec76256b942b9c2b28a694b36938abbbe26a7af9ac9caec7470ffccb885d2", size = 1318031, upload-time = "2026-04-09T09:55:14.659Z" },
-    { url = "https://files.pythonhosted.org/packages/2d/da/f6a56e5025dc35e1b492583169104f4d0971f5871631371b3c78aa3e14ad/pymodes-2.22.0-cp311-cp311-win_amd64.whl", hash = "sha256:0e879fc09b98ab5d6369e9a5e2c2da47b26f23e9a10901360420da450792c832", size = 505998, upload-time = "2026-04-09T09:55:16.161Z" },
-    { url = "https://files.pythonhosted.org/packages/11/b7/2ce4fac55bd56038b1269a99d6cf2e82f5bfc28332802e914d381acee8a0/pymodes-2.22.0-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:6f9724345ccb43bcddc0211a3c354d8a5b47ff17edec326da9e25f222f621ea7", size = 648531, upload-time = "2026-04-09T09:55:17.185Z" },
-    { url = "https://files.pythonhosted.org/packages/e2/31/a915e3188d0143f62f8de2a588f7672e7a60b269784e989d17321b850880/pymodes-2.22.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:442ebbcfe2b7dd99eeac13ed399e513674f85977b22979f3301f167377a5f23e", size = 1272810, upload-time = "2026-04-09T09:55:18.358Z" },
-    { url = "https://files.pythonhosted.org/packages/63/32/2ade19e08d62aff8fdf35fafd8f82e5e465466f48ff750d6583464e8d11c/pymodes-2.22.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8c6946b30348f55ad903002cfe2cc9e336e24fb26a6828240fcc272a9e5f43bc", size = 1279849, upload-time = "2026-04-09T09:55:19.625Z" },
-    { url = "https://files.pythonhosted.org/packages/95/6c/11ebc124c08196fd9c07b8b9c04ddc72bfe60bc202e05adbd42841c42be0/pymodes-2.22.0-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:767deb804ed01c7e786dca02fecc5da58fd7c41b4279338f8e784f66c627ec5d", size = 1272016, upload-time = "2026-04-09T09:55:20.856Z" },
-    { url = "https://files.pythonhosted.org/packages/b1/cb/095687bf41460e765a86a626d6ae061e886ca08ab8264698709f98676f55/pymodes-2.22.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:cf13ccef268065fd000ec010708dd24d079341d10ec832d602c66fac0e554561", size = 1307485, upload-time = "2026-04-09T09:55:22.385Z" },
-    { url = "https://files.pythonhosted.org/packages/c7/5f/670dae51cfa2da52f9342d3e7ecbec2d8ce17e7deb2c39e163ea5d46e6aa/pymodes-2.22.0-cp312-cp312-win_amd64.whl", hash = "sha256:dec769035d3814485525b356aaf5ee2168df057231d31ccd6f4e0af9973825a8", size = 506689, upload-time = "2026-04-09T09:55:23.633Z" },
-    { url = "https://files.pythonhosted.org/packages/b7/65/09c87e37d46a4f8034f167b2f4dae13753db758e3239c13fb05c68b6e487/pymodes-2.22.0-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:6f1a7ce80958bb136e8b2920eb4463cc218b5dc32befc43f412dd2a87fbf26d4", size = 645351, upload-time = "2026-04-09T09:55:24.84Z" },
-    { url = "https://files.pythonhosted.org/packages/ec/72/d3b0ee191941e3d52af7525626f1f2002cceb95ab40f2ac1d92dcd558dc8/pymodes-2.22.0-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c8382ef7e2a953a16879af02d70c5b5259d6fa5ec4da0cfe83c4e961a0d98879", size = 1274252, upload-time = "2026-04-09T09:55:26.114Z" },
-    { url = "https://files.pythonhosted.org/packages/87/73/b370fa1d11cb7a09ae68dcbb98dd28abedaee3c8ff6973909c851f52ebf5/pymodes-2.22.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c284dbc2282e7c826660c8bb098b431dfe849be056ad78e13ce32d930a1f2986", size = 1275487, upload-time = "2026-04-09T09:55:27.489Z" },
-    { url = "https://files.pythonhosted.org/packages/ed/a1/b2aa4ec5df35f96738d48b8e99aaf2d34e7ac2d2d5cacf4185841a8d7166/pymodes-2.22.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:944dc0ca4bd245f31a9af43548a41df4ce105e50b2c570854a32aeaa4c82bb6e", size = 1266768, upload-time = "2026-04-09T09:55:29.07Z" },
-    { url = "https://files.pythonhosted.org/packages/ce/5e/db2bd72d086e5b8487bad039385bc9cafb8ede059d12f3641c2afaf58050/pymodes-2.22.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:d7689a30ed603505913371e51fe2ffa64537a959a5cc117392221fcde96a8e64", size = 1294697, upload-time = "2026-04-09T09:55:30.361Z" },
-    { url = "https://files.pythonhosted.org/packages/a5/7a/21ed94d8b2d0d6cf96ecb69cd8896ead087975a690b04a41688ead2d8473/pymodes-2.22.0-cp313-cp313-win_amd64.whl", hash = "sha256:37d3c9b90c018e2895fc86c6ec4deb02f25b6b2caf667c19325f175d1939c0f5", size = 506176, upload-time = "2026-04-09T09:55:31.674Z" },
-]
-
-[[package]]
-name = "pymodes"
-version = "3.6.0"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.14' and sys_platform == 'win32'",
-    "python_full_version >= '3.14' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'win32'",
-    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-    "python_full_version == '3.11.*' and sys_platform == 'win32'",
-    "python_full_version == '3.11.*' and sys_platform == 'emscripten'",
-    "python_full_version == '3.11.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-]
-sdist = { url = "https://files.pythonhosted.org/packages/eb/a1/05b79de7ea850455d203f4b07c59396baea170e137af31fe96a3cea6eaf1/pymodes-3.6.0.tar.gz", hash = "sha256:416c8ac4a77300c07ca761947b6f68efb135e25512e7a996d876561dfb3bd480", size = 176234, upload-time = "2026-07-16T12:26:51.335Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/12/db/78361a889148e04644699cfaa619049f614029dde10eb950889aafebe88c/pymodes-3.6.0-py3-none-any.whl", hash = "sha256:c508f4731c7aa39b7ab9eb34d5d56fe853f8d425be85638f528bac6e02ec23f5", size = 191976, upload-time = "2026-07-16T12:26:49.667Z" },
+    { url = "https://files.pythonhosted.org/packages/c3/f8/ec272f1137e37d6e00bc3ae54644c05ea80beea7ed22f613a6114accd861/pymodes-3.7.0-py3-none-any.whl", hash = "sha256:78e64e9c9ac81c6ea986b1a77729c1c517b5d6200c17418ca4ae0db3c4478c3d", size = 194019, upload-time = "2026-11-11T17:18:13.359Z" },
 ]
 
 [[package]]
@@ -3078,8 +3028,7 @@ cartes = [
     { name = "cartes" },
 ]
 pymodes = [
-    { name = "pymodes", version = "2.22.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "pymodes", version = "3.6.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "pymodes", marker = "python_full_version >= '3.11'" },
 ]
 rs1090 = [
     { name = "rs1090" },
@@ -3107,7 +3056,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.2.2" },
     { name = "pyarrow", specifier = ">=17.0.0" },
     { name = "pyjwt", specifier = ">=2.9.0" },
-    { name = "pymodes", marker = "extra == 'pymodes'", specifier = ">=2.18" },
+    { name = "pymodes", marker = "python_full_version >= '3.11' and extra == 'pymodes'", specifier = ">=3.6.1,<4" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "rs1090", marker = "extra == 'rs1090'", specifier = ">=0.3.8" },
     { name = "stamina", specifier = ">=25.1.0" },

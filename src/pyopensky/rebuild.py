@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 
 from .decoders.base import Decoder
+from .decoders.pymodes import PyModesDecoder
 from .schema import (
     IdentificationData4,
     PositionData4,
@@ -166,14 +167,19 @@ class Rebuild:
         if pos_data is None or pos_data.shape[0] == 0:
             return None
 
-        # Prepare position data
+        # Repeated broadcasts at different times are separate CPR observations.
+        duplicate_key = (
+            ["icao24", "mintime", "rawmsg"]
+            if isinstance(decoder, PyModesDecoder)
+            else ["rawmsg"]
+        )
         pos_data = (
             pos_data.assign(
                 timestamp=lambda x: pd.to_datetime(
                     x.mintime, unit="s", utc=True
                 )
             )
-            .drop_duplicates("rawmsg")
+            .drop_duplicates(duplicate_key)
             .rename(
                 columns={
                     "surface": "onground",
@@ -398,8 +404,6 @@ class Rebuild:
         """
         if isinstance(decoder, str):
             if decoder == "pymodes":
-                from .decoders.pymodes import PyModesDecoder
-
                 decoder = PyModesDecoder()
             elif decoder == "rs1090":
                 from .decoders.rs1090 import Rs1090Decoder
@@ -524,6 +528,20 @@ class Rebuild:
         if rollcall_data is not None and rollcall_data.shape[0] > 0:
             rollcall_data = _normalize_icao24_dtype(rollcall_data)
             if include_rollcall:
+                if isinstance(decoder, PyModesDecoder):
+                    # Keep the roll-call mintime under its historical name.
+                    pos_data = pos_data.rename(
+                        columns={"mintime": "mintime_pos"}
+                    )
+                # Pandas can infer different resolutions for whole-second and
+                # fractional capture times. merge_asof requires equal dtypes.
+                if pos_data.timestamp.dtype != rollcall_data.timestamp.dtype:
+                    pos_data = pos_data.assign(
+                        timestamp=pos_data.timestamp.dt.as_unit("ns")
+                    )
+                    rollcall_data = rollcall_data.assign(
+                        timestamp=rollcall_data.timestamp.dt.as_unit("ns")
+                    )
                 pos_data = pd.merge_asof(
                     pos_data,
                     rollcall_data,
